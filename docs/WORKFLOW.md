@@ -9,6 +9,10 @@ Adapted from the backend's workflow for the frontend's actual tooling. [ENGINEER
 3. Verify actual implementation and local changes before repeating completed work. Identify deliverable, acceptance, selected design, dependency and external inputs. Distinguish confirmed decisions, proposals, code, local proof and external proof.
 4. Explain the intended batch briefly, then work in small reviewable slices. Ask only for unresolved input affecting implementation; continue useful independent work. Do not invent rewards, terms, provider readiness, design selections or successful API outcomes.
 
+## Batches and review units
+
+Follow [BATCH_DELIVERY](BATCH_DELIVERY.md): batches define coherent capabilities, smaller stable tasks are the usual PR/review units, and releases combine compatible integrated work. Keep the next batch concrete and later work at scope/dependency level. A green task PR is not automatically a release or deployment.
+
 ## Git and concurrent work
 
 Inspect `git status --short`, branch/HEAD, remotes, upstream and worktrees before editing or switching. Follow [GIT_AND_CI_SETUP](GIT_AND_CI_SETUP.md). New work branches from current dev when that baseline contains the required work; preserve unpublished dependencies and unrelated dirty files. Never reset/clean/force history to match an example. Coordinate different checkouts if two chats would otherwise edit the same files. Do not alter the backend app/data simply because a frontend defect may originate there; record the owning backend issue and authorized remedy.
@@ -43,7 +47,7 @@ Do not run install/clean-install against files held by a Vite/test process on Wi
 | Environment/packaging/dependencies  | Reproducible install, types/build/affected runtime/browser checks and safe config/lockfile review. Actual hosting/security proof remains later.                 |
 | Settled feature integration/release | Current full gate and complete relevant browser/cross-system acceptance; release/hosted gates as documented, with explicit remaining limitations.               |
 
-The installed pre-push hook and current CI run the full gate even for docs-only changes. This matrix describes sufficient local evidence, not permission to bypass configured hooks or claim a docs-only CI optimization already exists. Do not push solely to repeat an unchanged check.
+Hosted dev CI uses `check:docs` for the complete prose allowlist and `check:dev` for other changes; the latter is formatting, lint/import architecture, links and one build/typecheck, without unit/browser suites. Release CI runs `check`, audit and all current Playwright acceptance. The pre-push hook still runs the full local gate. Relevant local feature tests remain mandatory; light hosted checks do not replace them. See [Git/CI](GIT_AND_CI_SETUP.md). Do not push solely to repeat an unchanged check.
 
 ## Switching or resuming a chat
 

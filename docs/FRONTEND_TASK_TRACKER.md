@@ -29,6 +29,8 @@ See PLAN for exact backend mappings and acceptance; this table intentionally doe
 | ----- | --------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------- |
 | FW-01 | Adapt backend documentation/workflow patterns to frontend | CLOSED | [WORKFLOW](WORKFLOW.md): ownership split, restart templates, Git/CI, source/contract catalogues and docs-only validation. |
 
+| FW-02 | Align backend-style dev/main PR/CI and bootstrap the supplied frontend remote | IN_PROGRESS | [Git/CI implementation](FW02_GIT_CI_IMPLEMENTATION.md): local policy cases, dev bootstrap/protection/PR evidence and first stable main boundary. |
+
 ## Maintaining the tracker
 
 Add stable subtasks/defects when useful, for example `F02-01` or `F06-DEF-01`, with an owner, concrete next action and acceptance link. Do not renumber closed work, create parallel hidden status lists or mark a whole batch closed from one passing fixture. Reopen a regression with evidence; preserve earlier scope/history. Missing external evidence stays visible under its owner. Update CURRENT_STATE only when capabilities, priorities or blockers change.

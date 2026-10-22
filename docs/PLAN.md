@@ -6,6 +6,8 @@ This request authorizes the plan, architecture and skeleton. Feature batches bel
 
 ## Batches and acceptance
 
+[BATCH_DELIVERY](BATCH_DELIVERY.md) defines batch/task/PR units and the proposed next decomposition. Task PRs integrate into dev with light hosted checks; stable main requires full release acceptance. Batch completion does not automatically trigger a release.
+
 [FRONTEND_TASK_TRACKER](FRONTEND_TASK_TRACKER.md) is the only task-status ledger. This plan owns scope, dependencies and done criteria. [FRONTEND_SKELETON](FRONTEND_SKELETON.md) preserves F00 evidence; [WORKFLOW](WORKFLOW.md) defines execution and handoff.
 
 | ID  | Scope                                            | Reviewable deliverable and done criteria                                                                                                                                                                                                                                                                                              | Backend mapping                    |

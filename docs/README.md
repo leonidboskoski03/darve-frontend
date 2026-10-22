@@ -9,8 +9,10 @@ Start with [CURRENT_STATE](CURRENT_STATE.md), the relevant [task tracker](FRONTE
 | Current capabilities and next action           | [CURRENT_STATE](CURRENT_STATE.md)                                                                                          |
 | Task IDs, status and remaining work            | [FRONTEND_TASK_TRACKER](FRONTEND_TASK_TRACKER.md)                                                                          |
 | Batch scope, dependencies and acceptance       | [PLAN](PLAN.md)                                                                                                            |
+| Batch/task/PR planning                         | [BATCH_DELIVERY](BATCH_DELIVERY.md)                                                                                        |
 | Development and verification                   | [WORKFLOW](WORKFLOW.md), [ENGINEERING](ENGINEERING.md)                                                                     |
 | New or interrupted chat                        | [NEW_CHAT_TASK_TEMPLATE](NEW_CHAT_TASK_TEMPLATE.md), [usage guide](NEW_CHAT_TEMPLATE_USAGE_GUIDE.md)                       |
+| FW-02 Git/CI setup evidence                    | [FW02_GIT_CI_IMPLEMENTATION](FW02_GIT_CI_IMPLEMENTATION.md)                                                                |
 | Git, hooks, CI, release and cleanup            | [GIT_AND_CI_SETUP](GIT_AND_CI_SETUP.md)                                                                                    |
 | Module responsibilities and import enforcement | [ARCHITECTURE](ARCHITECTURE.md), [ESLint rules](../tools/eslint-architecture.mjs)                                          |
 | F00 structure, dependencies and dated proof    | [FRONTEND_SKELETON](FRONTEND_SKELETON.md), [package manifest](../package.json)                                             |

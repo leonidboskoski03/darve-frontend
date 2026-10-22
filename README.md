@@ -21,7 +21,7 @@ npx.cmd --no-install playwright install chromium
 npm.cmd run test:e2e
 ```
 
-`check` includes formatting, typed ESLint and architecture boundaries, architecture regression cases, documentation links, unit/component checks, TypeScript and a production build. Browser tests consume that build; rebuild after changing source. `test:watch` is for iteration. CI uses `npm ci`, runs the same checks and installs Chromium. Hooks provide fast staged checks and a complete pre-push gate; CI remains authoritative.
+`check` includes formatting, typed ESLint and architecture boundaries, architecture regression cases, documentation links, unit/component checks, TypeScript and a production build. Browser tests consume that build; rebuild after changing source. `test:watch` is for iteration. Dev PR CI uses light formatting/lint/import/build/type/link checks (formatting/links for prose-only diffs). Main-targeted release CI runs the full gate, audit and Chromium browser acceptance. Hooks provide fast staged checks and a complete pre-push gate; CI remains authoritative.
 
 ## Engineering records
 
