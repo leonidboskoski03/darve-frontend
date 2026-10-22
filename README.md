@@ -25,12 +25,16 @@ npm.cmd run test:e2e
 
 ## Engineering records
 
-- [Implementation batches and checkpoint](docs/PLAN.md)
+- [Documentation index](docs/README.md)
+- [Current state](docs/CURRENT_STATE.md) and [task tracker](docs/FRONTEND_TASK_TRACKER.md)
+- [Development workflow](docs/WORKFLOW.md) and [Git/CI setup](docs/GIT_AND_CI_SETUP.md)
+- [New-chat task template](docs/NEW_CHAT_TASK_TEMPLATE.md)
+- [Implementation batches](docs/PLAN.md) and [foundation evidence](docs/FRONTEND_SKELETON.md)
 - [Architecture and enforcement](docs/ARCHITECTURE.md)
 - [Engineering standards](docs/ENGINEERING.md)
 - [Design and motion systems](docs/DESIGN_AND_MOTION.md)
 - [API, identity and realtime integration](docs/INTEGRATION.md)
-- [Environments, security and deployment checklist](docs/OPERATIONS.md)
+- [Environments and security](docs/OPERATIONS.md), [deployment checklist](docs/DEPLOYMENT_PREPARATION_CHECKLIST.md)
 - [Contributor instructions](AGENTS.md)
 
-Current scope is the plan and F00 foundation. Feature implementation, provider/payment acceptance, publication, hosted CI and deployment are separate unfinished work. A local build is not an end-to-end acceptance claim.
+Current product capability is the F00 foundation. Workflow documentation is maintained alongside it; feature implementation, provider/payment acceptance, publication, hosted CI and deployment remain unfinished. A local build is not an end-to-end acceptance claim.

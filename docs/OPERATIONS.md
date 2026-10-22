@@ -16,24 +16,13 @@ Add telemetry only when useful: safe event name/category, approved timing and sa
 
 Playwright captures traces/screenshots/video only under a deliberately reviewed policy. F00 disables them by default; its safe shell tests can be visually inspected with local screenshots. Hosted failure reports have three-day retention, contain synthetic shell cases and must be reviewed before tests expand to private/provider flows.
 
-## Deferred deployment-preparation checklist
+## Deployment preparation
 
-The founder explicitly deferred these prerequisites while local frontend/API integration proceeds. Resend is selected for staff email. Open items retain backend owners; they are not closed by a frontend skeleton.
+The [deployment-preparation checklist](DEPLOYMENT_PREPARATION_CHECKLIST.md) owns all deferred hosting, real identity/mail/provider, custody, retention, workload and final activation requirements. It retains the confirmed Resend selection and existing backend owners. Do not duplicate checkboxes or infer completion from local frontend work.
 
-- B12-INT-01/B13-02: configure actual staff identity/OIDC policy, Resend verified domain/sender and server-side credentials; test real inbox delivery and password/code expiry/replay/rate-limit/revocation/recovery.
-- B12-INT-01/feature owners: actual provider/analysis permissions and credentials, reviewed limits, recovery policy, coin rewards and template prices; isolated test settings do not establish production values.
-- R02/B12-INT-01: final hosting direction, HTTPS/proxy/ingress, frontend/API/staff/OBS origins, private PostgreSQL/Redis networking, constrained runtime grants, per-process secret injection, key rotation/custody and independent journals/frontiers. Respect existing Fly.io direction until a hosting change is approved.
-- R02/B12-04/B13-02: named backup/key/restore operators, acceptable downtime and data-loss objectives, hosted backup/PITR/expiration evidence, retention/deletion policy and held-restore proof. Avoid resurrecting revoked proofs or removed content after restore.
-- B12-02/B12-05: agree actual pilot traffic and critical-request/backlog/resource limits; measure API/database/worker/SSE/OBS behavior, bounded outages, duplicate/delayed provider events and recovery; name alert responders and incident ownership; produce usable runbooks.
-- B12-03f/B12-05: final connected browser/provider/OBS/QR/sandbox acceptance, documented exceptions and explicit pilot/release decision. D02 terms, B03 bot identities and D07/B07-ACT-01 payment-exposure gates remain applicable.
+## Release handoff
 
-Deferral never authorizes external exposure, live payments, persistent migrations, all-feature enablement, secret purchase/rotation or deployment. Specific local real-provider journeys may need their external prerequisites earlier; record them as pending rather than fabricating a pass.
-
-## CI, team workflow and releases
-
-The checked-in GitHub Actions definition installs exact lockfile dependencies, runs `check`, installs Chromium and runs browser acceptance without backend secrets. Read-only token permissions, job timeout and per-PR concurrency are configured. The repository is local-only: hosted checks, remote settings, required branch protection and reviewers are not established. Configure them once the frontend remote is chosen; CI configuration alone does not enforce a protected branch.
-
-Use focused task branches and small PRs into dev with concrete results and acceptance. Review code ownership/boundary changes carefully. A settled release candidate goes through reviewed dev → main with exact source/lockfile/contract/build identity and required checks. Local hooks are enabled but bypassable; hosted gates remain mandatory. Do not run duplicate hosted workflows on every branch push and PR when one PR gate suffices.
+[GIT_AND_CI_SETUP](GIT_AND_CI_SETUP.md) owns the actual hook/CI setup, remote/protection gaps, task review/cleanup and release procedure. [WORKFLOW](WORKFLOW.md) owns verification selection and restart handoff. This document owns runtime/environment policy rather than another CI/status ledger.
 
 Deployment later must choose a static asset host/container, deep-link fallback, immutable asset caching and non-stale HTML/config delivery; separate public/staff/OBS ingress as required by contracts. Verify TLS, CSP, frame/embedding policy, cookie attributes, CORS/CSRF, referrer handling and route-specific caching on the actual host. Payments/identity use backend verified endpoints; frontend hosting is not another business backend.
 
