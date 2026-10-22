@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "packageManager": "npm@11.16.0",
   "engines": {
     "node": ">=24.16.0 <25",
     "npm": ">=11 <12"
@@ -18,9 +19,12 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:architecture": "node --test tools/architecture.test.mjs",
+    "test:ci": "node --test tools/ci-policy.test.mjs",
     "test:e2e": "playwright test",
     "docs:check": "node tools/check-docs.mjs",
-    "check": "npm run format:check && npm run lint && npm run test:architecture && npm run docs:check && npm run test && npm run build",
+    "check:docs": "npm run format:check && npm run docs:check",
+    "check:dev": "npm run format:check && npm run lint && npm run docs:check && npm run build",
+    "check": "npm run check:dev && npm run test:architecture && npm run test:ci && npm run test",
     "prepare": "node .husky/install.mjs"
   },
   "dependencies": {

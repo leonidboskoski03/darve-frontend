@@ -1,0 +1,39 @@
+name: Development checks
+on:
+  pull_request:
+    branches: [dev]
+    types: [opened, synchronize, reopened, edited]
+permissions:
+  contents: read
+concurrency:
+  group: development-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  development-checks:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      HUSKY: '0'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 2
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          package-manager-cache: false
+      - name: Select complete PR validation scope
+        id: scope
+        run: node tools/ci-policy.mjs development
+      - name: Use pinned npm
+        run: npm install --global npm@11.16.0 --no-audit --no-fund
+      - name: Install exact lockfile
+        run: npm ci --no-audit --no-fund
+      - name: Docs-only development checks
+        if: steps.scope.outputs.docs_only == 'true'
+        run: npm run check:docs
+      - name: Light frontend development checks
+        if: steps.scope.outputs.docs_only != 'true'
+        run: npm run check:dev

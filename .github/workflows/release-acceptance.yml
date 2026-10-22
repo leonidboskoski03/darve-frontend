@@ -1,0 +1,58 @@
+name: Release acceptance
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, edited]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: release-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  release-policy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          package-manager-cache: false
+      - name: Require an approved release source
+        run: node tools/ci-policy.mjs release
+  frontend-acceptance:
+    needs: release-policy
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      HUSKY: '0'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          package-manager-cache: false
+      - name: Use pinned npm
+        run: npm install --global npm@11.16.0 --no-audit --no-fund
+      - name: Install exact lockfile
+        run: npm ci --no-audit --no-fund
+      - name: Full frontend code and test acceptance
+        run: npm run check
+      - name: Dependency vulnerability audit
+        run: npm audit --audit-level=low
+      - name: Install Chromium
+        run: npx --no-install playwright install --with-deps chromium
+      - name: Browser, keyboard, reduced-motion and accessibility acceptance
+        run: npm run test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: frontend-test-report
+          path: playwright-report/
+          retention-days: 3
