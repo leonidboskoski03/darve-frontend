@@ -29,7 +29,7 @@ See PLAN for exact backend mappings and acceptance; this table intentionally doe
 | ----- | --------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------- |
 | FW-01 | Adapt backend documentation/workflow patterns to frontend | CLOSED | [WORKFLOW](WORKFLOW.md): ownership split, restart templates, Git/CI, source/contract catalogues and docs-only validation. |
 
-| FW-02 | Align backend-style dev/main PR/CI and bootstrap the supplied frontend remote | IN_PROGRESS | [Git/CI implementation](FW02_GIT_CI_IMPLEMENTATION.md): local policy cases, dev bootstrap/protection/PR evidence and first stable main boundary. |
+| FW-02 | Align backend-style dev/main PR/CI and bootstrap the supplied frontend remote | CLOSED | [Git/CI implementation](FW02_GIT_CI_IMPLEMENTATION.md): local policy cases, dev bootstrap/protection/PR evidence and first stable main boundary. |
 
 ## Maintaining the tracker
 

@@ -37,4 +37,4 @@ npm.cmd run test:e2e
 - [Environments and security](docs/OPERATIONS.md), [deployment checklist](docs/DEPLOYMENT_PREPARATION_CHECKLIST.md)
 - [Contributor instructions](AGENTS.md)
 
-Current product capability is the F00 foundation. Workflow documentation is maintained alongside it; feature implementation, provider/payment acceptance, publication, hosted CI and deployment remain unfinished. A local build is not an end-to-end acceptance claim.
+Current product capability is the F00 foundation. Workflow documentation and hosted light development CI are established. Feature implementation, provider/payment acceptance, the first full hosted release qualification and deployment remain unfinished. A local build is not an end-to-end acceptance claim.
