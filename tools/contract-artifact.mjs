@@ -95,7 +95,7 @@ async function pack(backend, revision) {
     ],
     backend,
   );
-  run('tar', ['-xf', archive, '-C', scratch], root);
+  run('tar', ['-xf', 'source.tar'], scratch);
   const pkgRoot = path.join(scratch, 'packages/contracts');
   const pkg = json(path.join(pkgRoot, 'package.json'));
   if (pkg.name !== '@darve/contracts' || pkg.dependencies.zod !== zod)
@@ -210,7 +210,15 @@ async function verify() {
     'sha512-' + createHash('sha512').update(bytes).digest('base64') !== manifest.artifact.integrity
   )
     throw new Error('Artifact digest mismatch');
-  const entries = run('tar', ['-tzf', artifact], root).trim().split(/\r?\n/).sort();
+  // GNU tar under Git hooks treats a drive colon as a remote host separator.
+  const entries = run(
+    'tar',
+    ['-tzf', path.relative(root, artifact).split(path.sep).join('/')],
+    root,
+  )
+    .trim()
+    .split(/\r?\n/)
+    .sort();
   const expected = Object.keys(manifest.artifact.files)
     .map((f) => 'package/' + f)
     .sort();
