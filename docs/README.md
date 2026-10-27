@@ -4,22 +4,22 @@ Start with [CURRENT_STATE](CURRENT_STATE.md), the relevant [task tracker](FRONTE
 
 ## Task routing
 
-| Work                                           | Owning records                                                                                                             |
-| ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| Current capabilities and next action           | [CURRENT_STATE](CURRENT_STATE.md)                                                                                          |
-| Task IDs, status and remaining work            | [FRONTEND_TASK_TRACKER](FRONTEND_TASK_TRACKER.md)                                                                          |
-| Batch scope, dependencies and acceptance       | [PLAN](PLAN.md)                                                                                                            |
-| Batch/task/PR planning                         | [BATCH_DELIVERY](BATCH_DELIVERY.md)                                                                                        |
-| Development and verification                   | [WORKFLOW](WORKFLOW.md), [ENGINEERING](ENGINEERING.md)                                                                     |
-| New or interrupted chat                        | [NEW_CHAT_TASK_TEMPLATE](NEW_CHAT_TASK_TEMPLATE.md), [usage guide](NEW_CHAT_TEMPLATE_USAGE_GUIDE.md)                       |
-| FW-02 Git/CI setup evidence                    | [FW02_GIT_CI_IMPLEMENTATION](FW02_GIT_CI_IMPLEMENTATION.md)                                                                |
-| Git, hooks, CI, release and cleanup            | [GIT_AND_CI_SETUP](GIT_AND_CI_SETUP.md)                                                                                    |
-| Module responsibilities and import enforcement | [ARCHITECTURE](ARCHITECTURE.md), [ESLint rules](../tools/eslint-architecture.mjs)                                          |
-| F00 structure, dependencies and dated proof    | [FRONTEND_SKELETON](FRONTEND_SKELETON.md), [package manifest](../package.json)                                             |
-| F01 source selection and screen inventory      | [SOURCE_PROJECTS_AND_DESIGN_BASELINES](SOURCE_PROJECTS_AND_DESIGN_BASELINES.md), [DESIGN_AND_MOTION](DESIGN_AND_MOTION.md) |
-| F02 authority, contracts, state and realtime   | [INTEGRATION](INTEGRATION.md), [FRONTEND_API_CONTRACT_MATRIX](FRONTEND_API_CONTRACT_MATRIX.md)                             |
-| Environment, flags, security and observability | [OPERATIONS](OPERATIONS.md)                                                                                                |
-| Deferred hosting and activation gates          | [DEPLOYMENT_PREPARATION_CHECKLIST](DEPLOYMENT_PREPARATION_CHECKLIST.md)                                                    |
+| Work                                           | Owning records                                                                                                                                                                   |
+| ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Current capabilities and next action           | [CURRENT_STATE](CURRENT_STATE.md)                                                                                                                                                |
+| Task IDs, status and remaining work            | [FRONTEND_TASK_TRACKER](FRONTEND_TASK_TRACKER.md)                                                                                                                                |
+| Batch scope, dependencies and acceptance       | [PLAN](PLAN.md)                                                                                                                                                                  |
+| Batch/task/PR planning                         | [BATCH_DELIVERY](BATCH_DELIVERY.md)                                                                                                                                              |
+| Development and verification                   | [WORKFLOW](WORKFLOW.md), [ENGINEERING](ENGINEERING.md)                                                                                                                           |
+| New or interrupted chat                        | [NEW_CHAT_TASK_TEMPLATE](NEW_CHAT_TASK_TEMPLATE.md), [usage guide](NEW_CHAT_TEMPLATE_USAGE_GUIDE.md)                                                                             |
+| FW-02 Git/CI setup evidence                    | [FW02_GIT_CI_IMPLEMENTATION](FW02_GIT_CI_IMPLEMENTATION.md)                                                                                                                      |
+| Git, hooks, CI, release and cleanup            | [GIT_AND_CI_SETUP](GIT_AND_CI_SETUP.md)                                                                                                                                          |
+| Module responsibilities and import enforcement | [ARCHITECTURE](ARCHITECTURE.md), [ESLint rules](../tools/eslint-architecture.mjs)                                                                                                |
+| F00 structure, dependencies and dated proof    | [FRONTEND_SKELETON](FRONTEND_SKELETON.md), [package manifest](../package.json)                                                                                                   |
+| F01 source selection and screen inventory      | [SOURCE_PROJECTS_AND_DESIGN_BASELINES](SOURCE_PROJECTS_AND_DESIGN_BASELINES.md), [F01-01 audit](F01_REFERENCE_AND_COMPONENT_AUDIT.md), [DESIGN_AND_MOTION](DESIGN_AND_MOTION.md) |
+| F02 authority, contracts, state and realtime   | [INTEGRATION](INTEGRATION.md), [FRONTEND_API_CONTRACT_MATRIX](FRONTEND_API_CONTRACT_MATRIX.md)                                                                                   |
+| Environment, flags, security and observability | [OPERATIONS](OPERATIONS.md)                                                                                                                                                      |
+| Deferred hosting and activation gates          | [DEPLOYMENT_PREPARATION_CHECKLIST](DEPLOYMENT_PREPARATION_CHECKLIST.md)                                                                                                          |
 
 ## Documentation ownership
 
