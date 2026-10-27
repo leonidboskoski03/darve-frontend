@@ -30,7 +30,10 @@ export async function startLocalApi({
   origins = ['http://127.0.0.1:5173', 'http://127.0.0.1:4175'],
   port = 3310,
   build = true,
+  task = 'f02-02',
+  overlay = false,
 }) {
+  if (!['f02-02', 'f02-03'].includes(task)) throw new Error('Invalid local task identity.');
   backend = path.resolve(backend);
   const provenance = JSON.parse(
     readFileSync(path.join(root, 'vendor/contracts/provenance.json'), 'utf8'),
@@ -114,7 +117,7 @@ export async function startLocalApi({
       '-d',
       '--rm',
       '--label',
-      'darve.frontend.task=f02-02',
+      `darve.frontend.task=${task}`,
       '--label',
       `darve.frontend.run=${runId}`,
     ];
@@ -195,6 +198,13 @@ export async function startLocalApi({
       REDIS_URL: `redis://:${redisPassword}@127.0.0.1:${redisPort}`,
       CORS_ORIGINS: origins.join(','),
       RATE_LIMIT_MAX: 1000,
+      ...(overlay
+        ? {
+            OVERLAY_PRESENTATION_BASE_URL: origins[0] + '/tests/fixtures/realtime.html/',
+            OVERLAY_GRANT_EPOCH: randomUUID(),
+            OVERLAY_SSE_POLL_MS: 250,
+          }
+        : {}),
     });
     const logger = createLogger('silent');
     deps = createDependencies(config, logger);
@@ -217,9 +227,9 @@ export async function startLocalApi({
       migrations: migrationRows[0].count,
       source: provenance.sourceRevision,
     };
-    mkdirSync(path.join(root, 'artifacts.local/f02-02'), { recursive: true });
+    mkdirSync(path.join(root, `artifacts.local/${task}`), { recursive: true });
     writeFileSync(
-      path.join(root, 'artifacts.local/f02-02/runtime.json'),
+      path.join(root, `artifacts.local/${task}/runtime.json`),
       JSON.stringify(state, null, 2),
     );
     const { sessionCsrfProof } = await import(
@@ -228,6 +238,8 @@ export async function startLocalApi({
     return {
       ...state,
       close,
+      // Node-only network-fault probe; no HTTP route or database effect.
+      interruptConnections: () => server.closeAllConnections(),
       // Node-only acceptance fixture. This is never an HTTP login endpoint or product shortcut.
       async seedSession({ expiresInMs = 60_000 } = {}) {
         const secret = randomBytes(32).toString('base64url');

@@ -18,10 +18,12 @@ The [F01-01 reference audit](F01_REFERENCE_AND_COMPONENT_AUDIT.md) now inventori
 
 [F02-02](F02_CONTRACTS_AND_AUTH_IMPLEMENTATION.md#f02-02-transport-session-and-authority) adds origin-bound validated Fetch, explicit pending/empty responses, safe errors, creator session/CSRF/expiry/logout and authority-scoped query/cache/draft cleanup. An optional public API origin enables actual session status; the default remains offline. [Disposable local API composition](LOCAL_API_COMPOSITION.md) passed real session/profile/CSRF/revocation/expiry/isolation checks with PostgreSQL, Redis and 60 fresh migrations. The fixture identity is synthetic; real provider login remains F03. GAP-202 is addressed in the client; the pinned helper and four feature-specific gaps remain unchanged.
 
+[F02-03](F02_CONTRACTS_AND_AUTH_IMPLEMENTATION.md#f02-03-resource-owned-realtime) supplies resource-owned overlay v1/v2 Fetch/SSE framing, same-connection resync reads, cursor reconnects, strict version/time floors, monotonic freshness and authority/reader cleanup. Ten actual disposable browser/API checks passed for both protocols, including SQL preference changes, actual socket interruption and persisted grant revocation. GAP-OVERLAY-V2 is addressed in the frontend adapter with full template metadata retained; the packaged reducer remains v1. No dashboard SSE, support-schema completion, OBS renderer or product route is implied. The default homepage stays offline.
+
 ## Not implemented or verified
 
 - Creator shell and feature-specific visual/design acceptance, including the missing staff/coin/template surfaces and actual OBS reference fit, with their owning feature batches.
-- F02-03 realtime integration and mapped feature-specific contract gaps; complete guest/reader/staff authority lifecycles remain with their feature owners.
+- Mapped staff/support/moderation public-contract gaps; full guest/reader/staff feature authority lifecycles and joint acceptance remain with their feature owners.
 - Actual creator, guest checkout/private receipt, OBS, staff/support and coins/templates journeys.
 - External provider/payment/Resend delivery acceptance or deployment. The default shell requires no Docker; configured session inspection and isolated API acceptance are now available.
 
@@ -33,4 +35,4 @@ Use task branches/PRs into dev with light hosted validation; main is reserved fo
 
 ## Next action
 
-FW-01 documentation and FW-02 Git/CI engineering/dev integration are complete for their recorded scopes. F01-01 inventory, F01-02 first primitives and F01-03 motion patterns are locally qualified. F02-01 mapping/artifact and F02-02 transport/session/isolation are qualified for their recorded scopes. Next is F02-03 resource/version/freshness-aware realtime, before actual creator connection/onboarding in F03. F01 screen-specific design/visual gaps remain assigned to their real feature callers. Do not repeat F00 or start every planned feature. Use the [new-chat template](NEW_CHAT_TASK_TEMPLATE.md) to resume with one explicit task/batch. Recheck ports, services, dirty work and sibling backend source/schema before any API test; their earlier state is not guaranteed.
+FW-01 documentation and FW-02 Git/CI engineering/dev integration are complete for their recorded scopes. F01-01 inventory, F01-02 first primitives and F01-03 motion patterns are locally qualified. F02-01/02/03 contracts, transport/session/isolation and reviewed overlay realtime are qualified for their recorded scopes. Next is F03 actual landing/creator connection/onboarding and current terms. F01 screen-specific design/visual gaps and F02 feature-specific contracts/authority acceptance remain assigned to their actual callers. Do not repeat F00 or start every planned feature. Use the [new-chat template](NEW_CHAT_TASK_TEMPLATE.md) to resume with one explicit task/batch. Recheck ports, services, dirty work and sibling backend source/schema before any API test; their earlier state is not guaranteed.

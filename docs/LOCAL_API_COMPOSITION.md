@@ -45,3 +45,17 @@ Ignored `artifacts.local/f02-02/runtime.json` contains only source/run/container
 If forced termination prevents cleanup, inspect containers with the `darve.frontend.task=f02-02` label and compare their exact `darve.frontend.run` label/IDs with this run's metadata. Stop only the verified owned API/process and those containers. Do not remove the ordinary development/staging groups, use broad prune commands or migrate their databases. Removal of tmpfs containers discards their test data. Credentials remain operator-private in the process/container configuration, never frontend build configuration or committed evidence.
 
 Real hosting, HTTPS origins/cookie attributes, secrets, provider configuration, backups/retention and monitoring remain in the [deferred deployment checklist](DEPLOYMENT_PREPARATION_CHECKLIST.md). This local composition is deliberately disposable and is not a staging deployment or backup procedure.
+
+## F02-03 actual realtime acceptance
+
+```powershell
+npm run test:realtime:local -- ../darve-backend
+```
+
+Leave 3310 and 4175 free. This reuses the isolated runtime with task identity `f02-03`, enables only the local overlay presentation prefix/250 ms stream poll, and creates a new overlay epoch solely for its freshly migrated disposable database. The default `api:local` and session acceptance keep their F02-02 behavior; they do not silently activate reader grants. No existing database, persistent recovery epoch or provider configuration is reused or changed.
+
+The Node-only synthetic creator fixture uses actual owner endpoints to issue grants and change preferences. The browser bootstraps real HttpOnly reader cookies and consumes actual v1/v2 streams. The operator injects socket loss through the owned HTTP server (no HTTP fault endpoint), verifies hidden content/cursor reconnect and revokes the persisted grant through the owner API. Ten checks cover both protocols, including denial of owner actions from reader authority and no bootstrap loop or storage. Zero provider calls, external identity verification or actual OBS/QR proof is implied.
+
+The source fixture is `/tests/fixtures/realtime.html`; it accepts only non-secret display/grant IDs and an optional explicit protocol-2 query. It issues no grants, provides no bootstrap shortcut and is excluded from production build entries/routes. Without valid IDs it shows a labelled acceptance message. It is a transport probe, not the selected OBS design.
+
+Safe metadata lives under ignored `artifacts.local/f02-03/`; task containers have `darve.frontend.task=f02-03` and the unique `darve.frontend.run` label. Cleanup follows the same ownership checks above, and leaves the user's 5173 preview running. For a forced interruption, inspect this task's labels and recorded exact IDs before stopping anything. [F02-03 implementation](F02_CONTRACTS_AND_AUTH_IMPLEMENTATION.md#f02-03-resource-owned-realtime) owns framing/limits, retry/version/freshness rules, failures and acceptance boundaries.
