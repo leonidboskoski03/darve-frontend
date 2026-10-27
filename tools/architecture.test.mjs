@@ -86,3 +86,36 @@ test('rejects server state in visual primitives', () => {
 test('rejects files outside the declared layers even without imports', () => {
   assert(inspect('export const value = 1;', 'misc/value.ts').length > 0);
 });
+
+test('permits only the exact public contract entry at the reviewed facade', () => {
+  assert.deepEqual(
+    inspect(
+      "export { SessionResponseSchema } from '@darve/contracts';",
+      'services/contracts/index.ts',
+    ),
+    [],
+  );
+  assert.deepEqual(
+    inspect(
+      "import type { SessionResponse } from '@darve/contracts';",
+      'services/contracts/index.ts',
+    ),
+    [],
+  );
+});
+
+for (const [name, source, file] of [
+  ['feature direct contract import', '@darve/contracts', 'features/session/model.ts'],
+  ['service facade bypass', '@darve/contracts', 'services/api/client.ts'],
+  ['contract deep import', '@darve/contracts/dist/session.js', 'services/contracts/index.ts'],
+  ['server domain import', '@darve/domain', 'services/contracts/index.ts'],
+  ['node builtin import', 'node:crypto', 'services/contracts/index.ts'],
+]) {
+  test(`rejects ${name}`, () => {
+    assert(
+      inspect(`import { value } from '${source}';`, file).some(
+        (m) => m.ruleId === 'architecture/boundaries',
+      ),
+    );
+  });
+}

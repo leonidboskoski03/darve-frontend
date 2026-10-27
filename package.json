@@ -23,11 +23,15 @@
     "test:e2e": "playwright test",
     "docs:check": "node tools/check-docs.mjs",
     "check:docs": "npm run format:check && npm run docs:check",
-    "check:dev": "npm run format:check && npm run lint && npm run docs:check && npm run build",
-    "check": "npm run check:dev && npm run test:architecture && npm run test:ci && npm run test",
-    "prepare": "node .husky/install.mjs"
+    "check:dev": "npm run format:check && npm run lint && npm run docs:check && npm run contracts:check && npm run build",
+    "check": "npm run check:dev && npm run test:architecture && npm run test:contracts && npm run test:ci && npm run test",
+    "prepare": "node .husky/install.mjs",
+    "contracts:pack": "node tools/contract-artifact.mjs pack",
+    "contracts:check": "node tools/contract-artifact.mjs verify",
+    "test:contracts": "node --test tools/contract-artifact.test.mjs"
   },
   "dependencies": {
+    "@darve/contracts": "file:vendor/contracts/darve-contracts-e12b84de3959f6fdbd7eba04ffdfa135f6ba47aa.tgz",
     "@gsap/react": "2.1.2",
     "@tanstack/react-query": "5.104.5",
     "framer-motion": "14.6.0",

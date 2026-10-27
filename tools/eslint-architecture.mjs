@@ -75,6 +75,8 @@ export const architectureRule = {
         if (from.layer !== 'motion') report(node, 'Animation engines belong in motion/ adapters.');
       }
       if (!source.startsWith('.') && !source.startsWith('@/')) {
+        if (source === '@darve/contracts' && from.relative === 'services/contracts/index.ts')
+          return;
         if (source.startsWith('@darve/') || source.startsWith('node:')) {
           report(
             node,

@@ -43,7 +43,7 @@ F01-01 through F01-03 are registered in the tracker with bounded foundation evid
 - F01-01: [selected screen/component/asset inventory and missing design decisions](F01_REFERENCE_AND_COMPONENT_AUDIT.md); no API or redesign implementation.
 - F01-02: [shared tokens and primitives](F01_DESIGN_SYSTEM_IMPLEMENTATION.md) needed by the next screens, including responsive/focus/loading/error states.
 - F01-03: [required motion patterns plus keyboard, reduced-motion and fixture visual verification](F01_DESIGN_SYSTEM_IMPLEMENTATION.md#f01-03-motion-patterns); feature-screen/OBS reference acceptance stays with the actual feature callers.
-- F02-01: current API/authority mapping and reproducible exact public contracts.
+- F02-01: [current API/authority mapping and reproducible exact public contracts](F02_CONTRACTS_AND_AUTH_IMPLEMENTATION.md).
 - F02-02: validated transport, real session/CSRF/cache isolation, errors and local backend configuration.
 - F02-03: resource/version/freshness-aware realtime needed by the first real feature.
 
