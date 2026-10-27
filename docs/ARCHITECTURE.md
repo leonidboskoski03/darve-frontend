@@ -1,6 +1,6 @@
 # Architecture
 
-Status: F00 foundation with qualified F01 presentation and F02-01/02 contract, transport and creator-session boundaries. React + TypeScript + Vite is selected. React Router uses its browser/data router, not Framework Mode or Next.js. The existing Darve backend remains the only owner of permissions, collections, payments, funding, declarations, moderation, support recovery and coin/template rules.
+Status: F00 foundation with qualified F01 presentation and F02-01/02/03 contract, transport, creator-session and reviewed overlay realtime boundaries. React + TypeScript + Vite is selected. React Router uses its browser/data router, not Framework Mode or Next.js. The existing Darve backend remains the only owner of permissions, collections, payments, funding, declarations, moderation, support recovery and coin/template rules.
 
 ## Responsibilities
 
@@ -51,6 +51,7 @@ Typed ESLint runs local architecture rules from [eslint-architecture.mjs](../too
 - TanStack Query caches server snapshots; feature queries use resource/authority-scoped keys. Services creates the QueryClient and performs transport. Do not combine Query's cache with a second route-loader data cache for the same resource. Loaders may prefetch through the same query definition when useful.
 - React state/reducers hold transient state. URLs own shareable navigation/filters. Start without Redux/Zustand. Browser storage needs a reviewed use, schema and privacy policy; it never stores session/overlay/guest secrets.
 - Creator session infrastructure is a pure external store in services; React context/status lives in its feature, composed by app. Authority rotation creates a new QueryClient/generation and remounts the private subtree. Scope disposal aborts/cancels/clears and runs registered cleanups; private queries use its late-result fence. Other authority lifecycles must compose their own independent scopes.
+- Resource-owned realtime in services owns transport/parser/reducer lifecycle, not business commands. Overlay snapshots use strict protocol-specific public contracts and complete authoritative projections; HTTP refetches share the authority QueryClient and leave no stale secondary cache after application. A feature subscribes to the derived view and disposes its scope on unmount. Reconnect never issues grants, logs secrets or transfers creator authority.
 - Forms belong to a feature. Pure validation can live in its model or an entity. The backend validates and authorizes every command. Do not infer successful funding or redemption from optimistic state.
 - An entity is not a copy of a database row. Reuse public DTO types, then derive minimal view models. Never transport Prisma/server/provider modules into the browser.
 - Design primitives have no router, QueryClient, authentication or business policy. Motion is presentation only; meaningful content stays available when motion is disabled.

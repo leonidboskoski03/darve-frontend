@@ -1,6 +1,6 @@
 # API, identity and realtime integration
 
-Status: F02-01 source/contracts and F02-02 transport/creator session/isolation are locally qualified; F02-03 realtime remains planned. [F02 evidence](F02_CONTRACTS_AND_AUTH_IMPLEMENTATION.md) separates synthetic browser cases from actual disposable API acceptance. Actual provider login and full feature authority journeys remain with their owners. Do not count the frontend build as backend interoperability.
+Status: F02-01 source/contracts, F02-02 transport/creator session/isolation and F02-03 reviewed overlay v1/v2 realtime are locally qualified. [F02 evidence](F02_CONTRACTS_AND_AUTH_IMPLEMENTATION.md) separates synthetic browser cases from actual disposable API acceptance. Actual provider login and full feature authority journeys remain with their owners. Do not count the frontend build as backend interoperability.
 
 ## Reproducible contracts
 
@@ -36,6 +36,10 @@ Use exact backend money helpers and integer/minor-unit strings. No floating-poin
 ## Realtime and OBS
 
 Create one resource/authority-owned subscription with explicit cleanup, parser validation and reconnect/backoff policy from the contract. Initial `resync_required` refetches the authoritative snapshot on the same connection when specified; do not loop through reconnect/bootstrap. Server-provided versions/cursors govern duplicates, ordering and resource mismatch. Source removal, revoked proof and stale freshness clear public content as required.
+
+F02-03 implements that policy in `services/realtime` for the existing overlay reader stream. Supply exact origin/display/grant/protocol and a fresh overlay scope; bootstrap is separate. Start once, subscribe to the safe view and dispose/stop on unmount or authority change. Stop is terminal. V1 omits the protocol query and reuses the pinned reducer; v2 explicitly selects protocol 2 and retains its complete template descriptor through strict validation/version/freshness handling. No silent downgrade or legacy coercion is supported. Template renderer assets and the production OBS entry remain F07/F09.
+
+Disconnect/protocol loss clears presentation. Validated resource cursors reconnect with GET only, honoring bounded server/backoff timing. Terminal denial/unavailable/malformed responses stop rather than signing in, reissuing a grant or replaying a command. Comments do not refresh clock validity. Snapshot reads are authority-scoped and discarded after applying the current full projection; delayed results cannot restore an older selection. [F02-03 evidence](F02_CONTRACTS_AND_AUTH_IMPLEMENTATION.md#f02-03-resource-owned-realtime) owns exact limits and tests. There is no creator dashboard/collection SSE endpoint in the pinned backend. Support streams retain their separate public-schema gap under F08.
 
 Reuse backend overlay reducers/snapshot/event helpers and their monotonic timing. The existing 15-second overlay freshness rule is a backend handoff requirement, not a new frontend setting. Deadline zero may request a fresh snapshot but cannot close a server round. QR is the exact selected challenge contribution URL; changing the OBS selection never transfers another challenge's money. Heartbeats must not duplicate financial effects.
 

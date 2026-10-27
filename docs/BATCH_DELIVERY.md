@@ -45,6 +45,6 @@ F01-01 through F01-03 are registered in the tracker with bounded foundation evid
 - F01-03: [required motion patterns plus keyboard, reduced-motion and fixture visual verification](F01_DESIGN_SYSTEM_IMPLEMENTATION.md#f01-03-motion-patterns); feature-screen/OBS reference acceptance stays with the actual feature callers.
 - F02-01: [current API/authority mapping and reproducible exact public contracts](F02_CONTRACTS_AND_AUTH_IMPLEMENTATION.md).
 - F02-02: validated transport, real session/CSRF/cache isolation, errors and local backend configuration.
-- F02-03: resource/version/freshness-aware realtime needed by the first real feature.
+- F02-03: reviewed overlay v1/v2 resource/version/freshness-aware realtime with actual stream/revocation proof. Support wire schemas remain F08-owned; no dashboard SSE endpoint is invented.
 
 Create tracker rows/implementation records when the scopes are settled. Then build visible vertical journeys such as real creator connection/collection. Guest, OBS, staff and coins follow their dependencies. Avoid generic infrastructure before a concrete caller needs it.

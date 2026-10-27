@@ -30,7 +30,8 @@
     "contracts:check": "node tools/contract-artifact.mjs verify",
     "test:contracts": "node --test tools/contract-artifact.test.mjs",
     "api:local": "node tools/local-api.mjs",
-    "test:api:local": "node tools/local-api-acceptance.mjs"
+    "test:api:local": "node tools/local-api-acceptance.mjs",
+    "test:realtime:local": "node tools/local-realtime-acceptance.mjs"
   },
   "dependencies": {
     "@darve/contracts": "file:vendor/contracts/darve-contracts-e12b84de3959f6fdbd7eba04ffdfa135f6ba47aa.tgz",
