@@ -1,12 +1,12 @@
 # API, identity and realtime integration
 
-Status: planned F02 contract/transport work. F00 contains no fake endpoints, authentication, automatic provider calls or business API queries. Do not count the frontend build as backend interoperability.
+Status: F02-01 source/authority mapping and pinned public contracts are locally qualified; F02-02 transport/session and F02-03 realtime remain planned. F00 contains no fake endpoints, authentication, automatic provider calls or business API queries. Do not count the frontend build as backend interoperability.
 
 ## Reproducible contracts
 
 The existing backend exports the browser-safe `@darve/contracts` package and B11 consumer adapters. Its package currently exports built `dist` and depends on Zod. A live `file:../darve-backend/...` link would silently follow a changing checkout and would fail independent CI. Do not use that as the final dependency.
 
-F02 must build/package public contracts from an exact reviewed backend revision into a versioned local tarball or private registry artifact. Record source SHA, artifact digest and exact dependency/lockfile; verify only browser-safe public files/dependencies are included. Prefer a committed reviewed tarball plus provenance manifest for initial independent local/CI use if no registry exists. This packaging is a planned choice to validate in F02, not an artifact already supplied. No schema copying or fake frontend DTOs. Add the narrowly reviewed `services/contracts/` import exception with boundary regression cases once packaging is established; current lint rejects all direct `@darve/` imports.
+[F02-01](F02_CONTRACTS_AND_AUTH_IMPLEMENTATION.md) now supplies a committed revision-pinned tarball/provenance/lockfile and a narrow services/contracts/index.ts facade. `contracts:check` verifies its browser-only distribution and map references without a sibling checkout. Refresh only as a reviewed source/artifact/map change; never copy schemas or use a live sibling link. The [contract matrix](FRONTEND_API_CONTRACT_MATRIX.md) records exact operations and current 202/staff/support/moderation/overlay-v2 gaps.
 
 Map each feature to actual endpoint/method, request/envelope schema, response status, authority, CSRF, idempotency, server availability and consumer helper. Review backend API/DTO catalogue, B02 session/security contracts, B06 overlay, B07/B08 financial/checkout, B11 compatibility, B13/B14 staff/support and B15 coins before implementing the corresponding client. Fix stale backend handoff notes through their current owners; older B11 exclusions do not erase newer B13–15 APIs.
 

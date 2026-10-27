@@ -1,6 +1,6 @@
 # Architecture
 
-Status: F00 foundation. React + TypeScript + Vite is selected. React Router uses its browser/data router, not Framework Mode or Next.js. The existing Darve backend remains the only owner of permissions, collections, payments, funding, declarations, moderation, support recovery and coin/template rules.
+Status: F00 foundation with qualified F01 presentation and F02-01 contract boundaries. React + TypeScript + Vite is selected. React Router uses its browser/data router, not Framework Mode or Next.js. The existing Darve backend remains the only owner of permissions, collections, payments, funding, declarations, moderation, support recovery and coin/template rules.
 
 ## Responsibilities
 
@@ -37,6 +37,8 @@ No empty business implementations or universal barrel exports. `entities/` and `
 Same-layer internal imports are allowed except sibling feature/entity slices. Compose two features in a route; do not import one feature's state into another. Entities remain framework-independent models; importing service contract types/pure adapters is allowed, running network effects from entities is not. Separate entities must not couple to one another through a hidden hierarchy.
 
 Feature, entity and service slice boundaries expose small explicit named exports via `index.ts`. Cross-boundary imports target `@/features/collection/index`, not private UI/query files. Internal imports use relative paths. `design-system/` and `motion/` expose explicit component/adapter modules; importing the whole library is unnecessary. Application composition can inject capabilities without reversing dependencies.
+
+Only `services/contracts/index.ts` may import the exact root `@darve/contracts` package. It exposes a reviewed named subset from the pinned browser artifact. Direct feature/other-service imports, deep package paths, private server workspaces and Node builtins remain forbidden; regression cases cover the exception.
 
 ## Enforcement
 
