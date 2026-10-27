@@ -1,5 +1,4 @@
 import { ArrowUpRight } from 'lucide-react';
-import { Fade } from '@/motion/fade';
 import { SequenceReveal } from '@/motion/sequence-reveal';
 
 export function LandingFoundation() {
@@ -15,18 +14,16 @@ export function LandingFoundation() {
         The tool that turns viewer ideas into funded live challenges — without losing control of
         your stream.
       </p>
-      <Fade>
-        <div className="foundation-status">
-          <h2>
-            <ArrowUpRight size={16} aria-hidden="true" />
-            Frontend foundation
-          </h2>
-          <p>
-            This local preview establishes the application structure. Streamer login, contributions
-            and OBS integration are not connected yet.
-          </p>
-        </div>
-      </Fade>
+      <div className="foundation-status">
+        <h2>
+          <ArrowUpRight size={16} aria-hidden="true" />
+          Frontend foundation
+        </h2>
+        <p>
+          This local preview establishes the application structure. Streamer login, contributions
+          and OBS integration are not connected yet.
+        </p>
+      </div>
     </section>
   );
 }

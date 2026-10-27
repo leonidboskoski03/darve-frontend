@@ -1,12 +1,8 @@
-import { LazyMotion, MotionConfig } from 'framer-motion';
+import { MotionConfig } from 'framer-motion';
 import type { PropsWithChildren } from 'react';
-
-const loadFeatures = () => import('./runtime').then((module) => module.default);
+import { useMotionPreference } from './use-motion-preference';
 
 export function MotionProvider({ children }: PropsWithChildren) {
-  return (
-    <LazyMotion features={loadFeatures} strict>
-      <MotionConfig reducedMotion="user">{children}</MotionConfig>
-    </LazyMotion>
-  );
+  const reduce = useMotionPreference();
+  return <MotionConfig reducedMotion={reduce ? 'always' : 'never'}>{children}</MotionConfig>;
 }

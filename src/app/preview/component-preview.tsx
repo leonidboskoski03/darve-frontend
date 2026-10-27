@@ -9,6 +9,7 @@ import { StatusBadge } from '@/design-system/status-badge';
 import { ContentState } from '@/design-system/content-state';
 import { LoadingState } from '@/design-system/loading-state';
 import { Dialog } from '@/design-system/dialog';
+import { MotionPreview } from './motion-preview';
 
 /** Isolated local fixture. Not imported by the product entry or production router. */
 export function ComponentPreview() {
@@ -28,7 +29,7 @@ export function ComponentPreview() {
       </header>
       <main id="preview-main" tabIndex={-1} className="preview-main">
         <div className="preview-intro">
-          <p>Design system · F01-02</p>
+          <p>Design system · F01-02 / F01-03</p>
           <h1>Component reference</h1>
           <p>
             Darve’s visual foundations, taken from the standalone source. Local examples only; these
@@ -36,6 +37,7 @@ export function ComponentPreview() {
           </p>
         </div>
         <div className="preview-grid">
+          <MotionPreview />
           <Panel
             title="Actions"
             description="Primary, secondary, quiet and destructive commands; navigation stays a link."

@@ -57,6 +57,16 @@
   font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
 }
+.preview-motion-list {
+  display: grid;
+  gap: var(--space-3);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.preview-motion-list li {
+  min-width: 0;
+}
 .preview-footer {
   padding: var(--space-6);
   color: var(--color-muted);
