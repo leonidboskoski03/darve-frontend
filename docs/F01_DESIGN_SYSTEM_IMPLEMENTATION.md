@@ -1,0 +1,86 @@
+# F01 design system implementation
+
+Owner: F01-02. Started 2026-10-27, Europe/Warsaw, on `feat/f01-02-design-primitives` from clean, synchronized dev `294ffb42fefbcf40341cbb2614cac2d08c1b5a61`. [PLAN](PLAN.md) owns batch acceptance; the [tracker](FRONTEND_TASK_TRACKER.md) owns status. This record owns component usage, source choices, verification and restart evidence. F01-03 can extend it for motion acceptance.
+
+## Scope and source decisions
+
+The user confirmed `darve-stream-standalone-main` as the old darve.gg source. Its `app/templates/base.html`, `landing.html`, `components/logo.html`, `static/img/darve-logo.png` and `static/fonts/inter.css` establish the brand used here. The [F01-01 audit](F01_REFERENCE_AND_COMPONENT_AUDIT.md) retains the selected creator/dashboard and M/R OBS references; this task does not replace their layouts with a new design.
+
+Delivered: semantic tokens, original brand asset, local Inter, first action/field/panel/status/loading/content-state primitives, an accessible native dialog and an isolated component fixture. Existing error/not-found navigation consumes the shared action styles. The application header consumes the real brand. Creator navigation/shell belongs next to its first real feature caller. Provider artwork, feature forms and collection duration controls follow actual feature contracts; no frontend business rules, auth, API integration, checkout or deployment are introduced.
+
+## Tokens and visual language
+
+Use [tokens.css](../src/design-system/tokens.css) through CSS variables and the existing Tailwind semantic aliases. [primitives.css](../src/design-system/primitives.css) owns component styles; [fonts.css](../src/design-system/fonts.css) owns the two local faces.
+
+| Group             | Decision                                                                                                                                                                                                                                                  |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Canvas/surfaces   | Standalone dark `#06070c`, panel `#0a0b10`, input/raised `#16161f`. Opt-in `data-color-scheme="light"` scopes the white contribution canvas vocabulary. No product theme preference or persisted setting is implied.                                      |
+| Brand/actions     | Original magenta `#9c006d`, hover `#91036e`, white action text; readable pink for text/focus on dark backgrounds. The selected blue dashboard vocabulary remains a feature-specific design question, not a global recolouring in this task.               |
+| Readability/state | Opaque muted text, stronger control boundaries and explicit error/success/warning/info foreground/surface pairs improve the faint legacy labels/borders. State meaning always has visible wording. Dark/light sampled contrast is checked in the browser. |
+| Typography        | Inter body, fixed rem roles for small/body/title/page text, 400/500/600 weights, 1.5 body line height. System fallback covers unavailable glyphs. Numeric example uses tabular figures; features still own exact money/currency formatting.               |
+| Geometry          | 4px-based spacing, 6/10/14px radii, minimum 44px controls, bounded panel/dialog width and wrapping content. No decorative card shadows. Native modal top layer supplies stacking; skip link has its named layer.                                          |
+| Motion            | Existing 120/220ms tokens retained. Border transitions and a pending indicator respect reduced motion; static skeletons avoid unnecessary motion. No new GSAP/Framer pattern is claimed here.                                                             |
+
+The light canvas is tested because the selected standalone contribution design has a white form area. Its fixture toggle is local presentation state only. Component backgrounds use the scoped variables; callers must place the dialog within the intended scheme scope.
+
+## Component contracts
+
+Import individual modules from `@/design-system/…`; do not add a universal barrel. Keep transport, Query state, permissions, domain validation and safe retry decisions in their existing owners.
+
+| Module                                                                                                        | Contract                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Brand](../src/design-system/brand.tsx)                                                                       | Original magenta PNG and visible Darve name; image has empty alt to avoid duplicate speech. Parent navigation supplies its destination/name. The original PNG is preserved byte-for-byte; it is about 801KB, so a reviewed smaller rendition remains relevant before landing performance acceptance.                                                                                                                                                    |
+| [Button](../src/design-system/button.tsx)                                                                     | Native button, default `type="button"`, primary/secondary/quiet/danger tones. Busy disables activation, keeps the visible accessible name and sets `aria-busy`. Choose a meaningful pending label; closing a dialog never establishes command cancellation. Native refs/handlers pass through.                                                                                                                                                          |
+| [ActionLink](../src/design-system/action-link.tsx) / [control styles](../src/design-system/control-styles.ts) | Native navigation anchor with required href, or shared classes on a router Link. No disabled-link imitation. Feature owners supply reviewed destinations; the primitive does not validate arbitrary user URLs.                                                                                                                                                                                                                                          |
+| [TextField](../src/design-system/text-field.tsx)                                                              | Native input with explicit label, stable generated/explicit ID, linked hint/error and merged caller descriptions. Error sets invalid state; clearing it removes stale error references. Native required/read-only/disabled/ref/handlers remain available. Caller chooses suitable input type/autocomplete and owns validation, focus after failed submission and live error announcements.                                                              |
+| [Panel](../src/design-system/panel.tsx)                                                                       | Named section with h2, optional description and composed children. Use within a page with an h1; avoid nested panel wrappers and preserve heading order.                                                                                                                                                                                                                                                                                                |
+| [StatusBadge](../src/design-system/status-badge.tsx)                                                          | Visible wording plus neutral/info/success/warning/danger tone. No automatic live-region announcements or implied backend status mapping.                                                                                                                                                                                                                                                                                                                |
+| [ContentState](../src/design-system/content-state.tsx)                                                        | Explicit empty/unavailable/error meaning, h3, explanation and optional caller-owned recovery action. Unknown availability never renders as successful empty data. Feature decides whether/how to announce an async change.                                                                                                                                                                                                                              |
+| [LoadingState](../src/design-system/loading-state.tsx)                                                        | Required loading label in a status region, decorative static skeletons. Loaded content replaces the entire loading region.                                                                                                                                                                                                                                                                                                                              |
+| [Dialog](../src/design-system/dialog.tsx)                                                                     | Controlled `open`, required title/description, `onDismiss` and composed content. Native `showModal` makes the background inert; initial focus goes to the safe close button. Escape/close request parent dismissal, native closure synchronizes state, and close/unmount clean up the modal. Native focus return is exercised. Backdrop click deliberately does not dismiss. Modal body scrolls within the viewport and background scrolling is locked. |
+
+For example, a feature can compose `TextField` and `Button` inside `Dialog`, passing its own submit/pending/error behavior. Do not tie accepted terms, backend success, collection lifecycle or cancellation to modal visibility or animation completion. No authentication or financial action is demonstrated by this fixture.
+
+## Local review surface
+
+Run `npm run dev` from the frontend repository, then open `http://127.0.0.1:5173/tests/fixtures/primitives.html`. This is a clearly labelled component reference with local field/error/scheme/dialog state and synthetic long-content examples. It has no API/provider/storage calls. The normal `/` homepage remains the honest unconnected foundation.
+
+The fixture HTML loads [its isolated app entry](../src/app/preview/main.tsx); neither is imported by the production entry/router or selected as a production build entry. Vite explicitly pre-scans both HTML entries to avoid dependency optimization restarting during cold fixture loading. Playwright owns two strict loopback servers: built product on 4173, component fixture on 4175. `npm run test:e2e` runs both scopes and shuts its servers down. Light hosted dev CI still has no browser suite; existing full release acceptance runs this expanded browser command.
+
+Committed samples are review evidence from the local component fixture, not completed business screens:
+
+| View          | Capture                                      |
+| ------------- | -------------------------------------------- |
+| Desktop dark  | [Reference](assets/f01-02/desktop-dark.png)  |
+| Desktop light | [Reference](assets/f01-02/desktop-light.png) |
+| Phone dark    | [Reference](assets/f01-02/phone-dark.png)    |
+| Phone dialog  | [Reference](assets/f01-02/dialog-phone.png)  |
+
+## Asset provenance
+
+Both WOFF2 subsets are unmodified copies of the standalone 400-labelled files. Metadata inspection found Inter version `4.001;git-66647c0bb`, copyright 2016 The Inter Project Authors, with a `wght` axis 100–900. SHA comparisons found identical files under the old 300/400/500/600/700 names within each subset, so those duplicate names are unnecessary. Latin and Latin-ext are declared separately with the original unicode ranges; `font-display: swap` and local system fallback keep text visible. No runtime font CDN is used.
+
+The full [Inter OFL notice](../public/fonts/Inter-LICENSE.txt), obtained from the [official Inter repository](https://github.com/rsms/inter/blob/master/LICENSE.txt), is distributed in public/fonts alongside the font files. License text is retained intact. The developer-only font metadata inspection used temporary fontTools/Brotli packages, with no application dependency or lockfile change.
+
+| Asset                                     | SHA-256                                                            |
+| ----------------------------------------- | ------------------------------------------------------------------ |
+| `src/design-system/assets/darve-logo.png` | `e193c683d0b80a1b1d0366ef7e61a19e73a2c92a99d13bf868c7e72fa459dee1` |
+| `public/fonts/inter-latin.woff2`          | `c940764593d0fe5d596be327ca7558855e018039fb78509aa21921fd3644c3e4` |
+| `public/fonts/inter-latin-ext.woff2`      | `a28eb6d3ccb534ae0c94ca999371df024aab60b08c3c8a5720ee9e32fa0faaa2` |
+| `public/fonts/Inter-LICENSE.txt`          | `262481e844521b326f5ecd053e59b98c8b2da78c8ee1bdbb6e8174305e54935a` |
+
+## Verification and restart
+
+Local qualification on 2026-10-27:
+
+- Typed lint, TypeScript and production build passed. Unit/component suites passed 7 cases, including accidental form submission, pending duplicate activation, link semantics and field description/ID/error lifecycle.
+- All 14 Chromium desktop/mobile browser cases passed against the settled production build and fixture sources. These cover existing foundation/404/reduced-motion behavior plus sampled dark/light axe scans, local font/logo loading, blocked external requests, field errors, modal background inertness, Escape, focus return/reopen under StrictMode, 320px reflow, 200% text resize at 640px and reduced-motion pending indicator. Chromium may move Tab focus through browser chrome (reported as body); the check forbids focusing background document controls rather than claiming a browser-chrome focus trap.
+- Initial browser failures exposed a theme-switch background transition that temporarily reduced contrast; removing that interpolation resolved it. An overstrict native-dialog focus assertion was corrected to account for browser chrome, while separately proving background controls cannot take focus. A cold fixture navigation timeout was resolved by declaring both dependency-scan entries. The settled full run passed without retries.
+- Five fixture views were captured; four above were committed and visually inspected. Eleven source fingerprints committed by F01-01 were rechecked unchanged; copied brand/font digests match the original files. The earlier disposable 260-file manifest was cleared by Playwright's output cleanup, so no new 260-file preservation pass is claimed here.
+- Production output was inspected: fixture HTML and its component-reference JS text are absent, and production deep-link testing resolves the fixture URL to the real not-found route. Preview-only sources remain typed/linted. Shared CSS and public fonts are production assets by design.
+
+The installed full pre-push hook and protected current-head development check qualify the PR separately; source/check/merge identities are available in its GitHub record. This bounded component acceptance does not close F01, feature integration, full browser compatibility, complete accessibility, payment/provider/QR/OBS or release/deployment acceptance. Native dialog semantics follow the [HTML dialog documentation](https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/dialog).
+
+Task artifacts live under ignored `artifacts.local/f01-02/` to survive Playwright's output cleanup; committed sources/tests/captures are sufficient to reproduce the result. Owned browser/5188 capture server and Playwright 4173/4175 servers were stopped. Backend remains at its existing source with the three pre-existing documentation edits preserved; no database, Docker or provider operations were performed. Dependencies and architecture enforcement are unchanged.
+
+Next action: F01-03 concrete presence/layout/focus/reduced-motion patterns using these primitives and the existing motion adapters. Keep GSAP/Framer ownership in motion/, native modal semantics intact and business side effects independent. Build the creator shell and actual provider/collection forms with their first feature callers after F02 contract mapping; retain the original source folders.

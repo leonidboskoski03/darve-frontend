@@ -2,7 +2,7 @@
 
 ## Visual direction
 
-Preserve the selected F dashboard, M/R OBS and A contribution designs. The historical deployed landing is dark with a magenta accent and restrained starfield. Rebuilding code does not authorize replacing the design with a new template. F00 uses preliminary dark/magenta tokens, a text brand mark and system font only as a clearly labelled engineering shell. It does not establish logo fidelity, final typography, full landing reproduction or visual acceptance.
+Preserve the selected F dashboard, M/R OBS and A contribution designs. The historical deployed landing is dark with a magenta accent and restrained starfield. Rebuilding code does not authorize replacing the design with a new template. F01-02 carries the original standalone magenta logo and locally hosted Inter into shared dark/light semantic tokens and the first primitives. [Implementation/usage/acceptance](F01_DESIGN_SYSTEM_IMPLEMENTATION.md) records the source assets and adjustments for readable contrast. Full landing reproduction, feature layouts and motion acceptance remain with their owning tasks.
 
 F01 inventories every selected screen and asset, traces its source and records a component/state map. Confirm real brand assets/font rights, density, responsive behavior and missing staff/coin/template references. Do not silently use the blue React reference as the deployed landing. Implement semantic tokens before individual screens: canvas/surface/text/muted/accent/focus/danger/success, spacing scale, typography roles, borders/radii, elevations and layering. Keep exact money/currencies readable at every breakpoint.
 

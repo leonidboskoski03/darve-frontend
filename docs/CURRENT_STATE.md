@@ -4,15 +4,17 @@ Checkpoint: 2026-10-27, Europe/Warsaw. Local foundation source: `ffc472d`. Read 
 
 ## Implemented
 
-The canonical rebuild is `darve-frontend`, a separate local React/TypeScript/Vite repository. It contains the requested layers, typed lint/import boundaries, public environment validation, QueryClient composition, lazy public routing/error pages, preliminary design tokens, GSAP/Framer Motion adapters, test tooling, Husky hooks and a GitHub Actions definition. Only `/` and the not-found route exist. The homepage explicitly describes an unconnected foundation.
+The canonical rebuild is `darve-frontend`, a separate local React/TypeScript/Vite repository. It contains the requested layers, typed lint/import boundaries, public environment validation, QueryClient composition, lazy public routing/error pages, shared design tokens/primitives, GSAP/Framer Motion adapters, test tooling, Husky hooks and a GitHub Actions definition. Only `/` and the not-found route exist. The homepage explicitly describes an unconnected foundation. The header uses the original standalone magenta logo and locally hosted Inter.
 
 [F00 evidence](FRONTEND_SKELETON.md) records the successful local gate, browser/visual checks, dependency setup and resolved setup failures. These qualify that foundation snapshot, not future features or deployed operation. The frontend GitHub remote is configured; dev is bootstrapped/protected and implementation PR #1 passed its current-head light hosted gate and merged. Future main rules require full frontend release acceptance before stable use. [FW-02](FW02_GIT_CI_IMPLEMENTATION.md) records source/controls/proof. Main and the first full hosted release acceptance remain unexercised; nothing is deployed.
 
 The [F01-01 reference audit](F01_REFERENCE_AND_COMPONENT_AUDIT.md) now inventories the selected screens, shared components/assets and backend migration gaps with labelled synthetic reference captures. It does not add product routes or API behavior.
 
+[F01-02](F01_DESIGN_SYSTEM_IMPLEMENTATION.md) adds semantic dark/light tokens, actions, labelled fields, panels, content/loading/status states and a native modal dialog. An isolated local component fixture is available through Vite and excluded from production routes/build entries. It exercises presentation only, without account or API actions.
+
 ## Not implemented or verified
 
-- F01 production tokens/primitives, responsive shell and finished motion/visual acceptance.
+- F01-03 concrete motion patterns and their acceptance; creator shell and feature-specific visual acceptance with their first real callers.
 - F02 packaged backend contracts, real API transport/proxy, sessions/CSRF, authorization/cache isolation and realtime integration.
 - Actual creator, guest checkout/private receipt, OBS, staff/support and coins/templates journeys.
 - External provider/payment/Resend delivery acceptance or deployment. The shell makes no business API requests and requires no Docker services.
@@ -25,4 +27,4 @@ Use task branches/PRs into dev with light hosted validation; main is reserved fo
 
 ## Next action
 
-FW-01 documentation and FW-02 Git/CI engineering/dev integration are complete for their recorded scopes. F01-01 reference/component inventory is locally qualified. The next slice is F01-02 tokens/primitives for the first connection/collection callers, with F02 contract/authority mapping before real API integration. Do not repeat F00 or start every planned feature. Use the [new-chat template](NEW_CHAT_TASK_TEMPLATE.md) to resume with one explicit task/batch. Recheck ports, services, dirty work and sibling backend source/schema before any API test; their earlier state is not guaranteed.
+FW-01 documentation and FW-02 Git/CI engineering/dev integration are complete for their recorded scopes. F01-01 inventory and F01-02 first primitives are locally qualified. The next slice is F01-03 motion/focus/reduced-motion patterns on the concrete components, with F02 contract/authority mapping before real API integration. Do not repeat F00 or start every planned feature. Use the [new-chat template](NEW_CHAT_TASK_TEMPLATE.md) to resume with one explicit task/batch. Recheck ports, services, dirty work and sibling backend source/schema before any API test; their earlier state is not guaranteed.
