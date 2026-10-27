@@ -1,10 +1,2 @@
-import { QueryClient } from '@tanstack/react-query';
-
-export function createQueryClient() {
-  return new QueryClient({
-    defaultOptions: {
-      queries: { retry: false, staleTime: 0 },
-      mutations: { retry: false },
-    },
-  });
-}
+export { createQueryClient } from './query-client';
+export { createAuthorityScope, type AuthorityScope } from './authority-scope';

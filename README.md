@@ -11,7 +11,7 @@ npm.cmd ci
 npm.cmd run dev
 ```
 
-Open `http://127.0.0.1:5173`. No backend or Docker services are required for F00; the shell makes no API calls. No credentials are needed. Copy `.env.example` to `.env.local` only if changing the public environment label. Every `VITE_*` value is browser-visible. Provider keys belong in backend configuration.
+Open `http://127.0.0.1:5173`. The default presentation preview needs no backend, Docker or credentials and makes no API calls. F02-02 supports optional actual session inspection/logout through an exact public API origin; see [isolated local API setup and acceptance](docs/LOCAL_API_COMPOSITION.md). Copy `.env.example` to `.env.local` only for documented public settings. Every `VITE_*` value is browser-visible. Provider keys belong in backend configuration.
 
 ## Verify
 
@@ -37,4 +37,4 @@ npm.cmd run test:e2e
 - [Environments and security](docs/OPERATIONS.md), [deployment checklist](docs/DEPLOYMENT_PREPARATION_CHECKLIST.md)
 - [Contributor instructions](AGENTS.md)
 
-Current product capability is the F00 foundation. Workflow documentation and hosted light development CI are established. Feature implementation, provider/payment acceptance, the first full hosted release qualification and deployment remain unfinished. A local build is not an end-to-end acceptance claim.
+Current capabilities include the foundation, shared design/motion primitives, pinned API contracts and creator session/transport isolation with disposable actual API proof. Workflow documentation and hosted light development CI are established. Full feature journeys, provider/payment acceptance, the first full hosted release qualification and deployment remain unfinished. A local build is not an end-to-end acceptance claim.

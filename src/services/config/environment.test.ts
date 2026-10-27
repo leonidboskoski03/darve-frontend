@@ -15,4 +15,33 @@ describe('public environment boundary', () => {
   it('rejects misspelled environment names', () => {
     expect(() => parsePublicEnvironment({ VITE_APP_ENV: 'prodution' })).toThrow();
   });
+  it('accepts an explicit loopback API only for local use', () => {
+    expect(parsePublicEnvironment({ VITE_PUBLIC_API_ORIGIN: 'http://127.0.0.1:3310' })).toEqual({
+      appEnv: 'local',
+      apiOrigin: 'http://127.0.0.1:3310',
+    });
+    expect(() =>
+      parsePublicEnvironment({
+        VITE_APP_ENV: 'staging',
+        VITE_PUBLIC_API_ORIGIN: 'http://127.0.0.1:3310',
+      }),
+    ).toThrow();
+    expect(
+      parsePublicEnvironment({
+        VITE_APP_ENV: 'staging',
+        VITE_PUBLIC_API_ORIGIN: 'https://api.example.test',
+      }).apiOrigin,
+    ).toBe('https://api.example.test');
+  });
+  it.each([
+    'https://api.example.test/path',
+    'https://user:private@api.example.test',
+    'http://outside.example.test',
+    '//api.example.test',
+    'https://api.example.test/#secret',
+  ])('rejects unsafe API origin %s', (origin) => {
+    expect(() => parsePublicEnvironment({ VITE_PUBLIC_API_ORIGIN: origin })).toThrow(
+      'Invalid public environment configuration. Check the documented allowlist.',
+    );
+  });
 });

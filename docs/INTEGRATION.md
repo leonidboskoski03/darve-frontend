@@ -1,6 +1,6 @@
 # API, identity and realtime integration
 
-Status: F02-01 source/authority mapping and pinned public contracts are locally qualified; F02-02 transport/session and F02-03 realtime remain planned. F00 contains no fake endpoints, authentication, automatic provider calls or business API queries. Do not count the frontend build as backend interoperability.
+Status: F02-01 source/contracts and F02-02 transport/creator session/isolation are locally qualified; F02-03 realtime remains planned. [F02 evidence](F02_CONTRACTS_AND_AUTH_IMPLEMENTATION.md) separates synthetic browser cases from actual disposable API acceptance. Actual provider login and full feature authority journeys remain with their owners. Do not count the frontend build as backend interoperability.
 
 ## Reproducible contracts
 
@@ -19,13 +19,15 @@ Map each feature to actual endpoint/method, request/envelope schema, response st
 | Guest   | Challenge/terms-bound contribution and private receipt proof   | Accountless viewing does not make receipts public. No shared creator/guest cache or public secret URLs.                                     |
 | OBS     | Read-only scoped overlay bootstrap/grant                       | Private source access link is distinct from a display/session identifier. No owner data or browser persistence shortcuts.                   |
 
-Implement real session states (loading, signed out, authenticated, expired/unavailable) from existing contracts. Route guards improve UX; every backend request still enforces permission. Validate safe internal return navigation; provider redirects must originate from the backend's approved flow. Capture/clean bootstrap fragments according to the owning contract before telemetry or navigation records can observe them.
+F02-02 implements creator loading, signed-out, authenticated, expired/unavailable and confirmed/unconfirmed logout from existing contracts. CSRF remains in memory. Every inspection rotates private authority before reading; focus rechecks can therefore clear private drafts. Route guards for future private routes improve UX; every backend request still enforces permission. Validate safe internal return navigation; provider redirects must originate from the backend's approved flow. Capture/clean bootstrap fragments according to the owning contract before telemetry or navigation records can observe them.
 
 On sign-out, authority change or terminal expiry: cancel scoped queries, abort transport, close streams and clear private cache and drafts. A late prior-session response must not populate a new session's cache. Use session-scoped clients/cache lifecycle or equivalent tested generation fences; document the exact mechanism in F02. A globally cached session result or a hidden button is not sufficient isolation.
 
 ## Transport and server state
 
-Network and storage enter through named service modules. Use native Fetch with AbortSignal and the documented cookie/CSRF mechanism; do not forward credentials to arbitrary URLs. Public JSON parsing uses supplied `parseConsumerResponse`, status and Content-Type. Redirects, OAuth, empty responses and SSE have separate handling. Do not echo raw response bodies or exception messages into the UI.
+Network and storage enter through named service modules. `services/api` supplies native Fetch with AbortSignal, exact origin/audience paths and the documented cookie/CSRF mechanism; it does not forward credentials to arbitrary URLs. Response parsing validates declared status, Content-Type and exact public schemas; the pinned `parseConsumerResponse` handles safe errors. Explicit 202 becomes pending without status coercion, and declared 204 must be empty. Generic JSON rejects redirects; OAuth navigation and SSE have separate handling. Do not echo raw response bodies or exception messages into the UI. [Local composition](LOCAL_API_COMPOSITION.md) documents direct CORS/origin behavior and disposable storage.
+
+`services/server-state` supplies independent authority generations/QueryClients, cancellation, cleanup registration and late-result fencing. App composition remounts the creator subtree on rotation to clear private React state. Confirmed logout invalidates other creator tabs; unconfirmed logout hides private content and requires explicit revoke retry. This lifetime policy supplies building blocks for future staff/guest/reader clients, not their completed login/bootstrap flows.
 
 TanStack Query owns backend snapshots. Feature query keys include authority scope, resource ID, reporting filters and pagination. Query defaults disable retries; a feature may add bounded retries to safe reads respecting server delay and cancellation. Explicitly disable automatic replay for payment, acceptance, recovery and redemption commands. Refreshing a stale snapshot is separate from resubmitting a command. Payment uncertainty remains uncertainty, never an invented failed/successful result.
 
