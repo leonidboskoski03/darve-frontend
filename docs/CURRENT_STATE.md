@@ -12,9 +12,11 @@ The [F01-01 reference audit](F01_REFERENCE_AND_COMPONENT_AUDIT.md) now inventori
 
 [F01-02](F01_DESIGN_SYSTEM_IMPLEMENTATION.md) adds semantic dark/light tokens, actions, labelled fields, panels, content/loading/status states and a native modal dialog. An isolated local component fixture is available through Vite and excluded from production routes/build entries. It exercises presentation only, without account or API actions.
 
+[F01-03 motion acceptance](F01_DESIGN_SYSTEM_IMPLEMENTATION.md#f01-03-motion-patterns) adds live reduced-motion policy, display-only feedback presence, stable-ID list positioning and scoped GSAP cleanup proof. Native dialogs remain immediate. Motion runtimes follow their consuming adapters; the component fixture includes motion examples.
+
 ## Not implemented or verified
 
-- F01-03 concrete motion patterns and their acceptance; creator shell and feature-specific visual acceptance with their first real callers.
+- Creator shell and feature-specific visual/design acceptance, including the missing staff/coin/template surfaces and actual OBS reference fit, with their owning feature batches.
 - F02 packaged backend contracts, real API transport/proxy, sessions/CSRF, authorization/cache isolation and realtime integration.
 - Actual creator, guest checkout/private receipt, OBS, staff/support and coins/templates journeys.
 - External provider/payment/Resend delivery acceptance or deployment. The shell makes no business API requests and requires no Docker services.
@@ -27,4 +29,4 @@ Use task branches/PRs into dev with light hosted validation; main is reserved fo
 
 ## Next action
 
-FW-01 documentation and FW-02 Git/CI engineering/dev integration are complete for their recorded scopes. F01-01 inventory and F01-02 first primitives are locally qualified. The next slice is F01-03 motion/focus/reduced-motion patterns on the concrete components, with F02 contract/authority mapping before real API integration. Do not repeat F00 or start every planned feature. Use the [new-chat template](NEW_CHAT_TASK_TEMPLATE.md) to resume with one explicit task/batch. Recheck ports, services, dirty work and sibling backend source/schema before any API test; their earlier state is not guaranteed.
+FW-01 documentation and FW-02 Git/CI engineering/dev integration are complete for their recorded scopes. F01-01 inventory, F01-02 first primitives and F01-03 motion patterns are locally qualified. The next slice is F02-01 current API/authority mapping and exact public contracts before real API integration. F01 screen-specific design/visual gaps remain assigned to their real feature callers. Do not repeat F00 or start every planned feature. Use the [new-chat template](NEW_CHAT_TASK_TEMPLATE.md) to resume with one explicit task/batch. Recheck ports, services, dirty work and sibling backend source/schema before any API test; their earlier state is not guaranteed.

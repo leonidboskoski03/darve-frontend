@@ -6,10 +6,11 @@ import { motionTokens } from './tokens';
 gsap.registerPlugin(useGSAP);
 
 // Use for a single coordinated entrance, not for realtime business transitions.
-export function SequenceReveal({ children }: PropsWithChildren) {
+export function SequenceReveal({ children, className }: PropsWithChildren<{ className?: string }>) {
   const root = useRef<HTMLDivElement>(null);
   useGSAP(
     () => {
+      if (!window.matchMedia) return;
       const media = gsap.matchMedia();
       media.add('(prefers-reduced-motion: no-preference)', () => {
         gsap.from(root.current, {
@@ -23,5 +24,9 @@ export function SequenceReveal({ children }: PropsWithChildren) {
     },
     { scope: root },
   );
-  return <div ref={root}>{children}</div>;
+  return (
+    <div ref={root} className={className}>
+      {children}
+    </div>
+  );
 }
