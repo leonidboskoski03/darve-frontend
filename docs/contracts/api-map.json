@@ -1,6 +1,6 @@
 {
   "sourceRevision": "e12b84de3959f6fdbd7eba04ffdfa135f6ba47aa",
-  "status": "mapped source and public-schema references; transport not implemented; inline/source-only shapes need owning feature schemas before wiring",
+  "status": "mapped source and public-schema references; F02-02 transport/creator session qualified; inline/source-only shapes need owning feature schemas before wiring",
   "operations": [
     {
       "id": "public-api:GET /api/rounds/:id/suggestions",
@@ -2816,6 +2816,7 @@
     {
       "id": "GAP-202",
       "owner": "F02-02 / affected feature transport",
+      "status": "addressed in F02-02 JSON client; pinned generic helper unchanged; actual feature schemas still required per operation",
       "detail": "parseConsumerResponse accepts 200/201 and explicit empty 204, not 202. Round/chat, Stripe receiving and checkout require explicit status-aware schema validation without status coercion or automatic command retry."
     },
     {

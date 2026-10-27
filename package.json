@@ -28,7 +28,9 @@
     "prepare": "node .husky/install.mjs",
     "contracts:pack": "node tools/contract-artifact.mjs pack",
     "contracts:check": "node tools/contract-artifact.mjs verify",
-    "test:contracts": "node --test tools/contract-artifact.test.mjs"
+    "test:contracts": "node --test tools/contract-artifact.test.mjs",
+    "api:local": "node tools/local-api.mjs",
+    "test:api:local": "node tools/local-api-acceptance.mjs"
   },
   "dependencies": {
     "@darve/contracts": "file:vendor/contracts/darve-contracts-e12b84de3959f6fdbd7eba04ffdfa135f6ba47aa.tgz",

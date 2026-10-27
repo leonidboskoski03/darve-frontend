@@ -1,6 +1,6 @@
 # Frontend API contract matrix
 
-Owner: F02-01. Mapped against backend `e12b84de3959f6fdbd7eba04ffdfa135f6ba47aa` on 2026-10-27. **Mapping and pinned public contracts are supplied; transport, sessions and feature wiring are not implemented.** This does not define a new API. [INTEGRATION](INTEGRATION.md) owns client rules; backend source and feature owners own behavior.
+Owner: F02-01/02. Mapped against backend `e12b84de3959f6fdbd7eba04ffdfa135f6ba47aa` on 2026-10-27. Mapping/pinned contracts and F02-02 transport/creator session are supplied; complete feature/provider wiring remains with its owners. This does not define a new API. [INTEGRATION](INTEGRATION.md) owns client rules; backend source and feature owners own behavior.
 
 The [operation register](contracts/api-map.json) records every method/path, source handler/line, authority, body/query, response/status, idempotency and public-export reference. It contains **115 browser operations**, plus seven excluded registrations: four health probes and Stripe/PayPal/Kick ingress. Paths join actual composition prefixes; root router trailing slashes are normalized. The register fingerprints 117 API/admin source files and records five contract gaps.
 
@@ -15,11 +15,11 @@ The [operation register](contracts/api-map.json) records every method/path, sour
 | Guest receipt | HttpOnly `darve_payment_guest` / `__Secure-darve_payment_guest`, SameSite=Lax, path `/api`. First checkout may establish it and return 409 `GUEST_PROOF_REQUIRED` **before** a monetary operation.       | Public challenge read versus private guest checkout status. Create/complete require Origin, guest cookie and `Idempotency-Key`; no creator-CSRF shortcut. Establish proof before submitting the same reviewed body/key. This handshake is distinct from ordinary automatic mutation retry. | Independent guest generation/checkout ID. No private receipt/donor data in creator/public cache, storage, logs or URLs. Provider return is not payment confirmation.                                                                                                 |
 | OBS reader    | Owner-issued link ends `<displayId>#grant=<secret>`. Safely capture/clean the fragment, then POST `/api/overlays/:id/session` with `OverlayBootstrapInputSchema`. It returns grant ID and scoped cookie. | Bootstrap requires allowed Origin. Reader GETs use `grantId`, cookie `darve_overlay_<grantId>` / `__Secure-darve_overlay_<grantId>` at `/api/overlays/<displayId>`, or supported Bearer proof. If both exist they must match. Cookie is HttpOnly/SameSite=Strict.                          | Separate display/grant generation, resource/version/cursor and monotonic receive time. No secret in keys. Clear presentation on revoke/remove/stale/disconnect and stop the connection on unmount/authority loss.                                                    |
 
-GET Origin/CORS policies still apply where implemented. Absence of mutation CSRF does not imply public access. Guards are UX only. These cache keys are concrete implementation requirements, not a cache lifecycle already supplied.
+GET Origin/CORS policies still apply where implemented. Absence of mutation CSRF does not imply public access. Guards are UX only. F02-02 now supplies independent cache generations/clients, cancellation/cleanup and creator session composition. Full staff/guest/reader proof lifecycles and feature-specific keys remain with those callers; the table retains their requirements.
 
 ## First creator connection operations
 
-All paths below belong to the configured public API origin; no frontend API proxy/client is installed yet. Public schema references resolve to the pinned package. Application imports go through `services/contracts/index.ts`.
+All paths below belong to the configured public API origin. F02-02 installs the origin-bound client and direct local CORS composition, without a Vite proxy. Public schema references resolve to the pinned package. Application imports go through `services/contracts/index.ts`.
 
 | Operation                             | Input                                              | Success                              | Important handling                                                                                                 |
 | ------------------------------------- | -------------------------------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
@@ -57,7 +57,7 @@ The register gives each individual method, request/query, response/status and so
 
 The register assigns five gaps:
 
-1. **GAP-202 — F02-02/affected features:** the helper accepts 200/201 and explicitly empty 204, but rejects 202. Add explicit status-aware schema validation; never disguise 202 as 200 or show pending as completed.
+1. **GAP-202 — addressed in F02-02 client / affected features:** the pinned helper still accepts 200/201 and explicitly empty 204, but rejects 202. The JSON client now validates declared 202 with its exact schema and returns pending without status coercion or command retry. Each real feature must supply its mapped schema/status policy; package source remains unchanged.
 2. **GAP-STAFF-ENVELOPE — F08/backend B13:** complete staff acknowledgements, several envelopes/pages and safe streamer inspection are controller-local. DTO references are not full wire validators. Expose/reuse exact public shapes before wiring. Staff start omits the creator start schema's required expiresAt.
 3. **GAP-SUPPORT-SSE — F02-03/F08/backend B14:** support notification/page envelopes need complete public schemas. Do not assume overlay cursor behavior or parse private outbox bodies.
 4. **GAP-MODERATION-INPUT — F08/backend B13:** several command validators are domain-local. Expose/review exact public revision/reason/confirmation inputs before submitting.
@@ -67,4 +67,4 @@ These gaps permit mapping and the first creator-session work, but prevent unsupp
 
 ## Revalidation and next action
 
-On a reviewed backend revision change, recheck affected route/controller/mapper/security sources, regenerate the artifact and update map, facade, lockfile and evidence in one task PR. Do not change contracts to fit legacy behavior. [F02 implementation](F02_CONTRACTS_AND_AUTH_IMPLEMENTATION.md) owns provenance/check/restart evidence. Next is F02-02: origin-bound transport, session/CSRF/generation isolation, explicit 202/empty/redirect handling and isolated local API composition. F02-03 owns realtime afterward.
+On a reviewed backend revision change, recheck affected route/controller/mapper/security sources, regenerate the artifact and update map, facade, lockfile and evidence in one task PR. Do not change contracts to fit legacy behavior. [F02 implementation](F02_CONTRACTS_AND_AUTH_IMPLEMENTATION.md) owns provenance/check/restart evidence. F02-02 transport/session/isolation has local actual API proof; F02-03 owns the next realtime slice.
