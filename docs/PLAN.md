@@ -33,4 +33,4 @@ F01 and F02 establish the basis for visible feature slices. F05–F07 can be ord
 
 ## Next step
 
-F01 reference/component inventory and F02 contract mapping remain upcoming feature work, subject to the user’s authorized scope. See [CURRENT_STATE](CURRENT_STATE.md) for the current checkpoint. Do not start every batch merely because it appears in this plan.
+Continue the current F01 slice and F02 contract mapping only within the user’s authorized scope; the tracker and CURRENT_STATE identify completed work and the next action. See [CURRENT_STATE](CURRENT_STATE.md) for the current checkpoint. Do not start every batch merely because it appears in this plan.

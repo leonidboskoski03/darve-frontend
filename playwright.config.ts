@@ -17,9 +17,16 @@ export default defineConfig({
     { name: 'desktop-chromium', use: { ...devices['Desktop Chrome'] } },
     { name: 'mobile-chromium', use: { ...devices['Pixel 7'] } },
   ],
-  webServer: {
-    command: 'npm run preview',
-    url: 'http://127.0.0.1:4173',
-    reuseExistingServer: false,
-  },
+  webServer: [
+    {
+      command: 'npm run preview',
+      url: 'http://127.0.0.1:4173',
+      reuseExistingServer: false,
+    },
+    {
+      command: 'npm run dev -- --port 4175',
+      url: 'http://127.0.0.1:4175/tests/fixtures/primitives.html',
+      reuseExistingServer: false,
+    },
+  ],
 });

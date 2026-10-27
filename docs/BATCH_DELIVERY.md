@@ -38,10 +38,10 @@ Backend defects keep their backend owner and compatible source/contract revision
 
 ## Proposed first slices
 
-F01-01 is registered in the tracker with its bounded inspection evidence. Refine the remaining slices before implementation; this list does not authorize additional product work:
+F01-01 and F01-02 are registered in the tracker with bounded evidence. Refine remaining slices before implementation; this list does not authorize additional product work:
 
 - F01-01: [selected screen/component/asset inventory and missing design decisions](F01_REFERENCE_AND_COMPONENT_AUDIT.md); no API or redesign implementation.
-- F01-02: approved tokens and primitives needed by the next screens, including responsive/focus/loading/error states.
+- F01-02: [shared tokens and primitives](F01_DESIGN_SYSTEM_IMPLEMENTATION.md) needed by the next screens, including responsive/focus/loading/error states.
 - F01-03: required motion patterns plus keyboard, reduced-motion and visual-reference verification.
 - F02-01: current API/authority mapping and reproducible exact public contracts.
 - F02-02: validated transport, real session/CSRF/cache isolation, errors and local backend configuration.

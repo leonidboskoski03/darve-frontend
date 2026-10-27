@@ -1,5 +1,7 @@
 @import 'tailwindcss';
 @import './tokens.css';
+@import './fonts.css';
+@import './primitives.css';
 
 @theme inline {
   --color-canvas: var(--color-background);
@@ -16,6 +18,7 @@ body {
   background: var(--color-background);
   color: var(--color-text);
   font-family: var(--font-body);
+  line-height: var(--line-height-body);
   -webkit-font-smoothing: antialiased;
 }
 a {
@@ -44,6 +47,7 @@ main:focus {
 }
 .site-header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
@@ -62,15 +66,11 @@ main:focus {
   letter-spacing: -0.04em;
 }
 .brand-mark {
-  display: grid;
-  place-items: center;
+  display: block;
   width: 2rem;
   height: 2rem;
   border-radius: var(--radius-small);
-  background: var(--color-brand);
-  font-weight: 700;
-  letter-spacing: -0.12em;
-  padding-right: 0.15em;
+  object-fit: contain;
 }
 .environment-label,
 .eyebrow {
@@ -88,7 +88,7 @@ main:focus {
   max-width: 16ch;
   font-size: clamp(2.75rem, 6vw, 5rem);
   line-height: 1.07;
-  letter-spacing: -0.055em;
+  letter-spacing: -0.04em;
   font-weight: 700;
   margin-block: var(--space-6) var(--space-8);
 }
@@ -133,7 +133,7 @@ main:focus {
   top: var(--space-4);
   left: var(--space-4);
   padding: var(--space-3);
-  z-index: 10;
+  z-index: var(--layer-skip-link);
   background: var(--color-surface);
   transform: translateY(-200%);
 }

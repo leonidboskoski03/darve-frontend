@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { controlStyles } from '@/design-system/control-styles';
 import { Link } from 'react-router-dom';
 
 export function Component() {
@@ -10,7 +11,7 @@ export function Component() {
       <p className="eyebrow">404</p>
       <h1>Page not found</h1>
       <p>This address does not have a page.</p>
-      <Link className="text-link" to="/">
+      <Link className={controlStyles('primary')} to="/">
         Return to Darve
       </Link>
     </section>

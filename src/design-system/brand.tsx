@@ -1,9 +1,9 @@
+import logo from './assets/darve-logo.png';
+
 export function Brand() {
   return (
     <span className="brand">
-      <span className="brand-mark" aria-hidden="true">
-        d/
-      </span>
+      <img className="brand-mark" src={logo} alt="" width={32} height={32} />
       <span>Darve</span>
     </span>
   );
