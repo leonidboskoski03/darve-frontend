@@ -1,1 +1,1 @@
-export { LandingFoundation } from './landing-foundation';
+export { Landing } from './landing';

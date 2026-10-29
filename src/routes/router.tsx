@@ -2,13 +2,22 @@ import { createBrowserRouter } from 'react-router-dom';
 import { RouteError } from './route-error';
 import { RootLayout } from './root-layout';
 
-export const router = createBrowserRouter([
-  {
-    element: <RootLayout />,
-    errorElement: <RouteError />,
-    children: [
-      { path: '/', lazy: () => import('./home') },
-      { path: '*', lazy: () => import('./not-found') },
-    ],
-  },
-]);
+export const createAppRouter = () =>
+  createBrowserRouter([
+    {
+      element: <RootLayout />,
+      hydrateFallbackElement: (
+        <p role="status" className="message-page">
+          Opening Darve…
+        </p>
+      ),
+      errorElement: <RouteError />,
+      children: [
+        { path: '/', lazy: () => import('./home') },
+        { path: '/authorize', lazy: () => import('./creator-connection') },
+        { path: '/integrations', lazy: () => import('./creator-connection') },
+        { path: '/terms', lazy: () => import('./creator-connection') },
+        { path: '*', lazy: () => import('./not-found') },
+      ],
+    },
+  ]);

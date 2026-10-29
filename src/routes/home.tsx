@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
-import { LandingFoundation } from '@/features/landing/index';
+import { Landing } from '@/features/landing/index';
 
 export function Component() {
   useEffect(() => {
-    document.title = 'Darve — frontend foundation';
+    document.title = 'Darve — The Engagement Engine for Your Viewers';
   }, []);
-  return <LandingFoundation />;
+  return <Landing connectHref="/authorize" />;
 }

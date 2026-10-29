@@ -124,6 +124,7 @@ export function createCreatorSession(options: {
   };
 
   return {
+    origin: options.origin,
     getSnapshot: () => snapshot,
     subscribe(this: void, listener: () => void) {
       listeners.add(listener);

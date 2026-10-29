@@ -47,4 +47,6 @@ F01-01 through F01-03 are registered in the tracker with bounded foundation evid
 - F02-02: validated transport, real session/CSRF/cache isolation, errors and local backend configuration.
 - F02-03: reviewed overlay v1/v2 resource/version/freshness-aware realtime with actual stream/revocation proof. Support wire schemas remain F08-owned; no dashboard SSE endpoint is invented.
 
+F03-01/02/03 now cover the coupled [standalone landing, creator/terms/connection vertical journey and isolated qualification](F03_CREATOR_CONNECTION_IMPLEMENTATION.md). They share one focused integration PR because route/session/terms behavior and acceptance are coupled. F03-AC-01 separately retains actual external provider consent and purpose-grant proof; local synthetic navigation cannot close it.
+
 Create tracker rows/implementation records when the scopes are settled. Then build visible vertical journeys such as real creator connection/collection. Guest, OBS, staff and coins follow their dependencies. Avoid generic infrastructure before a concrete caller needs it.

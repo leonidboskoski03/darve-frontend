@@ -1,0 +1,15 @@
+.ds-starfield {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  mask-image: radial-gradient(ellipse at center, #000 18%, transparent 75%);
+}
+.ds-starfield svg {
+  width: 100%;
+  height: 100%;
+  fill: var(--color-text);
+}
+.ds-starfield__brand {
+  fill: var(--color-brand-readable);
+}

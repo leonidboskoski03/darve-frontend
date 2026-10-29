@@ -8,10 +8,11 @@ type DialogProps = {
   description: string;
   onDismiss: () => void;
   children: ReactNode;
+  className?: string;
 };
 
 /** Native modal semantics: top layer, inert background and keyboard focus containment. */
-export function Dialog({ open, title, description, onDismiss, children }: DialogProps) {
+export function Dialog({ open, title, description, onDismiss, children, className }: DialogProps) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const descriptionId = useId();
@@ -27,7 +28,7 @@ export function Dialog({ open, title, description, onDismiss, children }: Dialog
   return (
     <dialog
       ref={ref}
-      className="ds-dialog"
+      className={['ds-dialog', className].filter(Boolean).join(' ')}
       aria-labelledby={titleId}
       aria-describedby={descriptionId}
       onCancel={(event) => {

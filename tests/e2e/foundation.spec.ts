@@ -1,16 +1,17 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 
-test('foundation is honest, keyboard reachable and responsive', async ({ page }) => {
+test('standalone landing is keyboard reachable, responsive and exposes the real connection entry', async ({
+  page,
+}) => {
   const failures: string[] = [];
   page.on('pageerror', (error) => failures.push(error.message));
   await page.goto('/');
   await expect(page.getByRole('heading', { level: 1 })).toContainText('The Engagement Engine');
   await expect(
-    page.getByText('Streamer login, contributions and OBS integration are not connected yet.', {
-      exact: false,
-    }),
+    page.getByRole('link', { name: 'Connect your stream', exact: true }).first(),
   ).toBeVisible();
+  await expect(page.getByText('Frontend foundation', { exact: true })).toHaveCount(0);
   await page.keyboard.press('Tab');
   await expect(page.getByRole('link', { name: 'Skip to content' })).toBeFocused();
   await page.keyboard.press('Enter');
@@ -39,7 +40,7 @@ test('reduced motion keeps all content visible without moving the heading', asyn
   const heading = page.getByRole('heading', { level: 1 });
   await expect(heading).toBeVisible();
   await expect(
-    page.getByRole('heading', { name: 'Frontend foundation', exact: true }),
+    page.getByRole('link', { name: 'Connect your stream', exact: true }).first(),
   ).toBeVisible();
   await expect(heading.locator('..')).toHaveCSS('transform', 'none');
 });
