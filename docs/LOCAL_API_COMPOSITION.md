@@ -1,6 +1,6 @@
 # Isolated local frontend/API composition
 
-Owners: F02-02 session, F02-03 realtime and F03 creator/terms. [Implementation evidence](F02_CONTRACTS_AND_AUTH_IMPLEMENTATION.md#f02-02-transport-session-and-authority) records the qualified source and checks. [OPERATIONS](OPERATIONS.md) owns environment policy. This composition uses the actual backend with disposable PostgreSQL and Redis; it configures no identity, payment, analysis or email provider.
+Owners: F02-02 session, F02-03 realtime and F03 creator/terms. [Implementation evidence](F02_CONTRACTS_AND_AUTH_IMPLEMENTATION.md#f02-02-transport-session-and-authority) records the qualified source and checks. [OPERATIONS](OPERATIONS.md) owns environment policy. The default composition uses the actual backend with disposable PostgreSQL and Redis; it configures no identity, payment, analysis or email provider. The separately approved operator mode below explicitly enables registered identity providers only.
 
 ## Start and stop
 
@@ -73,3 +73,29 @@ The probe verifies all three real unavailable provider starts, exact terms and C
 Safe records live under ignored `artifacts.local/f03/`; containers carry `darve.frontend.task=f03` plus the unique run label. `finally` stops the owned browser, API, temporary Vite and containers. After interruption, compare exact IDs/run metadata and actual liveness before cleanup. Leave the user's 5173 preview and ordinary Docker groups untouched.
 
 No external provider exchange or verified real identity is claimed. Actual provider testing requires backend configuration, registered callback URLs, an allowed frontend return origin and deliberate account consent. Backend development OAuth validation requires `localhost` origins rather than this fixture's `127.0.0.1` origin; configure matching approved origins/cookies consistently for that separate run. Hosted use requires HTTPS. Do not infer provider configuration from a synthetic start/navigation test, print consent URLs, or enable credentials in frontend build variables. Current reviewed terms, receiving readiness, OBS and per-collection permissions retain their respective owners.
+
+## Explicit real-provider operator run
+
+F03-AC-01 now has separate founder-approved actual provider evidence in the [F03 record](F03_CREATOR_CONNECTION_IMPLEMENTATION.md#f03-ac-01-registered-app-verification--2026-10-29). Its tooling is opt-in; ordinary session/realtime/creator acceptance continues with providers OFF.
+
+```powershell
+npm run test:operator
+npm run provider:local -- ../darve-backend --pause-development-api
+```
+
+Use the pause flag only when deliberately testing against the known registered localhost callbacks and the existing `darve-backend-api-1` needs to release port 3000. It records and pauses that exact running API container and restores the same ID on cleanup. It never pauses/reuses its database or Redis, migrates persistent storage, alters registration or starts the ordinary Compose group wholesale. Without the flag, free 3000 yourself or omit it if already free. Leave 5174 free. The offline 5173 preview remains separate.
+
+The runner privately selects only the six Twitch/Google/Kick client fields from the sibling `.env`, uses a fresh encryption key and creates new task-labelled tmpfs storage. It does not inherit that file's database URL, Redis URL, old credential key, bot actors, feature flags, payment/analysis configuration or terms policy. A clearly classified development-only document exercises version acceptance without inventing public legal terms. Only the public API origin is passed to Vite; `envDir: false` prevents frontend env-file loading. Node uses the system CA with TLS verification enabled.
+
+Open `http://localhost:5174/authorize` in the testing browser. The actual app makes the normal POST start; the backend owns redirect construction and code exchange at `http://localhost:3000/api/auth/:provider/callback`. No synthetic user/session is inserted and no HTTP login/control endpoint is supplied. The user completes any required credential/MFA/challenge and new account-data consent on the provider screen. Registered app access, scope consent, a Darve session, development terms and actual reader/bot/payment readiness remain different facts. Do not save cookies, consent URLs, provider payloads or private browser traces.
+
+After the desired flows, use the fixed read-only audit while this run is still alive:
+
+```powershell
+npm run provider:audit
+npm run provider:local -- --stop
+```
+
+The audit verifies the recorded PostgreSQL container's exact task/run labels and prints aggregate provider/intent/purpose completion, connection count, one-owner binding, AES-GCM envelope count and active/revoked session counts. It does not select subject/channel IDs, tokens or envelope values. Safe metadata/audit lives under ignored `artifacts.local/f03-live/`. The stop command writes a local request bound to the exact current run; a stale request cannot stop a replacement. Wait for the running operator to exit, verify 5174/API listener ownership, no remaining F03-live containers and ordinary API restoration. Command submission alone is not cleanup proof.
+
+Prefer the explicit stop command in Windows tool sessions: Ctrl+C can terminate the process tree before Node cleanup runs. On forced termination, compare the exact IDs/run labels in `runtime.json` and original API ID in `restore.json`; remove only those disposable containers and restart only the matching original API if it was paused. Never prune or delete ordinary storage. The explicit-stop path has actual startup/cleanup/restoration proof. Session logout does not revoke the provider's application consent; those account settings remain under the user's control.

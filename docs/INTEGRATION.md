@@ -1,6 +1,6 @@
 # API, identity and realtime integration
 
-Status: F02-01 source/contracts, F02-02 transport/creator session/isolation and F02-03 reviewed overlay v1/v2 realtime are locally qualified. [F02 evidence](F02_CONTRACTS_AND_AUTH_IMPLEMENTATION.md) separates synthetic browser cases from actual disposable API acceptance. F03 creator entry, current terms and connection management are implemented with [local API evidence](F03_CREATOR_CONNECTION_IMPLEMENTATION.md); actual provider login and full feature authority journeys remain with their owners. Do not count the frontend build as backend interoperability.
+Status: F02-01 source/contracts, F02-02 transport/creator session/isolation and F02-03 reviewed overlay v1/v2 realtime are locally qualified. [F02 evidence](F02_CONTRACTS_AND_AUTH_IMPLEMENTATION.md) separates synthetic browser cases from actual disposable API acceptance. F03 creator entry, current terms and connection management are implemented with [local API evidence](F03_CREATOR_CONNECTION_IMPLEMENTATION.md); nine real registered-app identity/link/purpose operations now qualify F03 login, while live collection and other feature authority journeys remain with their owners. Do not count the frontend build as backend interoperability.
 
 ## Reproducible contracts
 
