@@ -32,8 +32,9 @@ export async function startLocalApi({
   build = true,
   task = 'f02-02',
   overlay = false,
+  terms = false,
 }) {
-  if (!['f02-02', 'f02-03'].includes(task)) throw new Error('Invalid local task identity.');
+  if (!['f02-02', 'f02-03', 'f03'].includes(task)) throw new Error('Invalid local task identity.');
   backend = path.resolve(backend);
   const provenance = JSON.parse(
     readFileSync(path.join(root, 'vendor/contracts/provenance.json'), 'utf8'),
@@ -189,7 +190,24 @@ export async function startLocalApi({
     const { createLogger } = await import(
       pathToFileURL(path.join(backend, 'apps/api/dist/logging/logger.js')).href
     );
-    const config = readApiEnvironment({
+    let termsRevision = 1;
+    const termsFile = path.join(root, `artifacts.local/${task}/terms-${runId}.json`);
+    const writeTermsFixture = () => {
+      const content = `Development acceptance fixture. Not a public policy.\n\nDocument synthetic-v${termsRevision}.\nAcknowledgement is used only to test exact version/hash handling in a disposable local database.\n\nLiteral markup: <b>plain text only</b>.`;
+      mkdirSync(path.dirname(termsFile), { recursive: true });
+      writeFileSync(
+        termsFile,
+        JSON.stringify({
+          documentId: 'local-acceptance',
+          version: `synthetic-v${termsRevision}`,
+          classification: 'development',
+          contentHash: sha256(content),
+          content,
+        }),
+      );
+    };
+    if (terms) writeTermsFixture();
+    const runtimeInput = {
       NODE_ENV: 'development',
       HOST: '127.0.0.1',
       PORT: port,
@@ -198,6 +216,7 @@ export async function startLocalApi({
       REDIS_URL: `redis://:${redisPassword}@127.0.0.1:${redisPort}`,
       CORS_ORIGINS: origins.join(','),
       RATE_LIMIT_MAX: 1000,
+      ...(terms ? { TERMS_POLICY_FILE: termsFile } : {}),
       ...(overlay
         ? {
             OVERLAY_PRESENTATION_BASE_URL: origins[0] + '/tests/fixtures/realtime.html/',
@@ -205,16 +224,20 @@ export async function startLocalApi({
             OVERLAY_SSE_POLL_MS: 250,
           }
         : {}),
-    });
+    };
+    let config = readApiEnvironment(runtimeInput);
     const logger = createLogger('silent');
     deps = createDependencies(config, logger);
     const ready = await deps.checkReadiness();
     if (ready.status !== 'ready') throw new Error('Isolated runtime dependencies are unavailable.');
-    const app = createApp(config, logger, deps);
-    server = await new Promise((resolve, reject) => {
-      const listener = app.listen(port, '127.0.0.1', () => resolve(listener));
-      listener.once('error', reject);
-    });
+    const listen = () =>
+      new Promise((resolve, reject) => {
+        const listener = createApp(config, logger, deps).listen(port, '127.0.0.1', () =>
+          resolve(listener),
+        );
+        listener.once('error', reject);
+      });
+    server = await listen();
     const migrationRows = await deps.database
       .$queryRaw`SELECT count(*)::int AS count FROM _prisma_migrations WHERE finished_at IS NOT NULL`;
     const state = {
@@ -240,6 +263,28 @@ export async function startLocalApi({
       close,
       // Node-only network-fault probe; no HTTP route or database effect.
       interruptConnections: () => server.closeAllConnections(),
+      // Node-only source/config restart for stale-terms acceptance; no operator HTTP endpoint.
+      async replaceTermsFixture({ configured = true } = {}) {
+        if (task !== 'f03' || !terms)
+          throw new Error('Terms replacement requires the F03 disposable fixture.');
+        server.closeAllConnections();
+        await new Promise((resolve) => server.close(resolve));
+        server = undefined;
+        if (configured) {
+          termsRevision++;
+          writeTermsFixture();
+        }
+        config = readApiEnvironment({
+          ...runtimeInput,
+          TERMS_POLICY_FILE: configured ? termsFile : '',
+        });
+        await deps.close();
+        deps = createDependencies(config, logger);
+        const readiness = await deps.checkReadiness();
+        if (readiness.status !== 'ready')
+          throw new Error('Replacement fixture runtime is unavailable.');
+        server = await listen();
+      },
       // Node-only acceptance fixture. This is never an HTTP login endpoint or product shortcut.
       async seedSession({ expiresInMs = 60_000 } = {}) {
         const secret = randomBytes(32).toString('base64url');

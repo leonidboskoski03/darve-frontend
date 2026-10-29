@@ -1,6 +1,6 @@
 # Darve frontend
 
-Canonical new frontend workspace. React + TypeScript + Vite, separate from the existing backend. Historical projects remain reference material; no old authentication or simulated workflows are imported. Preserve the selected F dashboard, M/R OBS and A contribution direction. The homepage is an explicitly labelled foundation preview, not the rebuilt landing page or a connected product.
+Canonical new frontend workspace. React + TypeScript + Vite, separate from the existing backend. Historical projects remain reference material; no old authentication or simulated workflows are imported. Preserve the selected F dashboard, M/R OBS and A contribution direction. The homepage rebuilds the selected standalone landing. Creator entry, server terms and connection management use the current API when configured; actual external provider acceptance remains pending.
 
 ## Start locally
 
@@ -11,7 +11,7 @@ npm.cmd ci
 npm.cmd run dev
 ```
 
-Open `http://127.0.0.1:5173`. The default presentation preview needs no backend, Docker or credentials and makes no API calls. F02-02 supports optional actual session inspection/logout through an exact public API origin; see [isolated local API setup and acceptance](docs/LOCAL_API_COMPOSITION.md). Copy `.env.example` to `.env.local` only for documented public settings. Every `VITE_*` value is browser-visible. Provider keys belong in backend configuration.
+Open `http://127.0.0.1:5173`. The default presentation preview needs no backend, Docker or credentials and makes no API calls. The optional exact public API origin enables actual session inspection/logout and creator onboarding; see [isolated local API setup and acceptance](docs/LOCAL_API_COMPOSITION.md). Copy `.env.example` to `.env.local` only for documented public settings. Every `VITE_*` value is browser-visible. Provider keys belong in backend configuration.
 
 ## Verify
 
@@ -37,4 +37,4 @@ npm.cmd run test:e2e
 - [Environments and security](docs/OPERATIONS.md), [deployment checklist](docs/DEPLOYMENT_PREPARATION_CHECKLIST.md)
 - [Contributor instructions](AGENTS.md)
 
-Current capabilities include the foundation, shared design/motion primitives, pinned API contracts, creator session/transport isolation and reviewed overlay v1/v2 realtime with disposable actual API proof. The [local runbook](docs/LOCAL_API_COMPOSITION.md) includes separate session and realtime acceptance commands. Workflow documentation and hosted light development CI are established. Full feature journeys, provider/payment acceptance, the first full hosted release qualification and deployment remain unfinished. A local build is not an end-to-end acceptance claim.
+Current capabilities include the foundation, shared design/motion primitives, pinned API contracts, creator session/transport isolation and reviewed overlay v1/v2 realtime with disposable actual API proof. The [local runbook](docs/LOCAL_API_COMPOSITION.md) includes separate session, realtime and creator/terms acceptance commands. [F03 evidence](docs/F03_CREATOR_CONNECTION_IMPLEMENTATION.md) records the standalone comparison and actual API qualification. Workflow documentation and hosted light development CI are established. Full feature journeys, provider/payment acceptance, the first full hosted release qualification and deployment remain unfinished. A local build is not an end-to-end acceptance claim.

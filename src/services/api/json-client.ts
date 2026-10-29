@@ -116,10 +116,11 @@ export function createJsonClient(config: {
       input.body !== null &&
       'intent' in input.body &&
       input.body.intent === 'sign_in';
-    if (mutation && ['creator', 'staff'].includes(config.audience) && !signIn) {
+    if (mutation && ['creator', 'staff'].includes(config.audience)) {
       const csrf = config.csrf?.();
-      if (!csrf || !/^[A-Za-z0-9_-]{43}$/.test(csrf)) return failure('authority', 'CSRF_REQUIRED');
-      headers.set(config.audience === 'staff' ? 'x-staff-csrf' : 'X-CSRF-Token', csrf);
+      if (csrf && /^[A-Za-z0-9_-]{43}$/.test(csrf))
+        headers.set(config.audience === 'staff' ? 'x-staff-csrf' : 'X-CSRF-Token', csrf);
+      else if (!signIn) return failure('authority', 'CSRF_REQUIRED');
     }
     if (input.idempotencyKey !== undefined) {
       if (!/^[A-Za-z0-9._:-]{1,128}$/.test(input.idempotencyKey))
