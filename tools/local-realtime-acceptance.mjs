@@ -16,6 +16,7 @@ try {
     overlay: true,
   });
   vite = await createServer({
+    mode: 'acceptance-realtime',
     clearScreen: false,
     server: { host: '127.0.0.1', port: 4175, strictPort: true, hmr: false },
   });

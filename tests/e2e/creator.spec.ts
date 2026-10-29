@@ -120,6 +120,9 @@ for (const [provider, label, target] of [
       route.fulfill({ contentType: 'text/html', body: '<h1>Synthetic provider destination</h1>' }),
     );
     await page.goto(fixture);
+    await page
+      .getByRole('heading', { name: 'Connect your stream to Darve', exact: true })
+      .waitFor({ state: 'visible' });
     for (const name of ['Twitch', 'YouTube', 'Kick'])
       await expect(page.getByRole('button', { name: 'Continue with ' + name })).toBeEnabled();
     await page.getByRole('button', { name: 'Continue with ' + label }).click();

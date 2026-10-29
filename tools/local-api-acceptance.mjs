@@ -13,6 +13,7 @@ const origin = 'http://127.0.0.1:4175';
 try {
   api = await startLocalApi({ backend, origins: [origin], port: 3310 });
   vite = await createServer({
+    mode: 'acceptance-session',
     clearScreen: false,
     server: { host: '127.0.0.1', port: 4175, strictPort: true, hmr: false },
   });

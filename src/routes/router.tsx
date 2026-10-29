@@ -17,6 +17,8 @@ export const createAppRouter = () =>
         { path: '/authorize', lazy: () => import('./creator-connection') },
         { path: '/integrations', lazy: () => import('./creator-connection') },
         { path: '/terms', lazy: () => import('./creator-connection') },
+        { path: '/collection', lazy: () => import('./collection') },
+        { path: '/collection/:roundId', lazy: () => import('./collection') },
         { path: '*', lazy: () => import('./not-found') },
       ],
     },

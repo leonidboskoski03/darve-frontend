@@ -4,6 +4,8 @@ Owner: F02-01/02. Mapped against backend `e12b84de3959f6fdbd7eba04ffdfa135f6ba47
 
 The [operation register](contracts/api-map.json) records every method/path, source handler/line, authority, body/query, response/status, idempotency and public-export reference. It contains **115 browser operations**, plus seven excluded registrations: four health probes and Stripe/PayPal/Kick ingress. Paths join actual composition prefixes; root router trailing slashes are normalized. The register fingerprints 117 API/admin source files and records five contract gaps.
 
+F04-02 now consumes the mapped creator connections/broadcast discovery and round Start/read/Stop subset through the reviewed facade. The [F04 record](F04_COLLECTION_IMPLEMENTATION.md#current-api-map) owns exact schemas/status/command binding, controlled actual API evidence and open unknown-round/source-link findings. Suggestions/dispositions/acceptance remain F04-03; the pinned artifact and operation register are unchanged.
+
 [Artifact provenance](../vendor/contracts/provenance.json) pins the same revision. `contracts:check` verifies artifact/installed hashes, contents, public-module capability restrictions, exports, map source references, unique operations and staff-origin boundaries. It does not prove live authorization or route execution. **Inline** references are not claimed to be complete exported wire validators.
 
 ## Authority and origin boundaries
