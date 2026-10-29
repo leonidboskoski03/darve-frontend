@@ -39,7 +39,8 @@
     "provider:local": "node --use-system-ca tools/local-provider-login.mjs",
     "provider:audit": "node tools/provider-login-audit.mjs",
     "test:collection:local": "node tools/local-collection-acceptance.mjs",
-    "test:review:local": "node tools/local-review-acceptance.mjs"
+    "test:review:local": "node tools/local-review-acceptance.mjs",
+    "test:reporting:local": "node tools/local-reporting-acceptance.mjs"
   },
   "dependencies": {
     "@darve/contracts": "file:vendor/contracts/darve-contracts-e12b84de3959f6fdbd7eba04ffdfa135f6ba47aa.tgz",

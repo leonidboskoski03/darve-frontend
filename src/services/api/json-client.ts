@@ -81,7 +81,8 @@ export function createJsonClient(config: {
     if (
       !path.startsWith('/') ||
       path.startsWith('//') ||
-      /[\\#]|%(?:2e|2f|5c)/i.test(path) ||
+      /[\\#]/.test(path) ||
+      /%(?:2e|2f|5c)/i.test(path.split('?')[0] ?? '') ||
       [...path].some((character) => character.charCodeAt(0) <= 32) ||
       path
         .split('?')[0]

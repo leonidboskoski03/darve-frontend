@@ -34,6 +34,8 @@ describe('credentialed JSON transport', () => {
     '/admin/v1/session',
     '/api/../admin/v1/session',
     '/api/%2e%2e/admin/v1/session',
+    '/api%2fsession?timeZone=Europe%2FWarsaw',
+    '/api/%5cadmin?timeZone=Europe%2FWarsaw',
     '/api/checkouts/123',
     '/api/%63heckouts/123',
     '/api/overlays/123/snapshot',
@@ -47,6 +49,22 @@ describe('credentialed JSON transport', () => {
     });
     expect(await client({ ...read, path })).toMatchObject({ category: 'configuration' });
     expect(send).not.toHaveBeenCalled();
+  });
+
+  it('permits an encoded timezone query without changing origin or pathname authority', async () => {
+    const send = vi.fn<typeof fetch>().mockResolvedValue(json(body));
+    const client = createJsonClient({
+      origin: 'https://api.example.test',
+      audience: 'creator',
+      fetcher: send,
+    });
+    expect(await client({ ...read, path: '/api/session?timeZone=Europe%2FWarsaw' })).toMatchObject({
+      kind: 'data',
+    });
+    expect(send.mock.calls[0]?.[0]).toBe(
+      'https://api.example.test/api/session?timeZone=Europe%2FWarsaw',
+    );
+    expect(send.mock.calls[0]?.[1]?.redirect).toBe('error');
   });
 
   it('requires creator CSRF, preserves an idempotency key and sends an actually empty logout body', async () => {

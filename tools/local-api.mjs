@@ -37,14 +37,17 @@ export async function startLocalApi({
   operatorOAuth,
   collection = false,
   review = false,
+  reporting = false,
 }) {
-  if (!['f02-02', 'f02-03', 'f03', 'f03-live', 'f04-02', 'f04-03'].includes(task))
+  if (!['f02-02', 'f02-03', 'f03', 'f03-live', 'f04-02', 'f04-03', 'f05'].includes(task))
     throw new Error('Invalid local task identity.');
   const providerEnvironment = assertProviderLoginRuntime({ task, port, origins, operatorOAuth });
-  if (collection && !['f04-02', 'f04-03'].includes(task))
+  if (collection && !['f04-02', 'f04-03', 'f05'].includes(task))
     throw new Error('Controlled collection ports require their explicit disposable task.');
-  if (review && (task !== 'f04-03' || !collection))
+  if (review && (!['f04-03', 'f05'].includes(task) || !collection))
     throw new Error('Controlled review requires its explicit disposable collection task.');
+  if (reporting && (task !== 'f05' || !collection || !review))
+    throw new Error('Controlled reporting requires its explicit disposable review task.');
   backend = path.resolve(backend);
   const provenance = JSON.parse(
     readFileSync(path.join(root, 'vendor/contracts/provenance.json'), 'utf8'),
@@ -275,6 +278,11 @@ export async function startLocalApi({
           await import('./local-review-fixture.mjs')
         ).createLocalReviewFixture(backend, deps.database)
       : null;
+    const reportingFixture = reporting
+      ? await (
+          await import('./local-reporting-fixture.mjs')
+        ).createLocalReportingFixture(backend, deps.database)
+      : null;
     const listen = () =>
       new Promise((resolve, reject) => {
         const listener = createApp(config, logger, {
@@ -308,6 +316,7 @@ export async function startLocalApi({
       ...state,
       collectionFixture,
       reviewFixture,
+      reportingFixture,
       close,
       // Node-only network-fault probe; no HTTP route or database effect.
       interruptConnections: () => server.closeAllConnections(),

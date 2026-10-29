@@ -12,6 +12,7 @@ export async function createLocalCollectionFixture(backend, database, config) {
   );
   const cipher = config.credentialCipher;
   const readers = new Map();
+  let streamChanged = false;
   let capacity = 'busy',
     funding = 'ready';
   const now = async () =>
@@ -51,7 +52,9 @@ export async function createLocalCollectionFixture(backend, database, config) {
         observedAt: await now(),
         status: 'live',
         broadcast: {
-          externalBroadcastId: broadcast.providerBroadcastId,
+          externalBroadcastId: streamChanged
+            ? 'synthetic-changed-stream'
+            : broadcast.providerBroadcastId,
           externalChatId: broadcast.providerChatId,
           title: 'Synthetic provider observation',
           description: null,
@@ -100,6 +103,10 @@ export async function createLocalCollectionFixture(backend, database, config) {
       fundingReadiness: fundingPort,
     },
     recover: () => lifecycle.recoverPage(),
+    streamChanged(value) {
+      if (typeof value !== 'boolean') throw new Error('Invalid controlled stream state');
+      streamChanged = value;
+    },
     capacity(value) {
       if (!['busy', 'available', 'unavailable'].includes(value))
         throw new Error('Invalid fixture capacity');
