@@ -188,6 +188,11 @@ export function CollectionRound({
             ) : null}
           </div>
           {round.state === 'closed' ? (
+            <a href={`/collection/${encodeURIComponent(round.id)}/suggestions`}>
+              Review viewer ideas
+            </a>
+          ) : null}
+          {round.state === 'closed' ? (
             <p className="collection-muted">
               {round.analysis?.state === 'empty'
                 ? 'No eligible ideas were collected.'
@@ -195,7 +200,9 @@ export function CollectionRound({
                   ? 'The result is restricted.'
                   : round.analysis?.state === 'failed'
                     ? 'Analysis could not finish.'
-                    : 'Your ideas are being processed. Check status for updates.'}
+                    : round.analysis?.state === 'succeeded'
+                      ? 'Your ideas are ready for review.'
+                      : 'Your ideas are being processed. Open review for updates.'}
             </p>
           ) : null}
           {round.state === 'failed' ? (

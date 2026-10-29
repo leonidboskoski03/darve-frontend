@@ -1,0 +1,118 @@
+.review-heading {
+  margin-bottom: var(--space-8);
+}
+.review-heading h1 {
+  font-size: clamp(1.8rem, 4vw, 2.5rem);
+  letter-spacing: -0.04em;
+  margin-block: var(--space-3);
+}
+.review-heading p {
+  color: var(--color-muted);
+  max-width: 65ch;
+}
+.review-eyebrow {
+  color: #b5aaff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+.review-muted {
+  color: var(--color-muted);
+  font-size: var(--font-size-small);
+}
+.review-toolbar,
+.review-actions,
+.review-filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+.review-toolbar {
+  justify-content: space-between;
+  margin-bottom: var(--space-6);
+}
+.review-filters {
+  margin-block: var(--space-6);
+}
+.review-panel {
+  background: #0a0b10;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-large);
+  padding: clamp(1rem, 3vw, 2rem);
+  margin-block: var(--space-6);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.review-list {
+  padding-block: 0;
+}
+.review-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-6);
+  padding-block: var(--space-6);
+  border-bottom: 1px solid var(--color-border);
+}
+.review-row h2 {
+  font-size: 1.125rem;
+  line-height: 1.5;
+  font-weight: 600;
+  white-space: pre-wrap;
+}
+.review-row > .review-actions {
+  align-self: start;
+  justify-content: flex-end;
+  max-width: 20rem;
+}
+.review-credits {
+  margin-top: var(--space-4);
+  font-size: var(--font-size-small);
+}
+.review-credits summary {
+  cursor: pointer;
+  padding-block: var(--space-2);
+}
+.review-credits ul {
+  padding-left: var(--space-6);
+}
+.review-credits li {
+  margin-block: var(--space-2);
+}
+.review-credits code {
+  font-size: 0.75rem;
+}
+.review-dialog-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  border-left: 2px solid #a99cff;
+  padding-left: var(--space-4);
+  max-height: 12rem;
+  overflow: auto;
+}
+.review-terms {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  gap: var(--space-3);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.review-terms dt {
+  color: var(--color-muted);
+}
+.review-terms dd {
+  margin: 0;
+}
+.review-list > p:last-child,
+.review-list > button:last-child {
+  margin-bottom: var(--space-6);
+}
+@media (max-width: 65rem) {
+  .review-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .review-row > .review-actions {
+    justify-content: flex-start;
+    max-width: none;
+  }
+}

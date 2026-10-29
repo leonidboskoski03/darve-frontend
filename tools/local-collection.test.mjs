@@ -20,3 +20,14 @@ test('collection task cannot combine controlled facts with real-provider operato
     /Provider login requires/,
   );
 });
+
+test('review facts require their own explicit collection task before runtime access', async () => {
+  await assert.rejects(
+    startLocalApi({ backend: 'not-used', task: 'f04-02', collection: true, review: true }),
+    /Controlled review requires/,
+  );
+  await assert.rejects(
+    startLocalApi({ backend: 'not-used', task: 'f04-03', review: true }),
+    /Controlled review requires/,
+  );
+});

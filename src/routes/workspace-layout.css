@@ -18,11 +18,11 @@
 .workspace-sidebar > .brand-link {
   margin: 0 var(--space-2) var(--space-10);
 }
-.workspace-shell nav {
+.workspace-navigation {
   display: grid;
   gap: var(--space-2);
 }
-.workspace-shell nav a {
+.workspace-navigation a {
   display: flex;
   gap: var(--space-3);
   align-items: center;
@@ -32,11 +32,11 @@
   color: var(--color-muted);
   text-decoration: none;
 }
-.workspace-shell nav a:hover {
+.workspace-navigation a:hover {
   color: var(--color-text);
   background: var(--color-raised);
 }
-.workspace-shell nav a.active {
+.workspace-navigation a.active {
   background: var(--color-brand);
   color: white;
 }

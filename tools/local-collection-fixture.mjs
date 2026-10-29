@@ -11,6 +11,7 @@ export async function createLocalCollectionFixture(backend, database, config) {
     pathToFileURL(path.join(backend, 'packages/domain/dist/index.js')).href
   );
   const cipher = config.credentialCipher;
+  const readers = new Map();
   let capacity = 'busy',
     funding = 'ready';
   const now = async () =>
@@ -183,8 +184,9 @@ export async function createLocalCollectionFixture(backend, database, config) {
       );
       if (!claim || !(await ingestion.activate(claim, 1)))
         throw new Error('Controlled reader could not be activated');
+      let subscription = null;
       if (provider === 'TWITCH')
-        await db.createTwitchIngestionStore(database).register(claim, {
+        subscription = await db.createTwitchIngestionStore(database).register(claim, {
           appId: 'a'.repeat(20),
           externalId: randomUUID(),
           socketSessionId: 'synthetic-collection-socket',
@@ -192,7 +194,48 @@ export async function createLocalCollectionFixture(backend, database, config) {
       if (provider === 'YOUTUBE') await db.createYouTubeIngestionStore(database).open(claim);
       if (provider !== 'KICK' && !(await ingestion.healthy(claim, { kind: 'transport' })))
         throw new Error('Controlled reader health was not accepted.');
+      readers.set(context.broadcastId, { context, claim, subscription });
       return { connectionId: connection.id, broadcastId: context.broadcastId };
+    },
+    async admitIdeas(userId, roundId, texts = ['Draw a cat', 'Draw a cat', 'Sing a short song']) {
+      const round = await database.collectionRound.findFirstOrThrow({
+        where: { id: roundId, userId, state: 'collecting' },
+      });
+      const reader = readers.get(round.broadcastId);
+      if (!reader?.subscription || reader.context.userId !== userId)
+        throw new Error('Controlled Twitch reader is unavailable');
+      const store = db.createTwitchIngestionStore(database),
+        repository = db.createCollectionRepository(database);
+      for (const [index, text] of texts.entries()) {
+        const stamp = (await now()).toISOString(),
+          providerMessageId = randomUUID();
+        const result = await store.write(reader.claim, reader.subscription, {
+          deliveryId: randomUUID(),
+          bodyHash: 'a'.repeat(64),
+          message: {
+            schemaVersion: 1,
+            providerMessageId,
+            providerBroadcastId: null,
+            providerChatId: null,
+            sourceChannelId: reader.claim.providerChannelId,
+            sourceMessageId: null,
+            author: { providerAuthorId: 'review-viewer-' + index, displayName: 'Same viewer' },
+            textOriginal: '#darve ' + text,
+            kind: 'text',
+            publishedAt: null,
+            providerTimestamp: stamp,
+            timestampKind: 'event',
+            replayClassification: 'live',
+            originClassification: 'selected_channel',
+          },
+        });
+        if (result !== 'accepted') throw new Error('Controlled ingestion write was rejected');
+        const source = await database.ingestedChatMessage.findFirstOrThrow({
+          where: { providerMessageId },
+        });
+        if ((await repository.admit(userId, roundId, round.version, source.id)).kind !== 'admitted')
+          throw new Error('Controlled idea was not admitted');
+      }
     },
     async roundState(id) {
       const round = await database.collectionRound.findUniqueOrThrow({ where: { id } });

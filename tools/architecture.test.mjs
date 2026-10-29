@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { Linter } from 'eslint';
+import { ESLint, Linter } from 'eslint';
 import parser from '@typescript-eslint/parser';
 import plugin from './eslint-architecture.mjs';
 
@@ -18,6 +18,27 @@ function inspect(code, filename = 'features/challenge/ui.tsx') {
     { filename: `${process.cwd()}/src/${filename}` },
   );
 }
+
+test('acceptance output ignore is confined to generated root files and preserves source enforcement', async () => {
+  const eslint = new ESLint();
+  assert.equal(await eslint.isPathIgnored('dist-acceptance/assets/fixture.js'), true);
+  for (const path of [
+    'src/features/suggestion-review/review.tsx',
+    'src/services/suggestions/client.ts',
+    'src/features/dist-acceptance/ui.tsx',
+    'vite.acceptance.config.ts',
+  ])
+    assert.equal(await eslint.isPathIgnored(path), false);
+  assert.ok(
+    inspect("import { x } from '@/app/providers';", 'features/dist-acceptance/ui.tsx').some(
+      (message) => message.ruleId === 'architecture/boundaries',
+    ),
+  );
+  assert.equal(
+    inspect('export const allowed = true;', 'features/dist-acceptance/ui.tsx').length,
+    0,
+  );
+});
 
 const rejected = [
   ['upward alias', "import { x } from '@/app/providers';"],

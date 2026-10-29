@@ -19,6 +19,7 @@ export const createAppRouter = () =>
         { path: '/terms', lazy: () => import('./creator-connection') },
         { path: '/collection', lazy: () => import('./collection') },
         { path: '/collection/:roundId', lazy: () => import('./collection') },
+        { path: '/collection/:roundId/suggestions', lazy: () => import('./suggestions') },
         { path: '*', lazy: () => import('./not-found') },
       ],
     },

@@ -36,12 +36,15 @@ export async function startLocalApi({
   terms = false,
   operatorOAuth,
   collection = false,
+  review = false,
 }) {
-  if (!['f02-02', 'f02-03', 'f03', 'f03-live', 'f04-02'].includes(task))
+  if (!['f02-02', 'f02-03', 'f03', 'f03-live', 'f04-02', 'f04-03'].includes(task))
     throw new Error('Invalid local task identity.');
   const providerEnvironment = assertProviderLoginRuntime({ task, port, origins, operatorOAuth });
-  if (collection && task !== 'f04-02')
+  if (collection && !['f04-02', 'f04-03'].includes(task))
     throw new Error('Controlled collection ports require their explicit disposable task.');
+  if (review && (task !== 'f04-03' || !collection))
+    throw new Error('Controlled review requires its explicit disposable collection task.');
   backend = path.resolve(backend);
   const provenance = JSON.parse(
     readFileSync(path.join(root, 'vendor/contracts/provenance.json'), 'utf8'),
@@ -222,6 +225,19 @@ export async function startLocalApi({
       REDIS_URL: `redis://:${redisPassword}@127.0.0.1:${redisPort}`,
       CORS_ORIGINS: origins.join(','),
       RATE_LIMIT_MAX: 1000,
+      ...(review
+        ? {
+            CHALLENGE_TERMS_POLICY_JSON: JSON.stringify({
+              version: 'synthetic-review-v1',
+              currencies: {
+                EUR: { minimumMinor: '1', maximumMinor: '9223372036854775807' },
+                USD: { minimumMinor: '1', maximumMinor: '9223372036854775807' },
+              },
+              minimumFundingSeconds: 1,
+              maximumFundingSeconds: 3600,
+            }),
+          }
+        : {}),
       ...(collection
         ? {
             CREDENTIAL_ENCRYPTION_KEY_ID: 'collection-fixture',
@@ -253,6 +269,11 @@ export async function startLocalApi({
       ? await (
           await import('./local-collection-fixture.mjs')
         ).createLocalCollectionFixture(backend, deps.database, config)
+      : null;
+    const reviewFixture = review
+      ? await (
+          await import('./local-review-fixture.mjs')
+        ).createLocalReviewFixture(backend, deps.database)
       : null;
     const listen = () =>
       new Promise((resolve, reject) => {
@@ -286,6 +307,7 @@ export async function startLocalApi({
     return {
       ...state,
       collectionFixture,
+      reviewFixture,
       close,
       // Node-only network-fault probe; no HTTP route or database effect.
       interruptConnections: () => server.closeAllConnections(),
