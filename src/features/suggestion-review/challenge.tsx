@@ -29,6 +29,7 @@ export function ChallengeStatus({
   return (
     <section className="review-panel" aria-labelledby="accepted-title">
       <h2 id="accepted-title">Accepted challenge</h2>
+      <a href={'/challenges/' + id}>View challenge details and declaration</a>
       {query.isPending ? (
         <p role="status">Loading challenge status…</p>
       ) : query.isError ? (

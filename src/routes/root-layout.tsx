@@ -20,7 +20,13 @@ export function RootLayout() {
       previous.current = pathname;
     }
   }, [pathname]);
-  if (pathname === '/collection' || pathname.startsWith('/collection/'))
+  if (
+    pathname === '/dashboard' ||
+    pathname === '/challenges' ||
+    pathname.startsWith('/challenges/') ||
+    pathname === '/collection' ||
+    pathname.startsWith('/collection/')
+  )
     return (
       <Workspace session={creator ? <SessionStatus /> : <span>Server not connected</span>}>
         <Outlet />

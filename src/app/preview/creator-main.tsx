@@ -12,8 +12,21 @@ import './collection-fixture.css';
 const query = new URLSearchParams(window.location.search);
 const view = query.get('view');
 const round = query.get('roundId');
-const path =
-  view === 'review'
+const reportingView = ['dashboard', 'history', 'challenge', 'analytics'].includes(view ?? '');
+const reportingSearch = new URLSearchParams();
+for (const key of ['timeZone', 'fromDate', 'throughDate', 'broadcastId', 'scope', 'status']) {
+  if (query.has(key)) reportingSearch.set(key, query.get(key)!);
+}
+const path = reportingView
+  ? (view === 'dashboard'
+      ? '/dashboard'
+      : view === 'history'
+        ? '/challenges'
+        : view === 'challenge'
+          ? '/challenges/' + encodeURIComponent(query.get('challengeId') ?? '')
+          : '/collection/' + encodeURIComponent(round ?? '') + '/analytics') +
+    (reportingSearch.size ? '?' + reportingSearch.toString() : '')
+  : view === 'review'
     ? '/collection/' +
       encodeURIComponent(round ?? '') +
       '/suggestions' +
@@ -33,9 +46,11 @@ createRoot(root).render(
     <MotionProvider>
       <CreatorBoundary origin="http://127.0.0.1:3310">
         <RouterProvider router={createAppRouter()} />
-        {view === 'collection' || view === 'review' ? (
+        {view === 'collection' || view === 'review' || reportingView ? (
           <aside className="collection-fixture-label" aria-label="Synthetic acceptance fixture">
-            SYNTHETIC API FIXTURE · NO LIVE COLLECTION
+            {reportingView
+              ? 'SYNTHETIC API FIXTURE · NO REAL PAYMENTS'
+              : 'SYNTHETIC API FIXTURE · NO LIVE COLLECTION'}
           </aside>
         ) : null}
       </CreatorBoundary>

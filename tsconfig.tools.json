@@ -20,6 +20,7 @@
     "tests/e2e",
     "src/services/collection/fixture.test-helper.ts",
     "src/services/suggestions/fixture.test-helper.ts",
-    "src/services/contracts/index.ts"
+    "src/services/contracts/index.ts",
+    "src/services/reporting/fixture.test-helper.ts"
   ]
 }

@@ -31,3 +31,20 @@ test('review facts require their own explicit collection task before runtime acc
     /Controlled review requires/,
   );
 });
+
+test('reporting financial facts require their own explicit disposable review composition', async () => {
+  await assert.rejects(
+    startLocalApi({
+      backend: 'not-used',
+      task: 'f04-03',
+      collection: true,
+      review: true,
+      reporting: true,
+    }),
+    /Controlled reporting requires/,
+  );
+  await assert.rejects(
+    startLocalApi({ backend: 'not-used', task: 'f05', reporting: true }),
+    /Controlled reporting requires/,
+  );
+});
