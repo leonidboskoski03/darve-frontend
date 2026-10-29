@@ -13,7 +13,7 @@ const navigation = [
 ];
 function Navigation({ close }: { close?: () => void }) {
   return (
-    <nav aria-label="Creator workspace">
+    <nav className="workspace-navigation" aria-label="Creator workspace">
       {navigation.map(({ href, label, Icon }) => (
         <NavLink key={href} to={href} onClick={close}>
           <Icon size={19} aria-hidden="true" />

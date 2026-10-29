@@ -1,6 +1,6 @@
 # Architecture
 
-Status: foundation, shared presentation, contract/transport/session/realtime boundaries, F03 creator entry and F04-02 collection controls are implemented. Feature evidence remains with each owner. React + TypeScript + Vite is selected. React Router uses its browser/data router, not Framework Mode or Next.js. The existing Darve backend remains the only owner of permissions, collections, payments, funding, declarations, moderation, support recovery and coin/template rules.
+Status: foundation, shared presentation, contract/transport/session/realtime boundaries, F03 creator entry and F04 collection/review controls are implemented. Feature evidence remains with each owner. React + TypeScript + Vite is selected. React Router uses its browser/data router, not Framework Mode or Next.js. The existing Darve backend remains the only owner of permissions, collections, payments, funding, declarations, moderation, support recovery and coin/template rules.
 
 ## Responsibilities
 
@@ -58,7 +58,7 @@ Typed ESLint runs local architecture rules from [eslint-architecture.mjs](../too
 
 ## Route composition
 
-Routes compose `/`, `/authorize`, `/integrations`, `/terms`, `/collection`, `/collection/:roundId` and a catch-all with a shared root, safe error element and lazy feature routes. The collection workspace layout lives in routes because it owns navigation; route composition injects creator/session guards and passes navigation intent into the independent collection feature. Router imports stay out of features. Private terms/connections/rounds share their authority QueryClient; OAuth navigation stays inside its service. Collection commands and receipt/clock validation live in `services/collection`; no second loader cache or global store is added. [F04](F04_COLLECTION_IMPLEMENTATION.md) owns the known-ID recovery limit and remaining review route.
+Routes compose `/`, `/authorize`, `/integrations`, `/terms`, `/collection`, `/collection/:roundId`, `/collection/:roundId/suggestions` and a catch-all with a shared root, safe error element and lazy feature routes. The collection workspace layout lives in routes because it owns navigation; route composition injects creator/session guards and passes navigation intent into independent collection/review features. Router imports stay out of features. Private terms/connections/rounds share their authority QueryClient; OAuth navigation stays inside its service. `services/collection` owns collection commands and receipt/clock validation. `services/suggestions` owns publication-bound pages, versioned dispositions, exact acceptance receipts and source-bound owned challenge reads. Neither introduces a second loader cache or global store. [F04](F04_COLLECTION_IMPLEMENTATION.md) owns acceptance evidence and remaining contract/connected gaps.
 
 Future route groups include guest contribution/private receipt, staff portal and isolated OBS display. Their actual URL/authority map belongs to F02 and backend contracts. Staff must have a distinct entry/build/origin policy before real staff access; OBS gets a minimal transparent layout and separately loaded assets rather than the creator shell. Lazy load feature screens and motion sequences so an OBS display does not download the dashboard and marketing experience.
 

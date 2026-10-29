@@ -14,9 +14,12 @@
   },
   "include": [
     "vite.config.ts",
+    "vite.acceptance.config.ts",
     "vitest.config.ts",
     "playwright.config.ts",
     "tests/e2e",
-    "src/services/collection/fixture.test-helper.ts"
+    "src/services/collection/fixture.test-helper.ts",
+    "src/services/suggestions/fixture.test-helper.ts",
+    "src/services/contracts/index.ts"
   ]
 }

@@ -20,7 +20,9 @@
     "test:watch": "vitest",
     "test:architecture": "node --test tools/architecture.test.mjs",
     "test:ci": "node --test tools/ci-policy.test.mjs",
-    "test:e2e": "playwright test",
+    "test:e2e": "npm run build:acceptance && playwright test",
+    "build:acceptance": "vite build --config vite.acceptance.config.ts --mode acceptance",
+    "preview:acceptance": "vite preview --config vite.acceptance.config.ts --mode acceptance",
     "docs:check": "node tools/check-docs.mjs",
     "check:docs": "npm run format:check && npm run docs:check",
     "check:dev": "npm run format:check && npm run lint && npm run docs:check && npm run contracts:check && npm run build",
@@ -36,7 +38,8 @@
     "test:operator": "node --test tools/provider-login-config.test.mjs tools/local-collection.test.mjs",
     "provider:local": "node --use-system-ca tools/local-provider-login.mjs",
     "provider:audit": "node tools/provider-login-audit.mjs",
-    "test:collection:local": "node tools/local-collection-acceptance.mjs"
+    "test:collection:local": "node tools/local-collection-acceptance.mjs",
+    "test:review:local": "node tools/local-review-acceptance.mjs"
   },
   "dependencies": {
     "@darve/contracts": "file:vendor/contracts/darve-contracts-e12b84de3959f6fdbd7eba04ffdfa135f6ba47aa.tgz",

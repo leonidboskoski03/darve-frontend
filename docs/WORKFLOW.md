@@ -21,7 +21,7 @@ Inspect `git status --short`, branch/HEAD, remotes, upstream and worktrees befor
 
 Keep business UI in features, composition in routes and external adapters in services. Enforce public slice exports and import direction; do not suppress lint. Before API work, populate the relevant [contract row](FRONTEND_API_CONTRACT_MATRIX.md), select the isolated environment and confirm authority/CSRF/idempotency. UI guards and flags never replace API permissions.
 
-Run focused checks while iterating; broaden once the source settles or new failures/dependencies justify it. `npm run check` includes formatting, lint, architecture cases, docs links, unit/component tests, TypeScript and the production build. Do not immediately run another build afterward without a change. Playwright uses the existing production build; rebuild first if application/config/dependencies changed. Never claim stale dist as acceptance.
+Run focused checks while iterating; broaden once the source settles or new failures/dependencies justify it. `npm run check` includes formatting, lint, architecture cases, docs links, unit/component tests, TypeScript and the production build. Do not immediately run another product build afterward without a change. Playwright uses that production build on 4173; rebuild first if application/config/dependencies changed. `test:e2e` additionally builds its four isolated synthetic fixture entries into `dist-acceptance/` and previews that separate static output on 4175. Fixture HTML is excluded from product build entries. Never claim stale dist as acceptance.
 
 Use `npm.cmd`/`npx.cmd` on PowerShell where execution policy requires them. Run commands from the frontend root. Typical focused commands:
 
