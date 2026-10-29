@@ -1,0 +1,110 @@
+.workspace-shell {
+  --color-brand: #2400ff;
+  --color-brand-hover: #3217e6;
+  --color-brand-active: #1d00cb;
+  --color-focus: #a99cff;
+  min-height: 100dvh;
+  display: grid;
+  grid-template-columns: 16rem minmax(0, 1fr);
+}
+.workspace-sidebar {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-6) var(--space-4);
+  border-right: 1px solid var(--color-border);
+  background: #060709;
+  min-height: 100dvh;
+}
+.workspace-sidebar > .brand-link {
+  margin: 0 var(--space-2) var(--space-10);
+}
+.workspace-shell nav {
+  display: grid;
+  gap: var(--space-2);
+}
+.workspace-shell nav a {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-3);
+  min-height: var(--control-height);
+  border-radius: var(--radius-large);
+  color: var(--color-muted);
+  text-decoration: none;
+}
+.workspace-shell nav a:hover {
+  color: var(--color-text);
+  background: var(--color-raised);
+}
+.workspace-shell nav a.active {
+  background: var(--color-brand);
+  color: white;
+}
+.workspace-sidebar__foot {
+  margin-top: auto;
+  padding: var(--space-6) var(--space-2) 0;
+  color: var(--color-muted);
+  font-size: var(--font-size-small);
+}
+.workspace-sidebar__foot a {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+.workspace-body {
+  min-width: 0;
+}
+.workspace-topbar {
+  min-height: 4.5rem;
+  padding: var(--space-4) var(--space-8);
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  gap: var(--space-4);
+  justify-content: space-between;
+  align-items: center;
+}
+.workspace-topbar > div {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.workspace-session {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  font-size: var(--font-size-small);
+}
+.workspace-body > main {
+  padding: var(--space-10) clamp(1rem, 3vw, 3rem);
+  max-width: 85rem;
+  margin: auto;
+}
+.workspace-topbar .workspace-menu {
+  display: none;
+}
+@media (max-width: 52rem) {
+  .workspace-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .workspace-sidebar {
+    display: none;
+  }
+  .workspace-topbar .workspace-menu {
+    display: inline-flex;
+  }
+  .workspace-topbar {
+    padding: var(--space-3) var(--space-4);
+    align-items: flex-start;
+  }
+  .workspace-topbar > div:first-child > span {
+    display: none;
+  }
+  .workspace-session {
+    max-width: 80%;
+    overflow-wrap: anywhere;
+  }
+  .workspace-body > main {
+    padding-top: var(--space-6);
+  }
+}

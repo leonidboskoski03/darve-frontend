@@ -1,0 +1,15 @@
+.collection-fixture-label {
+  position: fixed;
+  bottom: 0.5rem;
+  right: 0.5rem;
+  padding: 0.4rem 0.65rem;
+  background: #fff;
+  color: #171721;
+  border: 1px solid #292b34;
+  font:
+    600 0.625rem/1.4 system-ui,
+    sans-serif;
+  z-index: 2;
+  pointer-events: none;
+  max-width: calc(100vw - 1rem);
+}

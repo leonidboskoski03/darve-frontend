@@ -33,9 +33,10 @@
     "test:api:local": "node tools/local-api-acceptance.mjs",
     "test:realtime:local": "node tools/local-realtime-acceptance.mjs",
     "test:creator:local": "node tools/local-creator-acceptance.mjs",
-    "test:operator": "node --test tools/provider-login-config.test.mjs",
+    "test:operator": "node --test tools/provider-login-config.test.mjs tools/local-collection.test.mjs",
     "provider:local": "node --use-system-ca tools/local-provider-login.mjs",
-    "provider:audit": "node tools/provider-login-audit.mjs"
+    "provider:audit": "node tools/provider-login-audit.mjs",
+    "test:collection:local": "node tools/local-collection-acceptance.mjs"
   },
   "dependencies": {
     "@darve/contracts": "file:vendor/contracts/darve-contracts-e12b84de3959f6fdbd7eba04ffdfa135f6ba47aa.tgz",

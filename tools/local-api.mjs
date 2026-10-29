@@ -35,10 +35,13 @@ export async function startLocalApi({
   overlay = false,
   terms = false,
   operatorOAuth,
+  collection = false,
 }) {
-  if (!['f02-02', 'f02-03', 'f03', 'f03-live'].includes(task))
+  if (!['f02-02', 'f02-03', 'f03', 'f03-live', 'f04-02'].includes(task))
     throw new Error('Invalid local task identity.');
   const providerEnvironment = assertProviderLoginRuntime({ task, port, origins, operatorOAuth });
+  if (collection && task !== 'f04-02')
+    throw new Error('Controlled collection ports require their explicit disposable task.');
   backend = path.resolve(backend);
   const provenance = JSON.parse(
     readFileSync(path.join(root, 'vendor/contracts/provenance.json'), 'utf8'),
@@ -219,6 +222,18 @@ export async function startLocalApi({
       REDIS_URL: `redis://:${redisPassword}@127.0.0.1:${redisPort}`,
       CORS_ORIGINS: origins.join(','),
       RATE_LIMIT_MAX: 1000,
+      ...(collection
+        ? {
+            CREDENTIAL_ENCRYPTION_KEY_ID: 'collection-fixture',
+            CREDENTIAL_ENCRYPTION_KEY_BASE64: randomBytes(32).toString('base64'),
+            TWITCH_CLIENT_ID: 'a'.repeat(20),
+            TWITCH_CLIENT_SECRET: 'a'.repeat(30),
+            GOOGLE_CLIENT_ID: 'synthetic.apps.googleusercontent.com',
+            GOOGLE_CLIENT_SECRET: 'a'.repeat(30),
+            KICK_CLIENT_ID: 'a'.repeat(26),
+            KICK_CLIENT_SECRET: 'a'.repeat(30),
+          }
+        : {}),
       ...providerEnvironment,
       ...(terms ? { TERMS_POLICY_FILE: termsFile } : {}),
       ...(overlay
@@ -234,11 +249,17 @@ export async function startLocalApi({
     deps = createDependencies(config, logger);
     const ready = await deps.checkReadiness();
     if (ready.status !== 'ready') throw new Error('Isolated runtime dependencies are unavailable.');
+    const collectionFixture = collection
+      ? await (
+          await import('./local-collection-fixture.mjs')
+        ).createLocalCollectionFixture(backend, deps.database, config)
+      : null;
     const listen = () =>
       new Promise((resolve, reject) => {
-        const listener = createApp(config, logger, deps).listen(port, '127.0.0.1', () =>
-          resolve(listener),
-        );
+        const listener = createApp(config, logger, {
+          ...deps,
+          ...collectionFixture?.dependencies,
+        }).listen(port, '127.0.0.1', () => resolve(listener));
         listener.once('error', reject);
       });
     server = await listen();
@@ -264,6 +285,7 @@ export async function startLocalApi({
     );
     return {
       ...state,
+      collectionFixture,
       close,
       // Node-only network-fault probe; no HTTP route or database effect.
       interruptConnections: () => server.closeAllConnections(),

@@ -19,6 +19,7 @@ try {
   process.env.VITE_APP_ENV = 'local';
   process.env.VITE_PUBLIC_API_ORIGIN = api.apiOrigin;
   vite = await createServer({
+    mode: 'acceptance-creator',
     clearScreen: false,
     envDir: false,
     server: { host: '127.0.0.1', port: 4175, strictPort: true, hmr: false },

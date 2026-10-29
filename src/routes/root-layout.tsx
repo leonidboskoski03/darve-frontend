@@ -6,6 +6,7 @@ import { Button } from '@/design-system/button';
 import { Dialog } from '@/design-system/dialog';
 import { ProviderMark } from '@/design-system/provider-mark';
 import { CreatorSessionContext, SessionStatus } from '@/features/session-status/index';
+import { Workspace } from './workspace-layout';
 
 export function RootLayout() {
   const creator = useContext(CreatorSessionContext);
@@ -19,6 +20,12 @@ export function RootLayout() {
       previous.current = pathname;
     }
   }, [pathname]);
+  if (pathname === '/collection' || pathname.startsWith('/collection/'))
+    return (
+      <Workspace session={creator ? <SessionStatus /> : <span>Server not connected</span>}>
+        <Outlet />
+      </Workspace>
+    );
   return (
     <div className="site-shell">
       <a className="skip-link" href="#main-content">
@@ -106,6 +113,9 @@ export function RootLayout() {
         className="site-menu"
       >
         <nav aria-label="Main navigation" className="site-menu__links">
+          <Link to="/collection" onClick={() => setMenuOpen(false)}>
+            Creator workspace
+          </Link>
           <Link to="/authorize" onClick={() => setMenuOpen(false)}>
             Connect your stream
           </Link>
