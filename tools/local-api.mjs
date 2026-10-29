@@ -3,6 +3,7 @@ import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { assertProviderLoginRuntime } from './provider-login-config.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const postgresImage =
@@ -24,7 +25,7 @@ const run = (command, args, options = {}) => {
 };
 const sha256 = (value) => createHash('sha256').update(value).digest('hex');
 
-/** Operator tooling only: real backend/SQL/Redis, fresh labelled tmpfs containers, no provider configuration. */
+/** Operator tooling only: fresh labelled tmpfs storage. Provider configuration requires explicit opt-in. */
 export async function startLocalApi({
   backend,
   origins = ['http://127.0.0.1:5173', 'http://127.0.0.1:4175'],
@@ -33,8 +34,11 @@ export async function startLocalApi({
   task = 'f02-02',
   overlay = false,
   terms = false,
+  operatorOAuth,
 }) {
-  if (!['f02-02', 'f02-03', 'f03'].includes(task)) throw new Error('Invalid local task identity.');
+  if (!['f02-02', 'f02-03', 'f03', 'f03-live'].includes(task))
+    throw new Error('Invalid local task identity.');
+  const providerEnvironment = assertProviderLoginRuntime({ task, port, origins, operatorOAuth });
   backend = path.resolve(backend);
   const provenance = JSON.parse(
     readFileSync(path.join(root, 'vendor/contracts/provenance.json'), 'utf8'),
@@ -59,8 +63,7 @@ export async function startLocalApi({
     })
   )
     throw new Error('Untracked backend build inputs require review.');
-  if (!Number.isInteger(port) || port < 1024 || port === 3000)
-    throw new Error('Use a separate local API port.');
+  if (!Number.isInteger(port) || port < 1024) throw new Error('Use a separate local API port.');
   run('docker', ['version', '--format', '{{.Server.Version}}']);
   if (build)
     run(
@@ -216,6 +219,7 @@ export async function startLocalApi({
       REDIS_URL: `redis://:${redisPassword}@127.0.0.1:${redisPort}`,
       CORS_ORIGINS: origins.join(','),
       RATE_LIMIT_MAX: 1000,
+      ...providerEnvironment,
       ...(terms ? { TERMS_POLICY_FILE: termsFile } : {}),
       ...(overlay
         ? {
