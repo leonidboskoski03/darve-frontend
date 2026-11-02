@@ -9,6 +9,7 @@ import {
 import { createJsonClient, failure, type ApiFailure } from '@/services/api/index';
 import { createAuthorityScope, createQueryClient } from '@/services/server-state/index';
 import { validReceiptId } from './navigation';
+import { createCheckoutCommands } from './checkout';
 
 export type { PublicChallengeDto };
 export type PublicRead = ReturnType<typeof PublicChallengeResponseSchema.parse>;
@@ -50,7 +51,7 @@ export function contributionMessage(error: unknown, audience: 'public' | 'receip
   if (status === 429) return 'Too many requests. Wait before refreshing.';
   return 'The current status could not be confirmed. Refresh to check again; no payment action was sent.';
 }
-/** Public GETs omit cookies. Private GETs have their own lifetime/cache and never issue money commands. */
+/** Public GETs omit cookies. Private reads and explicit commands have an independent guest lifetime. */
 export function createContributionRuntime(config: {
   origin: string;
   fetcher?: typeof fetch;
@@ -88,6 +89,11 @@ export function createContributionRuntime(config: {
   };
   const visibility = () => resetPrivate(document.visibilityState !== 'hidden');
   const hide = () => resetPrivate(false);
+  const payments = createCheckoutCommands({
+    request: privateRequest,
+    active,
+    revision: () => snapshot.revision,
+  });
   if (config.watch !== false) {
     document.addEventListener('visibilitychange', visibility);
     window.addEventListener('pagehide', hide);
@@ -96,6 +102,7 @@ export function createContributionRuntime(config: {
   }
   return {
     scope,
+    payments,
     publicQueries,
     getSnapshot: () => snapshot,
     subscribe: (listener: () => void) => {

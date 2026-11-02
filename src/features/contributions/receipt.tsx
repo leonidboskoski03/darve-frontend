@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/design-system/button';
 import {
@@ -8,6 +8,7 @@ import {
   type ContributionRuntime,
 } from '@/services/contributions/index';
 import './contributions.css';
+import { ReceiptActions } from './receipt-actions';
 
 const attemptLabels = {
   prepared: 'Prepared',
@@ -99,6 +100,7 @@ export function PrivateReceipt({
   visible: boolean;
   revision: number;
 }) {
+  const heading = useRef<HTMLHeadingElement>(null);
   const query = useQuery({
     queryKey: runtime.scope.key(['receipt', id, revision]),
     queryFn: ({ signal }) => runtime.receipt(id, signal),
@@ -111,10 +113,12 @@ export function PrivateReceipt({
     <>
       <header className="contribution-heading">
         <span className="contribution-kicker">Only in your private browser</span>
-        <h1>Private contribution receipt</h1>
+        <h1 ref={heading} tabIndex={-1}>
+          Private contribution receipt
+        </h1>
         <p>
           Returning from a payment provider does not confirm payment. This page reads the backend's
-          current record and never creates or captures a payment.
+          current record. Continuing or completing a payment requires your explicit confirmation.
         </p>
       </header>
       <Button
@@ -232,6 +236,11 @@ export function PrivateReceipt({
           </details>
         </>
       )}
+      <ReceiptActions
+        runtime={runtime}
+        receipt={receipt}
+        onAcknowledged={() => heading.current?.focus()}
+      />
       <p className="contribution-footnote">
         <a href="/receipts">Look up another receipt</a>
       </p>

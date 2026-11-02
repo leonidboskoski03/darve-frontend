@@ -42,7 +42,14 @@ function Configured({ runtime }: { runtime: ContributionRuntime }) {
       </aside>
       <main id="main-content" ref={main} tabIndex={-1} className="contribution-main">
         {publicId ? (
-          <Contribution key={publicId} runtime={runtime} publicId={publicId} />
+          <Contribution
+            key={publicId}
+            runtime={runtime}
+            publicId={publicId}
+            onReceipt={(id) => {
+              void navigate('/receipts/' + id);
+            }}
+          />
         ) : checkoutId ? (
           <PrivateReceipt
             key={checkoutId}

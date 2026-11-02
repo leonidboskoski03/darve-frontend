@@ -4,6 +4,10 @@ Owners: F02-02 session, F02-03 realtime and F03 creator/terms. [Implementation e
 
 ## Start and stop
 
+Current F06-03 contract source is `bfb6323d50c08099af73514b952771903b54d58b`. While preserving the original dirty backend checkout, use the clean pinned source `../tmp/backend-f06-checkout` as the explicit backend argument to any acceptance command below. A different HEAD/build input fails closed; historical default-path commands are not a bypass. This worktree has no copied operator secrets or persistent data.
+
+F06-03 checkout qualification: `npm.cmd run test:checkout:local -- ../tmp/backend-f06-checkout`. Run sequentially with 3310/4175 free. The exact `f06-03` task requires `collection/review/checkout`, rejects operator credentials and incompatible read/reporting fixtures before runtime access, and creates fresh tmpfs storage. Actual HTTP/domain/SQL create/resume/capture run against Node-only synthetic provider/receiving ports. Eleven actual checks pass; this is controlled engineering evidence, never real external payment acceptance. `finally` cleans the owned services/containers. [F06](F06_CONTRIBUTION_IMPLEMENTATION.md#f06-03-checkout-implementation) owns details and failures.
+
 Requirements: the pinned sibling backend revision, its installed dependencies, Node/npm matching both repositories, a running Docker Desktop engine and installed Playwright Chromium for acceptance. The tool refuses a different backend HEAD or changed tracked application/package inputs. Existing unrelated backend documentation edits are allowed and preserved. It builds the backend before importing its current compiled API; it does not reuse an unknown old dist.
 
 From `darve-frontend`:

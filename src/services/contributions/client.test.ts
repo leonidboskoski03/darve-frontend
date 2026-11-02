@@ -69,7 +69,7 @@ describe('public contribution and independent private receipt reads', () => {
       ),
     ).rejects.toMatchObject({ problem: { category: 'protocol' } });
   });
-  it('does not invent an available payment variant absent from the pinned public contract', async () => {
+  it('rejects availability that contradicts the server method and funding projection', async () => {
     const body = publicContributionFixture();
     const raw = { ...body, data: { ...body.data, checkoutAvailability: { available: true } } };
     await expect(

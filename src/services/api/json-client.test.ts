@@ -8,6 +8,30 @@ const json = (data: unknown, status = 200) =>
 const read = { path: '/api/session', schema: SessionResponseSchema, success: [200] as const };
 
 describe('credentialed JSON transport', () => {
+  it('permits existing-checkout continuation only for guest authority without creator CSRF', async () => {
+    const path = '/api/checkouts/11223344-1234-4234-8234-112233445566/resume';
+    for (const audience of ['guest', 'creator', 'public', 'overlay'] as const) {
+      const send = vi.fn<typeof fetch>().mockResolvedValue(json(body));
+      const client = createJsonClient({
+        origin: 'https://api.example.test',
+        audience,
+        fetcher: send,
+      });
+      const result = await client({ ...read, path, method: 'POST', body: {} });
+      if (audience === 'guest') {
+        expect(result.kind).toBe('data');
+        expect(send.mock.calls[0]?.[1]).toMatchObject({
+          method: 'POST',
+          body: '{}',
+          credentials: 'include',
+        });
+        expect(new Headers(send.mock.calls[0]?.[1]?.headers).get('X-CSRF-Token')).toBeNull();
+      } else {
+        expect(result).toMatchObject({ category: 'configuration' });
+        expect(send).not.toHaveBeenCalled();
+      }
+    }
+  });
   it('pins origin, credentials, redirect/referrer/cache policy and omits a GET body', async () => {
     const send = vi.fn<typeof fetch>().mockResolvedValue(json(body));
     const client = createJsonClient({

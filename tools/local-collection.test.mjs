@@ -1,6 +1,19 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { startLocalApi } from './local-api.mjs';
+
+test('controlled checkout requires explicit isolated selection before Docker or source access', async () => {
+  for (const options of [
+    { task: 'f06', collection: true, review: true, checkout: true },
+    { task: 'f06-03', checkout: true },
+    { task: 'f06-03', collection: true, review: true },
+    { task: 'f06-03', collection: true, review: true, checkout: true, operatorOAuth: {} },
+  ])
+    await assert.rejects(
+      startLocalApi({ backend: 'not-used', ...options }),
+      /Controlled checkout|Provider login requires/,
+    );
+});
 test('controlled collection ports cannot be enabled by an ordinary creator fixture task', async () => {
   await assert.rejects(
     startLocalApi({ backend: 'not-used', task: 'f03', collection: true }),

@@ -39,18 +39,37 @@ export async function startLocalApi({
   review = false,
   reporting = false,
   contributionReads = false,
+  checkout = false,
 }) {
-  if (!['f02-02', 'f02-03', 'f03', 'f03-live', 'f04-02', 'f04-03', 'f05', 'f06'].includes(task))
+  if (
+    !['f02-02', 'f02-03', 'f03', 'f03-live', 'f04-02', 'f04-03', 'f05', 'f06', 'f06-03'].includes(
+      task,
+    )
+  )
     throw new Error('Invalid local task identity.');
   const providerEnvironment = assertProviderLoginRuntime({ task, port, origins, operatorOAuth });
-  if (collection && !['f04-02', 'f04-03', 'f05', 'f06'].includes(task))
+  if (collection && !['f04-02', 'f04-03', 'f05', 'f06', 'f06-03'].includes(task))
     throw new Error('Controlled collection ports require their explicit disposable task.');
-  if (review && (!['f04-03', 'f05', 'f06'].includes(task) || !collection))
+  if (review && (!['f04-03', 'f05', 'f06', 'f06-03'].includes(task) || !collection))
     throw new Error('Controlled review requires its explicit disposable collection task.');
   if (reporting && (task !== 'f05' || !collection || !review))
     throw new Error('Controlled reporting requires its explicit disposable review task.');
   if (contributionReads && (task !== 'f06' || !collection || !review))
     throw new Error('Controlled receipt reads require their explicit disposable review task.');
+  if (
+    checkout &&
+    (task !== 'f06-03' ||
+      !collection ||
+      !review ||
+      contributionReads ||
+      reporting ||
+      operatorOAuth !== undefined)
+  )
+    throw new Error(
+      'Controlled checkout requires its exact disposable review composition without operator credentials.',
+    );
+  if (task === 'f06-03' && !checkout)
+    throw new Error('Controlled checkout must be explicitly selected.');
   backend = path.resolve(backend);
   const provenance = JSON.parse(
     readFileSync(path.join(root, 'vendor/contracts/provenance.json'), 'utf8'),
@@ -231,7 +250,9 @@ export async function startLocalApi({
       REDIS_URL: `redis://:${redisPassword}@127.0.0.1:${redisPort}`,
       CORS_ORIGINS: origins.join(','),
       RATE_LIMIT_MAX: 1000,
-      ...(contributionReads ? { PUBLIC_CHALLENGE_BASE_URL: origins[0] + '/contribute/' } : {}),
+      ...(contributionReads || checkout
+        ? { PUBLIC_CHALLENGE_BASE_URL: origins[0] + '/contribute/' }
+        : {}),
       ...(review
         ? {
             CHALLENGE_TERMS_POLICY_JSON: JSON.stringify({
@@ -292,12 +313,18 @@ export async function startLocalApi({
           await import('./local-contribution-fixture.mjs')
         ).createLocalContributionFixture(backend, deps.database)
       : null;
+    const checkoutFixture = checkout
+      ? await (
+          await import('./local-checkout-fixture.mjs')
+        ).createLocalCheckoutFixture(backend, deps.database, config)
+      : null;
     const listen = () =>
       new Promise((resolve, reject) => {
         const listener = createApp(config, logger, {
           ...deps,
           ...collectionFixture?.dependencies,
           ...contributionFixture?.dependencies,
+          ...checkoutFixture?.dependencies,
         }).listen(port, '127.0.0.1', () => resolve(listener));
         listener.once('error', reject);
       });
@@ -328,6 +355,7 @@ export async function startLocalApi({
       reviewFixture,
       reportingFixture,
       contributionFixture,
+      checkoutFixture,
       close,
       // Node-only network-fault probe; no HTTP route or database effect.
       interruptConnections: () => server.closeAllConnections(),

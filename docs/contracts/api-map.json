@@ -1,5 +1,5 @@
 {
-  "sourceRevision": "e12b84de3959f6fdbd7eba04ffdfa135f6ba47aa",
+  "sourceRevision": "bfb6323d50c08099af73514b952771903b54d58b",
   "status": "mapped source and public-schema references; F02-02 creator session and F02-03 overlay v1/v2 realtime qualified; inline/source-only shapes need owning feature schemas before wiring",
   "operations": [
     {
@@ -1167,7 +1167,7 @@
         "file": "apps/api/src/modules/payments/checkout.routes.ts",
         "line": 7,
         "handler": "controller.create",
-        "sha256": "fafe04f706826b35eaa8c3d688f4eb6ee17c60e6605981db433960c3b2a6c91a"
+        "sha256": "d88b3d91ef9c8c57839e8e438b443409a111371cb1bbdbe777de14e8fe48c377"
       },
       "frontend": "F06"
     },
@@ -1192,7 +1192,7 @@
         "file": "apps/api/src/modules/payments/checkout.routes.ts",
         "line": 8,
         "handler": "controller.status",
-        "sha256": "fafe04f706826b35eaa8c3d688f4eb6ee17c60e6605981db433960c3b2a6c91a"
+        "sha256": "d88b3d91ef9c8c57839e8e438b443409a111371cb1bbdbe777de14e8fe48c377"
       },
       "frontend": "F06"
     },
@@ -1219,7 +1219,33 @@
         "file": "apps/api/src/modules/payments/checkout.routes.ts",
         "line": 9,
         "handler": "controller.complete",
-        "sha256": "fafe04f706826b35eaa8c3d688f4eb6ee17c60e6605981db433960c3b2a6c91a"
+        "sha256": "d88b3d91ef9c8c57839e8e438b443409a111371cb1bbdbe777de14e8fe48c377"
+      },
+      "frontend": "F06"
+    },
+    {
+      "id": "public-api:POST /api/checkouts/:id/resume",
+      "origin": "public-api",
+      "method": "POST",
+      "path": "/api/checkouts/:id/resume",
+      "authority": "guest",
+      "csrf": "Origin + guest cookie, no creator CSRF",
+      "idempotency": "none; reauthorizes existing object only",
+      "request": "CheckoutCompleteInputSchema; CheckoutParamsSchema",
+      "query": "CheckoutEmptyQuerySchema",
+      "response": "CheckoutResponseSchema",
+      "successStatuses": [200, 202],
+      "publicExports": [
+        "CheckoutCompleteInputSchema",
+        "CheckoutParamsSchema",
+        "CheckoutResponseSchema",
+        "CheckoutEmptyQuerySchema"
+      ],
+      "source": {
+        "file": "apps/api/src/modules/payments/checkout.routes.ts",
+        "line": 10,
+        "handler": "controller.resume",
+        "sha256": "d88b3d91ef9c8c57839e8e438b443409a111371cb1bbdbe777de14e8fe48c377"
       },
       "frontend": "F06"
     },
@@ -2715,10 +2741,10 @@
     "apps/admin-api/src/modules/support/support.mapper.ts": "05190dd3910bc74e11d13581809e4b4f0a59a528d8f742646564847d5c0aba0d",
     "apps/admin-api/src/modules/support/support.routes.ts": "d73d2bac43e5c816964f83b608f00172cab1a251de89a5f2460fd793d722a21e",
     "apps/admin-api/src/security/cookies.ts": "3d89106ebc53da73efc7f22f20e9c0754a16ebe3dd555d8ccc236ab7cdefb1e5",
-    "apps/api/src/app.ts": "d3a36d05e3bb36cc1b30ae8b29d4fc3b0e02f60d52b915cdf365b2751a669758",
+    "apps/api/src/app.ts": "78e91fe94c5bba1e80a0fa12ba2e200e6f567038aadde813615718e2eab66be9",
     "apps/api/src/composition/broadcast-discovery.ts": "6a3ce2d33045c7f33bb7b4e9af5d1f5d27efde1dd60964f61207847967d8822d",
     "apps/api/src/composition/collection.ts": "0a71046a02bc2ceedda1cfc85d55eade71e00ba6070c4cc36229e332b5bafb95",
-    "apps/api/src/composition/http-modules.ts": "4b5dae057dd67f0865bc80916771ba1b91c51a7a4404a915cfb96ba0894b8df3",
+    "apps/api/src/composition/http-modules.ts": "d70075517a4bebc556a91aa7dbe906f284ee274802b48de62b2342ddf993cd8e",
     "apps/api/src/composition/identity-access.ts": "288b6c373ee4713f00c74051876715d37e0f0b8f57544b4bda5aa70af18913d9",
     "apps/api/src/composition/kick-webhook.ts": "11f97fa8f2b58145a43e0aa595bfd20229ff9b2d1aa6e31c31c41b23ae7c5390",
     "apps/api/src/composition/oauth-protocol.ts": "e7638e390059926acd897e9222875b35abe2ed5f9a67b55b8f425ce74cb575b5",
@@ -2726,7 +2752,7 @@
     "apps/api/src/composition/paypal-reconciliation.ts": "bf952d1b1697eec3e7e8cb75cc9360fc5953cf4cd4685f661e229f8606e4b1de",
     "apps/api/src/composition/provider-maintenance.ts": "98866b11c193abaec3ea751ccf0bd31bb642509c880715427d7ca1d30b3d73c2",
     "apps/api/src/composition/runtime.ts": "0ca5465084e712047e37a5ce127564aeaa1409737befd40eace310f01f8b030d",
-    "apps/api/src/composition/stripe-checkout.ts": "b81c66e5c87dbf556c3dd1f148c3637b0e54ef307c4034e0ddc6e7300b667774",
+    "apps/api/src/composition/stripe-checkout.ts": "369e5e35f27e60d5839545bad68d39234a4e999993db976c35046a61c3346dfa",
     "apps/api/src/composition/stripe-existing-account.ts": "a46f83c7c068f0b23cadfd2180758c38620d4ff479e711d5450aa63473ec8524",
     "apps/api/src/composition/stripe-receiving.ts": "d63bdbd4e697eecd50d603ed3a5c8f3c707fdbb5b27a4a420ce43964d05cacb3",
     "apps/api/src/composition/support.ts": "f635627647e8721446036a64732d09d6bb4d133844c57b55c430d88f0d4f00bb",
@@ -2750,8 +2776,8 @@
     "apps/api/src/modules/challenges/challenge-completion.controller.ts": "a0842266dddfdeb57819543997086b619b12df780aff1be959142d7dca7fcc41",
     "apps/api/src/modules/challenges/challenge-completion.mapper.ts": "ff09918a4d3014d72f60183e761fc56289d31b5bd7661e6734b0781f510ee672",
     "apps/api/src/modules/challenges/challenge-completion.routes.ts": "59a651fe8155a790988289f3d027208f858870229c5c766443981ba1a03e29a0",
-    "apps/api/src/modules/challenges/challenge-projections.controller.ts": "e7f8811119f57d513bdc20c3e03191a4922c2c149f20b101179ae7c3b43dfd46",
-    "apps/api/src/modules/challenges/challenge-projections.mapper.ts": "cae393e886a43de407e19983c11ee723d6227f87472f5f9f007a155ae5a3aa47",
+    "apps/api/src/modules/challenges/challenge-projections.controller.ts": "20735923ac8bbc30236fe8337a1e960af937d65b8f2a0d1517020688a9b35ed8",
+    "apps/api/src/modules/challenges/challenge-projections.mapper.ts": "cee751aa2e834c9f39a609ab8f776402693ca59a9c7c87c7b5751ac08a7b213e",
     "apps/api/src/modules/challenges/challenge-projections.routes.ts": "0d9e82712e684c9aadefd94c2969e1a9fbd027aa95f5a2fe3d5e114d4fa26d7c",
     "apps/api/src/modules/coins/templates.controller.ts": "3064c6ded005fab935a313fc4b1ecb5a537d8742d955d63d997445e3f25d2be6",
     "apps/api/src/modules/coins/templates.mapper.ts": "d4fe9885ef1a610df0f19222d95c566e2f4ea0c01d798ffa4bdd90d4a93e04fe",
@@ -2787,9 +2813,9 @@
     "apps/api/src/modules/payment-accounts/stripe-receiving.controller.ts": "1da7c3340d15d2c836b106b2727ed666ab052c99e3edcbed528f0b09906eee22",
     "apps/api/src/modules/payment-accounts/stripe-receiving.mapper.ts": "f4d891b574c5ed15ec235878f3ffddb0f7c2cdf6abecf18b7547ef4795ae2d3c",
     "apps/api/src/modules/payment-accounts/stripe-receiving.routes.ts": "1e2591d24e2492ca5b8a0ca535a6cdf5dea5981aa97e76c90ad3ad06a24b3abf",
-    "apps/api/src/modules/payments/checkout.controller.ts": "5e85f304f12dcded785bb21eee836e635dca8ed30399d8db02098ab5ac65ea51",
+    "apps/api/src/modules/payments/checkout.controller.ts": "7758694a820cf5dc1c933fbad26fc883ada926ee0496d641a19e3b0c0cd666db",
     "apps/api/src/modules/payments/checkout.mapper.ts": "7741af17d7dd6453e5ed1bdb8932d57fd9cff9cc10f13457637347131309259a",
-    "apps/api/src/modules/payments/checkout.routes.ts": "fafe04f706826b35eaa8c3d688f4eb6ee17c60e6605981db433960c3b2a6c91a",
+    "apps/api/src/modules/payments/checkout.routes.ts": "d88b3d91ef9c8c57839e8e438b443409a111371cb1bbdbe777de14e8fe48c377",
     "apps/api/src/modules/payments/paypal-webhook.controller.ts": "3886c6f5d1c90a842804efff0e25423f9c68a58589e5e3e80d71b1b1d0ad17d5",
     "apps/api/src/modules/payments/paypal-webhook.routes.ts": "cb33607a3d8bc1e255a9f9b78afd90878b7a90318e014b0f77594cf309679912",
     "apps/api/src/modules/payments/stripe-webhook.controller.ts": "7e42ccbb68a4ab129d6993b4cca92a475c8b33a53c1ed140043f0184e6871564",
