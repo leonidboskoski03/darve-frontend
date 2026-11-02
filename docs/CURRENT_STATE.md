@@ -1,6 +1,6 @@
 # Current frontend state
 
-Checkpoint: 2026-11-02, Europe/Warsaw. F06 is CLOSED and integrated through PR16, with verified ancestry/identical tree and clean dev synchronization. F07 OBS is authorized and in progress; [its owner](F07_OBS_IMPLEMENTATION.md) records source, implementation and remaining qualification. Ordinary/live payment activation remains disabled.
+Checkpoint: 2026-11-02, Europe/Warsaw. F06 is CLOSED/integrated through PR16. F07 is CLOSED for local engineering plus founder-assisted actual OBS lifecycle and physical QR destination acceptance; [F07 final qualification](F07_OBS_IMPLEMENTATION.md#final-qualification-and-integration) owns proof and protected PR17 integration custody. Ordinary/live payments remain disabled.
 
 ## Implemented
 
@@ -28,12 +28,12 @@ The [F01-01 reference audit](F01_REFERENCE_AND_COMPONENT_AUDIT.md) now inventori
 
 [F06](F06_CONTRIBUTION_IMPLEMENTATION.md#final-f06-qualification-and-integration) implements the selected A public contribution/private receipt journey without creator login. Exact reviewed create/same-key replay, server availability, original-object provider continuation, sanitized return/cancel and separate explicit PayPal capture are qualified. Tests pass 228 unit/component, 172 browser and thirteen controlled actual API checks. Actual founder-assisted fresh-viewer sandbox runs verify one EUR10 Stripe payment and one USD10 PayPal capture/payment with synthetic 0.70 fees and original-cookie private receipt reload. Concurrent receiving, valid Stripe fragments and premature PayPal completion/continuation defects are corrected. Verified money stays separate from timing/funding/performance; ordinary/live activation stays OFF.
 
-[F07](F07_OBS_IMPLEMENTATION.md) implements guarded `/obs` creator setup and the isolated transparent `/overlay/:displayId` entry. Actual private grant bootstrap, matching-cookie reload, owner selection/settings, source restriction/revocation and exact rendered QR decoding pass twelve disposable API/database checks. The full gate passes 235 unit/component cases and 198 browser cases, followed by all 22 affected OBS cases after final secret clearing. Draft PR17 and the bounded founder-assisted OBS/physical QR observation are pending; neither actual OBS nor physical scanning is claimed yet.
+[F07](F07_OBS_IMPLEMENTATION.md#final-qualification-and-integration) implements guarded `/obs` setup and the independent transparent `/overlay/:displayId` entry. Explicit access Copy/show/revoke, version-confirmed owner selection/settings, matching-cookie reload, stale/source/revoked hiding and exact local QR are qualified. The full gate passes 235 unit/component and 198 browser cases, plus twelve actual disposable API checks and two handoff Copy/fallback checks. The founder confirms actual OBS rendering, hide/show/refresh/scene recovery and physical QR decoding to the exact current public challenge URL. The phone could not load the computer-loopback destination; reachable mobile/network acceptance remains F10/F11. Temporary grant/runtime/storage are cleaned.
 
 ## Not implemented or verified
 
-- Remaining feature-specific visual/design acceptance, including missing staff/coin/template surfaces and actual OBS reference fit, with their owning feature batches. The F04-02 collection workspace has local responsive/accessibility evidence.
-- Mapped staff/support/moderation public-contract gaps; full guest/reader/staff feature authority lifecycles and joint acceptance remain with their feature owners.
+- Remaining staff/coin/template designs and broader device/connected visual acceptance, with their owning feature batches. F04 has local responsive/accessibility evidence; F07 has selected M/R rendering and actual OBS lifecycle proof.
+- Mapped staff/support/moderation public-contract gaps, staff authority journeys and broader joint lifecycle acceptance. F06 guest and F07 reader scopes have their separate qualified evidence.
 - Joint connected collection/analysis/OBS, staff/support and coins/templates journeys. Actual creator OAuth and F06 sandbox receiving/guest checkout/private receipts have their separate recorded acceptance; full live-system acceptance remains open.
 - Live payment/Resend delivery or deployment acceptance. Actual Stripe/PayPal sandbox receiving/payment/private-receipt acceptance is now qualified under F06; no live activation follows. The default shell requires no Docker.
 
@@ -45,4 +45,4 @@ Use task branches/PRs into dev with light hosted validation; main is reserved fo
 
 ## Next action
 
-Continue F07 reader/setup and joint qualification on `feat/f07-obs-presentation`. Record actual OBS and physical QR observations separately from browser/API checks. Keep the original dirty backend checkout and persistent data unchanged. F08–F11 remain planned; no deployment or live payment activation follows.
+Finish protected PR17 integration/cleanup from the F07 owner if still pending. The next planned batch is F08 staff/support with separate staff authority and Resend evidence, when the user authorizes it. Broader connected F04/F10 and network/deployment acceptance remain with their owners. Preserve original backend files/data and retained evidence worktrees; no task runtime is required.
