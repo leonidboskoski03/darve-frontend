@@ -45,7 +45,14 @@ export async function startLocalApi({
   contributionReads = false,
   checkout = false,
   sandboxPayment,
+  qrPublicOrigin,
 }) {
+  if (
+    qrPublicOrigin !== undefined &&
+    (task !== 'f07' ||
+      !/^https:\/\/[a-z0-9]+(?:-[a-z0-9]+)*\.trycloudflare\.com$/.test(qrPublicOrigin))
+  )
+    throw new Error('Mobile QR origin requires its explicit F07 HTTPS test.');
   if (
     ![
       'f02-02',
@@ -300,7 +307,7 @@ export async function startLocalApi({
       CORS_ORIGINS: origins.join(','),
       RATE_LIMIT_MAX: 1000,
       ...(contributionReads || checkout || sandboxPayment || task === 'f07'
-        ? { PUBLIC_CHALLENGE_BASE_URL: origins[0] + '/contribute/' }
+        ? { PUBLIC_CHALLENGE_BASE_URL: (qrPublicOrigin ?? origins[0]) + '/contribute/' }
         : {}),
       ...(review
         ? {

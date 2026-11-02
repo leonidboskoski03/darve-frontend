@@ -34,3 +34,7 @@ F01 and F02 establish the basis for visible feature slices. F05–F07 can be ord
 ## Next step
 
 Continue the currently authorized feature slice; the tracker and CURRENT_STATE identify completed work, prerequisite findings and the next action. See [CURRENT_STATE](CURRENT_STATE.md) for the current checkpoint. Do not start every batch merely because it appears in this plan.
+
+## F07 mobile QR acceptance extension
+
+2026-11-02: the user explicitly requests the QR to open the actual contribution screen on a phone, extending the earlier decoded-loopback-destination proof. F07-05 owns a bounded synthetic public HTTPS test, successful production mobile-browser reads, actual OBS/phone scan-to-page observation, private/mutation denial and cleanup. This does not authorize payment creation, real provider calls, persistent migrations, stable deployment or the rest of F10/F11. See [F07-05](F07_OBS_IMPLEMENTATION.md#f07-05-phone-reachable-qr-retest).

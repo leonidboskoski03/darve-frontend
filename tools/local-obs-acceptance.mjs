@@ -1,22 +1,29 @@
 import assert from 'node:assert/strict';
 import { randomUUID, randomBytes, createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
+import { mkdirSync, writeFileSync, readFileSync, existsSync, copyFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { chromium, expect } from '@playwright/test';
-import { createServer } from 'vite';
+import { createServer, build } from 'vite';
 import jsQR from 'jsqr';
 import { startLocalApi } from './local-api.mjs';
 import { observationPage } from './obs-observation-page.mjs';
+import { createMobileQrRelay, openMobileQrTunnel } from './mobile-qr-relay.mjs';
 
+const phoneTest = process.argv.includes('--phone');
+if (phoneTest && !process.argv.includes('--observe'))
+  throw new Error('Phone QR requires explicit bounded observation.');
 const origin = 'http://127.0.0.1:4175',
-  directory = 'artifacts.local/f07',
+  directory = phoneTest ? 'artifacts.local/f07-mobile' : 'artifacts.local/f07',
   checks = [],
   errors = [];
 let api,
   vite,
   browser,
   stage = 'startup',
-  handoff = null;
+  handoff = null,
+  mobile,
+  relay;
 mkdirSync(directory, { recursive: true });
 const frontendSource = {
   revision: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(),
@@ -29,6 +36,7 @@ const frontendSource = {
       'src/services/overlay/qr.ts',
       'src/services/overlay/clipboard.ts',
       'tools/obs-observation-page.mjs',
+      'tools/mobile-qr-relay.mjs',
       'src/features/overlay-display/display.tsx',
       'src/features/overlay-display/display.css',
       'src/features/overlay-settings/settings.tsx',
@@ -42,6 +50,20 @@ const frontendSource = {
   ),
 };
 try {
+  if (phoneTest) {
+    stage = 'prepare scoped mobile HTTPS surface';
+    relay = createMobileQrRelay({ directory: resolve(directory, 'dist') });
+    mobile = await openMobileQrTunnel(relay);
+    stage = 'build public mobile contribution entry';
+    process.env.VITE_APP_ENV = 'local';
+    process.env.VITE_PUBLIC_API_ORIGIN = mobile.origin;
+    await build({
+      mode: 'acceptance-qr-mobile',
+      envDir: false,
+      clearScreen: false,
+      build: { outDir: resolve(directory, 'dist'), emptyOutDir: false },
+    });
+  }
   api = await startLocalApi({
     backend: process.argv[2] ?? '../tmp/backend-f06-readiness',
     origins: [origin],
@@ -50,7 +72,9 @@ try {
     collection: true,
     review: true,
     terms: true,
+    ...(mobile ? { qrPublicOrigin: mobile.origin } : {}),
   });
+  if (phoneTest) copyFileSync('artifacts.local/f07/runtime.json', directory + '/runtime.json');
   process.env.VITE_APP_ENV = 'local';
   process.env.VITE_PUBLIC_API_ORIGIN = api.apiOrigin;
   vite = await createServer({
@@ -320,7 +344,9 @@ try {
     actualPostgresRedis: true,
     actualApiAndReaderCookie: true,
     syntheticProviderModelAndSource: true,
-    externalCalls: false,
+    externalCalls: phoneTest,
+    externalProviderCalls: false,
+    temporaryPublicHttps: phoneTest,
     livePayments: false,
     obsObserved: false,
     physicalQrObserved: false,
@@ -367,7 +393,84 @@ try {
       ).status(),
       200,
     );
-    handoff = { presentationUrl: grant.presentationUrl, publicUrl: observedDetail.contributionUrl };
+    const deadline = Date.now() + 1800000;
+    if (mobile) {
+      stage = 'verify real public mobile contribution';
+      relay.bind({
+        origin: mobile.origin,
+        publicId: observedDetail.publicId,
+        apiOrigin: api.apiOrigin,
+        deadline,
+      });
+      const publicPage = await fetch(observedDetail.contributionUrl, {
+        redirect: 'error',
+        signal: AbortSignal.timeout(15000),
+      });
+      assert.equal(publicPage.status, 200);
+      await publicPage.body?.cancel();
+      const publicRead = await fetch(
+        mobile.origin + '/api/public/challenges/' + observedDetail.publicId,
+        { redirect: 'error', signal: AbortSignal.timeout(15000) },
+      );
+      assert.equal(publicRead.status, 200);
+      const publicData = (await publicRead.json()).data;
+      assert.equal(publicData.publicId, observedDetail.publicId);
+      assert.equal(publicData.checkoutAvailability.available, false);
+      const blocked = [];
+      for (const path of [
+        '/api/session',
+        '/api/overlay-grants',
+        '/__f07_observation',
+        '/overlay/' + grant.displayId,
+        '/api/checkouts/' + grant.id,
+        '/api/public/challenges/' + grant.id,
+      ]) {
+        const response = await fetch(mobile.origin + path, {
+          redirect: 'manual',
+          signal: AbortSignal.timeout(15000),
+        });
+        assert.equal(response.status, 404);
+        await response.body?.cancel();
+        blocked.push(path.split('/').slice(0, 3).join('/'));
+      }
+      const mutation = await fetch(
+        mobile.origin + '/api/public/challenges/' + observedDetail.publicId,
+        { method: 'POST', body: '{}', signal: AbortSignal.timeout(15000) },
+      );
+      assert.equal(mutation.status, 405);
+      await mutation.body?.cancel();
+      const phoneContext = await browser.newContext({
+          viewport: { width: 390, height: 844 },
+          isMobile: true,
+          hasTouch: true,
+        }),
+        phone = await phoneContext.newPage();
+      phone.on('pageerror', (error) => errors.push(error.name));
+      await phone.goto(observedDetail.contributionUrl, { waitUntil: 'domcontentloaded' });
+      await expect(phone.getByText(observedDetail.terms.text, { exact: true })).toBeVisible({
+        timeout: 15000,
+      });
+      assert.deepEqual(errors, []);
+      await phoneContext.close();
+      record.mobileHttps = {
+        origin: mobile.origin,
+        publicId: observedDetail.publicId,
+        contributionPageHttp: 200,
+        publicApiHttp: 200,
+        productionMobileBrowserPassed: true,
+        blockedPrivateRoutes: blocked.length,
+        mutationsDenied: true,
+        creationEnabled: false,
+        toolVersion: mobile.toolVersion,
+        checksumVerified: mobile.checksumVerified,
+      };
+      stage = 'human phone QR observation';
+    }
+    handoff = {
+      presentationUrl: grant.presentationUrl,
+      publicUrl: observedDetail.contributionUrl,
+      phoneReachable: phoneTest,
+    };
     for (const denied of [false, true]) {
       const setupContext = await browser.newContext();
       await setupContext.addInitScript(
@@ -412,7 +515,6 @@ try {
       'clipboard denial reveals and selects the private link for manual copy without issuing a replacement',
     ];
     writeFileSync(directory + '/acceptance.json', JSON.stringify(record, null, 2));
-    const deadline = Date.now() + 1800000;
     writeFileSync(
       directory + '/observation-status.json',
       JSON.stringify(
@@ -425,6 +527,7 @@ try {
           publicUrl: observedDetail.contributionUrl,
           deadline: new Date(deadline).toISOString(),
           noPrivateUrlInArtifacts: true,
+          phoneReachable: phoneTest,
         },
         null,
         2,
@@ -450,6 +553,7 @@ try {
                 runId: api.runId,
                 stage: command.action === 'finish' ? 'human-reported-complete' : 'stopped',
                 observations: command.observations ?? null,
+                ...(relay ? { relay: relay.audit() } : {}),
               },
               null,
               2,
@@ -489,7 +593,11 @@ try {
   process.exitCode = 1;
 } finally {
   handoff = null;
-  await browser?.close();
-  await vite?.close();
-  await api?.close();
+  try {
+    await browser?.close();
+    await vite?.close();
+    await api?.close();
+  } finally {
+    await mobile?.close();
+  }
 }

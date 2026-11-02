@@ -35,7 +35,7 @@
     "test:api:local": "node tools/local-api-acceptance.mjs",
     "test:realtime:local": "node tools/local-realtime-acceptance.mjs",
     "test:creator:local": "node tools/local-creator-acceptance.mjs",
-    "test:operator": "node --test tools/provider-login-config.test.mjs tools/local-collection.test.mjs",
+    "test:operator": "node --test tools/provider-login-config.test.mjs tools/local-collection.test.mjs tools/mobile-qr-relay.test.mjs",
     "provider:local": "node --use-system-ca tools/local-provider-login.mjs",
     "provider:audit": "node tools/provider-login-audit.mjs",
     "test:collection:local": "node tools/local-collection-acceptance.mjs",
@@ -43,7 +43,8 @@
     "test:reporting:local": "node tools/local-reporting-acceptance.mjs",
     "test:contribution:local": "node tools/local-contribution-acceptance.mjs",
     "test:checkout:local": "node tools/local-checkout-acceptance.mjs",
-    "test:obs:local": "node tools/local-obs-acceptance.mjs"
+    "test:obs:local": "node tools/local-obs-acceptance.mjs",
+    "test:obs:phone": "node --use-system-ca tools/local-obs-acceptance.mjs ../tmp/backend-f06-readiness --observe --phone"
   },
   "dependencies": {
     "@darve/contracts": "file:vendor/contracts/darve-contracts-4a91709b530b333fd8f094ff797946a6ec8a99cd.tgz",

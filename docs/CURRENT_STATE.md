@@ -1,6 +1,6 @@
 # Current frontend state
 
-Checkpoint: 2026-11-02, Europe/Warsaw. F06 is CLOSED/integrated through PR16. F07 is CLOSED for local engineering plus founder-assisted actual OBS lifecycle and physical QR destination acceptance; [F07 final qualification](F07_OBS_IMPLEMENTATION.md#final-qualification-and-integration) owns proof and protected PR17 integration custody. Ordinary/live payments remain disabled.
+Checkpoint: 2026-11-02, Europe/Warsaw. F06 and the original F07 local/OBS/QR-destination scope are integrated through PR16/17. The user now requests F07-05: a QR that opens the actual contribution page on a phone. [The owner](F07_OBS_IMPLEMENTATION.md#f07-05-phone-reachable-qr-retest) records the bounded synthetic HTTPS retest; phone page loading remains unverified. Ordinary/live payments remain disabled.
 
 ## Implemented
 
@@ -45,4 +45,4 @@ Use task branches/PRs into dev with light hosted validation; main is reserved fo
 
 ## Next action
 
-Finish protected PR17 integration/cleanup from the F07 owner if still pending. The next planned batch is F08 staff/support with separate staff authority and Resend evidence, when the user authorizes it. Broader connected F04/F10 and network/deployment acceptance remain with their owners. Preserve original backend files/data and retained evidence worktrees; no task runtime is required.
+Complete F07-05 scoped HTTPS and production mobile-browser checks, then coordinate actual OBS-to-phone scan/page loading and clean the bounded test. Follow its owner for current source/run/Git evidence. F08 remains planned until authorized. Preserve original backend files/data and retained evidence worktrees; no live payments or stable deployment is implied.
