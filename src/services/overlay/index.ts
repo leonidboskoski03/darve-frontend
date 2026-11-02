@@ -7,3 +7,4 @@ export {
   type Preferences,
 } from './owner';
 export { qrMatrix } from './qr';
+export { copyOverlayAccessLink } from './clipboard';

@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict';
-import { randomUUID, createHash } from 'node:crypto';
+import { randomUUID, randomBytes, createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
 import { chromium, expect } from '@playwright/test';
 import { createServer } from 'vite';
 import jsQR from 'jsqr';
 import { startLocalApi } from './local-api.mjs';
+import { observationPage } from './obs-observation-page.mjs';
 
 const origin = 'http://127.0.0.1:4175',
   directory = 'artifacts.local/f07',
@@ -17,12 +18,6 @@ let api,
   stage = 'startup',
   handoff = null;
 mkdirSync(directory, { recursive: true });
-const escape = (value) =>
-  value
-    .replaceAll('&', '&amp;')
-    .replaceAll('"', '&quot;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;');
 const frontendSource = {
   revision: execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf8' }).trim(),
   dirty: Boolean(execFileSync('git', ['status', '--porcelain'], { encoding: 'utf8' }).trim()),
@@ -32,6 +27,8 @@ const frontendSource = {
       'src/services/overlay/reader.ts',
       'src/services/overlay/owner.ts',
       'src/services/overlay/qr.ts',
+      'src/services/overlay/clipboard.ts',
+      'tools/obs-observation-page.mjs',
       'src/features/overlay-display/display.tsx',
       'src/features/overlay-display/display.css',
       'src/features/overlay-settings/settings.tsx',
@@ -79,18 +76,13 @@ try {
             response.setHeader('Cache-Control', 'no-store');
             response.setHeader('Referrer-Policy', 'no-referrer');
             response.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
+            const nonce = randomBytes(18).toString('base64url');
             response.setHeader(
               'Content-Security-Policy',
-              "default-src 'none'; style-src 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
+              `default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-${nonce}'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'`,
             );
             response.setHeader('Content-Type', 'text/html; charset=utf-8');
-            if (!handoff) {
-              response.end('<h1>F07 observation is not active</h1>');
-              return;
-            }
-            response.end(
-              `<!doctype html><html lang="en"><meta name="referrer" content="no-referrer"><title>F07 local OBS observation</title><style>body{font:17px system-ui;max-width:800px;margin:40px auto;padding:24px;background:#0a0b10;color:#f5f5f7}input{width:100%;font:inherit;padding:12px}p{line-height:1.6}</style><h1>F07 local OBS observation</h1><p>Disposable synthetic challenge, actual read-only backend grant and SSE. No live stream, payment or external provider call is involved.</p><p>Copy the complete private value below into a new temporary OBS Browser Source. Do not paste it in chat or share a screenshot of this page. Use 1920×1080, or 1280×720 with scale 0.75 in the display settings.</p><label>Private OBS access link<input type="password" readonly value="${escape(handoff.presentationUrl)}"></label><p>OBS should show the selected viewer challenge, exact EUR goal and white QR panel. Scan that QR and compare its destination with this exact public challenge URL:</p><p>${escape(handoff.publicUrl)}</p><p>The URL is loopback-local; a phone can verify the decoded destination but cannot load this computer's loopback page. Record scanning and page reachability separately.</p><p>Hide/show the source, reload it and switch away/back with shutdown when invisible enabled. Content should recover. Do not start streaming or recording. This temporary run ends after 30 minutes.</p></html>`,
-            );
+            response.end(observationPage(handoff, nonce));
           });
         },
       },
@@ -376,6 +368,50 @@ try {
       200,
     );
     handoff = { presentationUrl: grant.presentationUrl, publicUrl: observedDetail.contributionUrl };
+    for (const denied of [false, true]) {
+      const setupContext = await browser.newContext();
+      await setupContext.addInitScript(
+        ({ denied }) =>
+          Object.defineProperty(globalThis.navigator, 'clipboard', {
+            value: {
+              writeText: async (value) => {
+                if (denied) throw new Error('Controlled clipboard denial');
+                globalThis.f07Copied = value;
+              },
+            },
+          }),
+        { denied },
+      );
+      const setupPage = await setupContext.newPage();
+      await setupPage.goto(origin + '/__f07_observation', { waitUntil: 'domcontentloaded' });
+      await setupPage.getByRole('button', { name: 'Copy private OBS link', exact: true }).click();
+      if (denied) {
+        await expect(
+          setupPage.getByRole('status').filter({ hasText: 'Clipboard access is unavailable' }),
+        ).toBeVisible();
+        await expect(setupPage.getByLabel('Private OBS access link')).toHaveAttribute(
+          'type',
+          'text',
+        );
+      } else {
+        await expect(
+          setupPage.getByRole('status').filter({ hasText: 'Private OBS link copied' }),
+        ).toBeVisible();
+        assert.equal(
+          await setupPage.evaluate(
+            (value) => globalThis.f07Copied === value,
+            grant.presentationUrl,
+          ),
+          true,
+        );
+      }
+      await setupContext.close();
+    }
+    record.handoffCopyChecks = [
+      'nonce-protected loopback handoff copies the exact original private source link on explicit click',
+      'clipboard denial reveals and selects the private link for manual copy without issuing a replacement',
+    ];
+    writeFileSync(directory + '/acceptance.json', JSON.stringify(record, null, 2));
     const deadline = Date.now() + 1800000;
     writeFileSync(
       directory + '/observation-status.json',

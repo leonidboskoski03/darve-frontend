@@ -390,6 +390,57 @@ test('synthetic owner controls never issue on mount and require separate review 
   await expect.poll(() => state.revoked).toBe(1);
   await expect(page.getByLabel('Private browser-source URL')).toHaveCount(0);
 });
+test('synthetic private OBS access uses explicit Copy and Show controls without copying the public donation URL', async ({
+  page,
+}) => {
+  await page.addInitScript(() =>
+    Object.defineProperty(navigator, 'clipboard', {
+      value: {
+        writeText: (value: string) => {
+          (window as unknown as { copiedObs: string }).copiedObs = value;
+          return Promise.resolve();
+        },
+      },
+    }),
+  );
+  const state = await owner(page);
+  await page.getByRole('checkbox', { name: /I understand this read-only link/ }).check();
+  await page.getByRole('button', { name: 'Create private OBS link' }).click();
+  await expect(page.getByLabel('Private browser-source URL')).toHaveAttribute('type', 'password');
+  await page.getByRole('button', { name: 'Copy private OBS link' }).click();
+  await expect(
+    page.getByRole('status').filter({ hasText: 'Private OBS link copied' }),
+  ).toBeVisible();
+  expect(await page.evaluate(() => (window as unknown as { copiedObs: string }).copiedObs)).toBe(
+    `${origin}/overlay/${displayId}#grant=${'s'.repeat(43)}`,
+  );
+  await page.getByRole('button', { name: 'Show private link' }).click();
+  await expect(page.getByLabel('Private browser-source URL')).toHaveAttribute('type', 'text');
+  await page.getByRole('button', { name: 'Hide private link' }).click();
+  await expect(page.getByLabel('Private browser-source URL')).toHaveAttribute('type', 'password');
+  expect(state.issued).toBe(1);
+});
+test('synthetic blocked clipboard explains the visible private-link fallback without issuing another grant', async ({
+  page,
+}) => {
+  await page.addInitScript(() =>
+    Object.defineProperty(navigator, 'clipboard', {
+      value: {
+        writeText: () => Promise.reject(new Error('Synthetic denied clipboard')),
+      },
+    }),
+  );
+  const state = await owner(page);
+  await page.getByRole('checkbox', { name: /I understand this read-only link/ }).check();
+  await page.getByRole('button', { name: 'Create private OBS link' }).click();
+  await page.getByRole('button', { name: 'Copy private OBS link' }).click();
+  await expect(
+    page.getByRole('status').filter({ hasText: 'Clipboard access is unavailable' }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Show private link' }).click();
+  await expect(page.getByLabel('Private browser-source URL')).toHaveAttribute('type', 'text');
+  expect(state.issued).toBe(1);
+});
 test('synthetic stale selection requires refreshed renewed review without an automatic command replay', async ({
   page,
 }) => {

@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/design-system/button';
 import {
   createOverlayOwner,
+  copyOverlayAccessLink,
   overlayMessage,
   type Preferences,
   type Selection,
@@ -24,6 +25,7 @@ export function OverlaySettings({
   const [client] = useState(() => createOverlayOwner(session)),
     [historyClient] = useState(() => createReportingClient(session));
   const [link, setLink] = useState<string | null>(null),
+    [showLink, setShowLink] = useState(false),
     [grantId, setGrantId] = useState(''),
     [knownDisplay, setKnownDisplay] = useState('');
   const [busy, setBusy] = useState(false),
@@ -120,6 +122,7 @@ export function OverlaySettings({
               const result = await client.issue();
               if (scope.signal.aborted) return;
               setLink(result.presentationUrl);
+              setShowLink(false);
               setGrantId(result.id);
               onDisplay(result.displayId);
               setNotice(
@@ -131,19 +134,44 @@ export function OverlaySettings({
           Create private OBS link
         </Button>
         {link && (
-          <label>
-            Private browser-source URL
-            <input
-              aria-label="Private browser-source URL"
-              type="password"
-              readOnly
-              value={link}
-              onFocus={(e) => e.target.select()}
-            />
-            <span>
-              Select this field and copy its full value. It is shown only in this session.
-            </span>
-          </label>
+          <div>
+            <label>
+              Private browser-source URL
+              <input
+                aria-label="Private browser-source URL"
+                type={showLink ? 'text' : 'password'}
+                readOnly
+                value={link}
+                onFocus={(e) => e.target.select()}
+              />
+              <span>
+                Use Copy private OBS link, then paste into the Browser Source URL field. Keep the
+                complete value private.
+              </span>
+            </label>
+            <Button
+              tone="secondary"
+              onClick={() =>
+                void copyOverlayAccessLink(link).then((copied) => {
+                  if (!scope.signal.aborted)
+                    setNotice(
+                      copied
+                        ? 'Private OBS link copied. Paste it into the Browser Source URL field.'
+                        : 'Clipboard access is unavailable. Show the private link, select its complete value and copy it manually.',
+                    );
+                })
+              }
+            >
+              Copy private OBS link
+            </Button>
+            <Button
+              tone="quiet"
+              aria-pressed={showLink}
+              onClick={() => setShowLink((value) => !value)}
+            >
+              {showLink ? 'Hide private link' : 'Show private link'}
+            </Button>
+          </div>
         )}
         <p>
           In OBS: add a Browser Source, use a 1920 × 1080 canvas (or 1280 × 720), and paste the
