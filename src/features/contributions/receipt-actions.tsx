@@ -75,6 +75,7 @@ export function ReceiptActions({
       )}
       {allowed && (
         <>
+          {receipt.paymentProvider === 'paypal' && <h3>1. Approve on PayPal</h3>}
           <label className="contribution-consent">
             <input
               type="checkbox"
@@ -89,7 +90,7 @@ export function ReceiptActions({
           </label>
           <Button
             aria-busy={resume.isPending}
-            disabled={!reviewed || !!captureAttempt}
+            disabled={!reviewed}
             onClick={() => {
               if (!busy) {
                 capture.reset();
@@ -102,9 +103,10 @@ export function ReceiptActions({
           </Button>
           {receipt.paymentProvider === 'paypal' && (
             <>
+              <h3>2. Finish after PayPal approval</h3>
               <p>
-                If you already approved this order on PayPal, confirm below to request completion.
-                Returning here alone does not capture it.
+                Use Continue to PayPal above first. After approving this order there, return here
+                and confirm below to finish payment. Returning here alone does not complete payment.
               </p>
               <label className="contribution-consent">
                 <input
@@ -145,8 +147,9 @@ export function ReceiptActions({
       {!!error && <p role="alert">{checkoutMessage(error)}</p>}
       {capture.isSuccess && (
         <p role="status">
-          The completion request was checked. Only a verified payment in the canonical receipt
-          confirms money.
+          {capture.data.paymentStatus === 'confirmed'
+            ? 'PayPal payment is confirmed. Refresh the receipt to see its current details.'
+            : 'Payment is not confirmed. If you have not approved the order yet, use Continue to PayPal above. Otherwise refresh this receipt to check again.'}
         </p>
       )}
       {uncertain && (

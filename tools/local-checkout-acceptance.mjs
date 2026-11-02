@@ -249,7 +249,30 @@ try {
     page.getByRole('button', { name: 'Complete PayPal payment', exact: true }),
   ).toBeDisabled();
   assert.equal((await api.checkoutFixture.audit()).captures, 0);
+  await page.getByRole('checkbox', { name: /I approved this order on PayPal/ }).check();
+  await page.getByRole('button', { name: 'Complete PayPal payment', exact: true }).click();
+  await expect(
+    page.getByRole('status').filter({ hasText: 'Payment is not confirmed' }),
+  ).toBeVisible();
+  assert.equal((await api.checkoutFixture.audit()).captures, 0);
+  await page.route('https://www.sandbox.paypal.com/**', (route) =>
+    route.fulfill({
+      contentType: 'text/html',
+      body: '<h1>Synthetic original PayPal approval</h1>',
+    }),
+  );
+  await page.getByRole('checkbox', { name: /I reviewed this checkout/ }).check();
+  await page.getByRole('button', { name: 'Continue to PayPal', exact: true }).click();
+  await expect(
+    page.getByRole('heading', { name: 'Synthetic original PayPal approval', exact: true }),
+  ).toBeVisible();
+  assert.equal((await api.checkoutFixture.audit()).paypalCreates, 1);
+  assert.equal((await api.checkoutFixture.audit()).captures, 0);
+  checks.push(
+    'completion before approval performs no capture and still permits continuation of the same original PayPal order',
+  );
   await api.checkoutFixture.approve(paypalId);
+  await visit('/payments/return?checkout=' + paypalId + '&token=ORDER1');
   await page.getByRole('checkbox', { name: /I approved this order on PayPal/ }).check();
   await page.getByRole('button', { name: 'Complete PayPal payment', exact: true }).click();
   await expect(page.getByText('Verified payment recorded', { exact: true })).toBeVisible();

@@ -170,7 +170,7 @@ try {
         newAccountCreation: false,
       }),
     );
-    await api.sandboxFixture.waitForSetup(Math.min(600000, operatorDeadline - Date.now()));
+    await api.sandboxFixture.waitForSetup(operatorDeadline - Date.now());
   }
   const challenge = await accepted(1800);
   const { publicId } = await api.sandboxFixture.bindChallenge(challenge.id);
@@ -300,6 +300,28 @@ try {
     process.exitCode = 1;
   }
 } catch (error) {
+  if (api?.sandboxFixture && ['stripe', 'paypal'].includes(selectedProvider)) {
+    const directory = 'artifacts.local/f06-04-' + selectedProvider;
+    mkdirSync(directory, { recursive: true });
+    writeFileSync(
+      directory + '/status.json',
+      JSON.stringify(
+        {
+          task: 'F06-04',
+          runId: api.runId,
+          source: api.source,
+          provider: selectedProvider,
+          stage: 'incomplete',
+          failedStage: stage,
+          ordinaryPaymentsEnabled: false,
+          newAccountsAllowed: false,
+          ...(await api.sandboxFixture.audit()),
+        },
+        null,
+        2,
+      ),
+    );
+  }
   console.error(
     JSON.stringify({
       failedStage: stage,
