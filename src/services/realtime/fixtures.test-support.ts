@@ -1,7 +1,4 @@
-import {
-  OverlaySnapshotResponseSchema,
-  OverlaySnapshotV2ResponseSchema,
-} from '@/services/contracts/index';
+import { OverlaySnapshotResponseSchema, OverlaySnapshotV2ResponseSchema } from '../contracts/index';
 
 export const displayId = '11223344-1234-4234-8234-112233445566';
 export const grantId = '22334455-1234-4234-8234-112233445566';

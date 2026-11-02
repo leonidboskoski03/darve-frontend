@@ -1,0 +1,171 @@
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+  background: transparent;
+}
+body {
+  overflow: hidden;
+}
+.obs-stage {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  color: #f1f3f7;
+  font-family: Inter, system-ui, sans-serif;
+}
+.obs-card {
+  position: absolute;
+  display: flex;
+  width: 960px;
+  min-height: 236px;
+  box-sizing: border-box;
+  border: 1px solid #454473;
+  border-radius: 18px;
+  overflow: hidden;
+  background: #0a0b10;
+  opacity: var(--obs-opacity);
+  transform: scale(var(--obs-scale));
+}
+.obs-stage[data-position$='left'] .obs-card {
+  left: var(--obs-x);
+  transform-origin: left bottom;
+}
+.obs-stage[data-position$='right'] .obs-card {
+  right: var(--obs-x);
+  transform-origin: right bottom;
+}
+.obs-stage[data-position^='bottom'] .obs-card {
+  bottom: var(--obs-y);
+}
+.obs-stage[data-position^='top'] .obs-card {
+  top: var(--obs-y);
+  transform-origin: left top;
+}
+.obs-stage[data-position='top_right'] .obs-card {
+  transform-origin: right top;
+}
+.obs-main {
+  flex: 1;
+  min-width: 0;
+  padding: 20px 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.obs-top,
+.obs-bottom,
+.obs-funding > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+.obs-status {
+  color: #c2bbff;
+  font-size: 13px;
+}
+.obs-time {
+  color: #f1f3f7;
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+}
+.obs-main h1 {
+  margin: 0;
+  font-size: 25px;
+  line-height: 1.25;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.obs-bottom {
+  margin-top: auto;
+  align-items: flex-start;
+}
+.obs-credits {
+  flex: 1;
+  min-width: 0;
+}
+.obs-credits p {
+  margin: 4px 0 0;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.obs-credits > span,
+.obs-funding > span,
+.obs-subtitle,
+.obs-review {
+  color: #afb5c8;
+  font-size: 12px;
+}
+.obs-funding {
+  width: 55%;
+  min-width: 0;
+}
+.obs-funding > div:first-child {
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 3px 8px;
+}
+.obs-funding strong {
+  font-size: 19px;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.obs-funding > div > span {
+  color: #afb5c8;
+  font-size: 12px;
+}
+.obs-progress {
+  height: 6px;
+  background: #2d2e40;
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 9px 0 5px;
+}
+.obs-progress > span {
+  display: block;
+  height: 100%;
+  background: #aaa0ff;
+}
+.obs-qr {
+  width: 190px;
+  flex-shrink: 0;
+  border-left: 1px solid #333443;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 15px;
+  box-sizing: border-box;
+}
+.obs-qr > strong {
+  font-size: 18px;
+}
+.obs-qr svg {
+  width: 150px;
+  height: 150px;
+}
+.obs-qr > span {
+  font-size: 12px;
+  color: #c5cada;
+}
+.obs-review,
+.obs-subtitle {
+  margin: 0;
+}
+@font-face {
+  font-family: Inter;
+  src: url('/fonts/inter-latin.woff2') format('woff2');
+  font-weight: 100 900;
+  font-display: swap;
+}

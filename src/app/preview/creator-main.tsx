@@ -25,18 +25,21 @@ const path = reportingView
           ? '/challenges/' + encodeURIComponent(query.get('challengeId') ?? '')
           : '/collection/' + encodeURIComponent(round ?? '') + '/analytics') +
     (reportingSearch.size ? '?' + reportingSearch.toString() : '')
-  : view === 'review'
-    ? '/collection/' +
-      encodeURIComponent(round ?? '') +
-      '/suggestions' +
-      (query.has('filter') ? '?filter=' + encodeURIComponent(query.get('filter')!) : '')
-    : view === 'collection'
-      ? '/collection' + (round ? '/' + encodeURIComponent(round) : '')
-      : view === 'integrations'
-        ? '/integrations'
-        : view === 'terms'
-          ? '/terms'
-          : '/authorize';
+  : view === 'obs'
+    ? '/obs' +
+      (query.has('displayId') ? '?displayId=' + encodeURIComponent(query.get('displayId')!) : '')
+    : view === 'review'
+      ? '/collection/' +
+        encodeURIComponent(round ?? '') +
+        '/suggestions' +
+        (query.has('filter') ? '?filter=' + encodeURIComponent(query.get('filter')!) : '')
+      : view === 'collection'
+        ? '/collection' + (round ? '/' + encodeURIComponent(round) : '')
+        : view === 'integrations'
+          ? '/integrations'
+          : view === 'terms'
+            ? '/terms'
+            : '/authorize';
 window.history.replaceState(window.history.state, '', path);
 const root = document.getElementById('root');
 if (!root) throw new Error('Missing creator acceptance root.');

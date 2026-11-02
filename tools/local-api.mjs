@@ -58,6 +58,7 @@ export async function startLocalApi({
       'f06',
       'f06-03',
       'f06-04',
+      'f07',
     ].includes(task)
   )
     throw new Error('Invalid local task identity.');
@@ -74,9 +75,12 @@ export async function startLocalApi({
     operatorOAuth,
   });
   const providerEnvironment = assertProviderLoginRuntime({ task, port, origins, operatorOAuth });
-  if (collection && !['f04-02', 'f04-03', 'f05', 'f06', 'f06-03', 'f06-04'].includes(task))
+  if (collection && !['f04-02', 'f04-03', 'f05', 'f06', 'f06-03', 'f06-04', 'f07'].includes(task))
     throw new Error('Controlled collection ports require their explicit disposable task.');
-  if (review && (!['f04-03', 'f05', 'f06', 'f06-03', 'f06-04'].includes(task) || !collection))
+  if (
+    review &&
+    (!['f04-03', 'f05', 'f06', 'f06-03', 'f06-04', 'f07'].includes(task) || !collection)
+  )
     throw new Error('Controlled review requires its explicit disposable collection task.');
   if (reporting && (task !== 'f05' || !collection || !review))
     throw new Error('Controlled reporting requires its explicit disposable review task.');
@@ -96,6 +100,22 @@ export async function startLocalApi({
     );
   if (task === 'f06-03' && !checkout)
     throw new Error('Controlled checkout must be explicitly selected.');
+  if (
+    task === 'f07' &&
+    (!overlay ||
+      !collection ||
+      !review ||
+      !terms ||
+      checkout ||
+      sandboxPayment ||
+      reporting ||
+      contributionReads ||
+      operatorOAuth ||
+      port !== 3310 ||
+      origins.length !== 1 ||
+      origins[0] !== 'http://127.0.0.1:4175')
+  )
+    throw new Error('OBS acceptance requires its isolated read-only overlay/review composition.');
   backend = path.resolve(backend);
   const provenance = JSON.parse(
     readFileSync(path.join(root, 'vendor/contracts/provenance.json'), 'utf8'),
@@ -279,7 +299,7 @@ export async function startLocalApi({
       REDIS_URL: `redis://:${redisPassword}@127.0.0.1:${redisPort}`,
       CORS_ORIGINS: origins.join(','),
       RATE_LIMIT_MAX: 1000,
-      ...(contributionReads || checkout || sandboxPayment
+      ...(contributionReads || checkout || sandboxPayment || task === 'f07'
         ? { PUBLIC_CHALLENGE_BASE_URL: origins[0] + '/contribute/' }
         : {}),
       ...(review
@@ -311,7 +331,8 @@ export async function startLocalApi({
       ...(terms ? { TERMS_POLICY_FILE: termsFile } : {}),
       ...(overlay
         ? {
-            OVERLAY_PRESENTATION_BASE_URL: origins[0] + '/tests/fixtures/realtime.html/',
+            OVERLAY_PRESENTATION_BASE_URL:
+              origins[0] + (task === 'f07' ? '/overlay/' : '/tests/fixtures/realtime.html/'),
             OVERLAY_GRANT_EPOCH: randomUUID(),
             OVERLAY_SSE_POLL_MS: 250,
           }
