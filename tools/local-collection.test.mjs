@@ -2,6 +2,16 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { startLocalApi } from './local-api.mjs';
 
+test('public QR base changes are scoped to the explicit temporary F07 HTTPS test', async () => {
+  for (const options of [
+    { task: 'f03', qrPublicOrigin: 'https://synthetic.trycloudflare.com' },
+    { task: 'f07', qrPublicOrigin: 'http://local.example.test' },
+    { task: 'f07', qrPublicOrigin: 'https://unreviewed.example.test' },
+    { task: 'f07', qrPublicOrigin: 'https://synthetic.trycloudflare.com/path' },
+  ])
+    await assert.rejects(startLocalApi({ backend: 'not-used', ...options }), /Mobile QR origin/);
+});
+
 test('OBS qualification cannot enable payments or escape its reviewed disposable composition', async () => {
   const base = {
     backend: 'not-used',

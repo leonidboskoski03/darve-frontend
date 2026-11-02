@@ -1,6 +1,6 @@
 # Current frontend state
 
-Checkpoint: 2026-11-02, Europe/Warsaw. F06 is CLOSED/integrated through PR16. F07 is CLOSED for local engineering plus founder-assisted actual OBS lifecycle and physical QR destination acceptance; [F07 final qualification](F07_OBS_IMPLEMENTATION.md#final-qualification-and-integration) owns proof and protected PR17 integration custody. Ordinary/live payments remain disabled.
+Checkpoint: 2026-11-02, Europe/Warsaw. F06 and original F07 are integrated through PR16/17. F07-05 now also qualifies physical OBS QR scanning that opens the contribution page on a phone through a bounded public HTTPS test; [its owner](F07_OBS_IMPLEMENTATION.md#f07-05-final-scan-to-page-qualification-and-integration) records final Git/evidence custody. Temporary exposure is cleaned; stable deployment and ordinary/live payments remain disabled.
 
 ## Implemented
 
@@ -28,7 +28,7 @@ The [F01-01 reference audit](F01_REFERENCE_AND_COMPONENT_AUDIT.md) now inventori
 
 [F06](F06_CONTRIBUTION_IMPLEMENTATION.md#final-f06-qualification-and-integration) implements the selected A public contribution/private receipt journey without creator login. Exact reviewed create/same-key replay, server availability, original-object provider continuation, sanitized return/cancel and separate explicit PayPal capture are qualified. Tests pass 228 unit/component, 172 browser and thirteen controlled actual API checks. Actual founder-assisted fresh-viewer sandbox runs verify one EUR10 Stripe payment and one USD10 PayPal capture/payment with synthetic 0.70 fees and original-cookie private receipt reload. Concurrent receiving, valid Stripe fragments and premature PayPal completion/continuation defects are corrected. Verified money stays separate from timing/funding/performance; ordinary/live activation stays OFF.
 
-[F07](F07_OBS_IMPLEMENTATION.md#final-qualification-and-integration) implements guarded `/obs` setup and the independent transparent `/overlay/:displayId` entry. Explicit access Copy/show/revoke, version-confirmed owner selection/settings, matching-cookie reload, stale/source/revoked hiding and exact local QR are qualified. The full gate passes 235 unit/component and 198 browser cases, plus twelve actual disposable API checks and two handoff Copy/fallback checks. The founder confirms actual OBS rendering, hide/show/refresh/scene recovery and physical QR decoding to the exact current public challenge URL. The phone could not load the computer-loopback destination; reachable mobile/network acceptance remains F10/F11. Temporary grant/runtime/storage are cleaned.
+[F07](F07_OBS_IMPLEMENTATION.md#final-qualification-and-integration) implements guarded `/obs` setup and the independent transparent `/overlay/:displayId` entry. Explicit access Copy/show/revoke, version-confirmed owner selection/settings, matching-cookie reload, stale/source/revoked hiding and exact local QR are qualified. The full gate passes 235 unit/component and 198 browser cases, plus twelve actual disposable API checks and two handoff Copy/fallback checks. The founder confirms actual OBS rendering, hide/show/refresh/scene recovery and physical QR decoding to the exact current public challenge URL. The original loopback test proved decoding only. F07-05 now adds a scoped temporary HTTPS relay, real production mobile-browser loading, private/mutation denial and founder-confirmed physical scan-to-page loading. Temporary grant/connector/runtime/storage are cleaned; stable network/deployment and broader F10/F11 acceptance remain separate.
 
 ## Not implemented or verified
 
@@ -45,4 +45,4 @@ Use task branches/PRs into dev with light hosted validation; main is reserved fo
 
 ## Next action
 
-Finish protected PR17 integration/cleanup from the F07 owner if still pending. The next planned batch is F08 staff/support with separate staff authority and Resend evidence, when the user authorizes it. Broader connected F04/F10 and network/deployment acceptance remain with their owners. Preserve original backend files/data and retained evidence worktrees; no task runtime is required.
+Finish F07-05 protected PR integration/cleanup from its owner if still pending. F08 staff/support is the next planned batch when authorized. Broader connected F04/F10 and stable hosting/Resend/live activation remain with their owners. Preserve original backend files/data and retained evidence worktrees. No task runtime is required.
