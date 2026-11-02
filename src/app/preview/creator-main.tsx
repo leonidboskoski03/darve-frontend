@@ -3,7 +3,6 @@ import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
 import { createAppRouter } from '@/routes/router';
 import { MotionProvider } from '@/motion/provider';
-import CreatorBoundary from '../creator-boundary';
 import '@/design-system/styles.css';
 import './collection-fixture.css';
 
@@ -44,16 +43,14 @@ if (!root) throw new Error('Missing creator acceptance root.');
 createRoot(root).render(
   <StrictMode>
     <MotionProvider>
-      <CreatorBoundary origin="http://127.0.0.1:3310">
-        <RouterProvider router={createAppRouter()} />
-        {view === 'collection' || view === 'review' || reportingView ? (
-          <aside className="collection-fixture-label" aria-label="Synthetic acceptance fixture">
-            {reportingView
-              ? 'SYNTHETIC API FIXTURE · NO REAL PAYMENTS'
-              : 'SYNTHETIC API FIXTURE · NO LIVE COLLECTION'}
-          </aside>
-        ) : null}
-      </CreatorBoundary>
+      <RouterProvider router={createAppRouter({ apiOrigin: 'http://127.0.0.1:3310' })} />
+      {view === 'collection' || view === 'review' || reportingView ? (
+        <aside className="collection-fixture-label" aria-label="Synthetic acceptance fixture">
+          {reportingView
+            ? 'SYNTHETIC API FIXTURE · NO REAL PAYMENTS'
+            : 'SYNTHETIC API FIXTURE · NO LIVE COLLECTION'}
+        </aside>
+      ) : null}
     </MotionProvider>
   </StrictMode>,
 );

@@ -48,3 +48,19 @@ test('reporting financial facts require their own explicit disposable review com
     /Controlled reporting requires/,
   );
 });
+test('read-only receipt facts require the exact F06 composition without enabling ordinary payment creation', async () => {
+  await assert.rejects(
+    startLocalApi({
+      backend: 'not-used',
+      task: 'f05',
+      collection: true,
+      review: true,
+      contributionReads: true,
+    }),
+    /Controlled receipt reads require/,
+  );
+  await assert.rejects(
+    startLocalApi({ backend: 'not-used', task: 'f06', contributionReads: true }),
+    /Controlled receipt reads require/,
+  );
+});

@@ -21,9 +21,11 @@ npx.cmd --no-install playwright install chromium
 npm.cmd run test:e2e
 ```
 
-`check` includes formatting, typed ESLint and architecture boundaries, architecture regression cases, documentation links, unit/component checks, TypeScript and a production build. Browser tests consume that product build; rebuild after changing source. `test:e2e` also builds its four isolated synthetic fixture entries into ignored `dist-acceptance/` and serves them separately on 4175; the product build excludes those entries. `test:watch` is for iteration. Dev PR CI uses light formatting/lint/import/build/type/link checks (formatting/links for prose-only diffs). Main-targeted release CI runs the full gate, audit and Chromium browser acceptance. Hooks provide fast staged checks and a complete pre-push gate; CI remains authoritative.
+`check` includes formatting, typed ESLint and architecture boundaries, architecture regression cases, documentation links, unit/component checks, TypeScript and a production build. Browser tests consume that product build; rebuild after changing source. `test:e2e` also builds its five isolated synthetic fixture entries into ignored `dist-acceptance/` and serves them separately on 4175; the product build excludes those entries. `test:watch` is for iteration. Dev PR CI uses light formatting/lint/import/build/type/link checks (formatting/links for prose-only diffs). Main-targeted release CI runs the full gate, audit and Chromium browser acceptance. Hooks provide fast staged checks and a complete pre-push gate; CI remains authoritative.
 
 ## Engineering records
+
+F06 adds the selected public contribution layout and private receipt reads. A configured guest route uses independent public/guest clients without starting creator login. Ordinary payment creation remains deliberately disabled; [F06 scope and prerequisites](docs/F06_CONTRIBUTION_IMPLEMENTATION.md) records the remaining checkout/capture and actual sandbox work.
 
 - [Documentation index](docs/README.md)
 - [Current state](docs/CURRENT_STATE.md) and [task tracker](docs/FRONTEND_TASK_TRACKER.md)
