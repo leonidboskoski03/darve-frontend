@@ -1,6 +1,6 @@
 # Current frontend state
 
-Checkpoint: 2026-11-02, Europe/Warsaw. F06-01/02 are integrated through PR14 on dev `df0802f`. F06-03 implements checkout creation/private continuation/PayPal confirmation, under final qualification. Its backend dependency PR83 is integrated; ordinary payment creation remains disabled. [F06](F06_CONTRIBUTION_IMPLEMENTATION.md) owns proof and restart custody.
+Checkpoint: 2026-11-02, Europe/Warsaw. F06-01/02 are integrated through PR14 on dev `df0802f`. F06-03 is integrated through PR15 at dev `59ee61f`; it implements checkout creation/private continuation/PayPal confirmation. Its backend dependency PR83 is integrated; ordinary payment creation remains disabled. [F06](F06_CONTRIBUTION_IMPLEMENTATION.md) owns proof and restart custody.
 
 ## Implemented
 
@@ -26,7 +26,7 @@ The [F01-01 reference audit](F01_REFERENCE_AND_COMPONENT_AUDIT.md) now inventori
 
 [F05](F05_DASHBOARD_IMPLEMENTATION.md) adds guarded dashboard, retained challenge history/detail and known-round analytics. Applied civil-date/timezone/source filters live in the URL; exact currency rows, unknown adjustments, current audience and snapshot freshness stay distinct. Multiple overlapping challenges and expired funding windows remain in retained history. Explicit original/authorized-stream completion requires unchecked confirmation of immutable terms/authority, preserves same-key uncertain replay and reconciles server projections. A funded goal never declares completion automatically. The full local gate passed 184 unit/component cases and all 124 desktop/mobile browser cases; sixteen controlled actual API/SQL checks passed with synthetic provider/model/receiving/financial evidence. No external charge, verified live stream or joint payment/OBS acceptance is claimed.
 
-[F06](F06_CONTRIBUTION_IMPLEMENTATION.md) adds the selected A public/guest journey without creator login. F06-03 now includes exact reviewed contributions, same-key uncertainty/cookie-handshake replay, canonical private receipt custody, transient validated Stripe/PayPal continuation and separate explicit PayPal completion. The reviewed backend availability/continuation contract keeps ordinary creation OFF. Current local gate passes 228 unit/component cases and controlled actual API/SQL proof passes eleven checks; full browser regression is being finalized. Fresh actual provider sandbox acceptance remains F06-04, so whole F06 stays in progress.
+[F06](F06_CONTRIBUTION_IMPLEMENTATION.md) adds the selected A public/guest journey without creator login. F06-03 now includes exact reviewed contributions, same-key uncertainty/cookie-handshake replay, canonical private receipt custody, transient validated Stripe/PayPal continuation and separate explicit PayPal completion. The reviewed backend availability/continuation contract keeps ordinary creation OFF. Current local gate passes 228 unit/component cases and controlled actual API/SQL proof passes eleven checks; all 170 browser cases pass; PR15 is integrated. Fresh actual provider sandbox acceptance remains F06-04, so whole F06 stays in progress.
 
 ## Not implemented or verified
 
@@ -43,4 +43,4 @@ Use task branches/PRs into dev with light hosted validation; main is reserved fo
 
 ## Next action
 
-Finish F06-03 final browser/API qualification and protected dev integration, then coordinate F06-04 fresh-viewer sandbox approval using its concrete bounded proposal. The original backend checkout and its three documentation edits remain untouched; isolated API tests require the clean pinned backend worktree documented in the owner. Whole F04 connected acceptance and F07–F11 remain with their own owners. Recheck source/build, ports and task/run labels before resuming.
+Complete the user-approved F06-04 sandbox journeys on the real React UI. The bounded Stripe window is waiting for the human viewer; PayPal needs a fresh consent to the same existing seller and uses the separately approved USD10 amount. Browser control is disabled; the user performs browser actions. The original backend checkout and its three documentation edits remain untouched; isolated API tests require the clean pinned backend worktree documented in the owner. Whole F04 connected acceptance and F07–F11 remain with their own owners. Recheck source/build, ports and task/run labels before resuming.

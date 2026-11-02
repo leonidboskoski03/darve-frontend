@@ -4,6 +4,10 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { assertProviderLoginRuntime } from './provider-login-config.mjs';
+import {
+  assertPaymentSandboxSelection,
+  readPaymentSandboxConfiguration,
+} from './payment-sandbox-config.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const postgresImage =
@@ -40,17 +44,39 @@ export async function startLocalApi({
   reporting = false,
   contributionReads = false,
   checkout = false,
+  sandboxPayment,
 }) {
   if (
-    !['f02-02', 'f02-03', 'f03', 'f03-live', 'f04-02', 'f04-03', 'f05', 'f06', 'f06-03'].includes(
-      task,
-    )
+    ![
+      'f02-02',
+      'f02-03',
+      'f03',
+      'f03-live',
+      'f04-02',
+      'f04-03',
+      'f05',
+      'f06',
+      'f06-03',
+      'f06-04',
+    ].includes(task)
   )
     throw new Error('Invalid local task identity.');
+  assertPaymentSandboxSelection({
+    task,
+    port,
+    origins,
+    sandboxPayment,
+    collection,
+    review,
+    checkout,
+    contributionReads,
+    reporting,
+    operatorOAuth,
+  });
   const providerEnvironment = assertProviderLoginRuntime({ task, port, origins, operatorOAuth });
-  if (collection && !['f04-02', 'f04-03', 'f05', 'f06', 'f06-03'].includes(task))
+  if (collection && !['f04-02', 'f04-03', 'f05', 'f06', 'f06-03', 'f06-04'].includes(task))
     throw new Error('Controlled collection ports require their explicit disposable task.');
-  if (review && (!['f04-03', 'f05', 'f06', 'f06-03'].includes(task) || !collection))
+  if (review && (!['f04-03', 'f05', 'f06', 'f06-03', 'f06-04'].includes(task) || !collection))
     throw new Error('Controlled review requires its explicit disposable collection task.');
   if (reporting && (task !== 'f05' || !collection || !review))
     throw new Error('Controlled reporting requires its explicit disposable review task.');
@@ -95,6 +121,9 @@ export async function startLocalApi({
   )
     throw new Error('Untracked backend build inputs require review.');
   if (!Number.isInteger(port) || port < 1024) throw new Error('Use a separate local API port.');
+  const sandboxConfiguration = sandboxPayment
+    ? await readPaymentSandboxConfiguration(backend, sandboxPayment)
+    : null;
   run('docker', ['version', '--format', '{{.Server.Version}}']);
   if (build)
     run(
@@ -250,7 +279,7 @@ export async function startLocalApi({
       REDIS_URL: `redis://:${redisPassword}@127.0.0.1:${redisPort}`,
       CORS_ORIGINS: origins.join(','),
       RATE_LIMIT_MAX: 1000,
-      ...(contributionReads || checkout
+      ...(contributionReads || checkout || sandboxPayment
         ? { PUBLIC_CHALLENGE_BASE_URL: origins[0] + '/contribute/' }
         : {}),
       ...(review
@@ -318,6 +347,11 @@ export async function startLocalApi({
           await import('./local-checkout-fixture.mjs')
         ).createLocalCheckoutFixture(backend, deps.database, config)
       : null;
+    const sandboxFixture = sandboxConfiguration
+      ? await (
+          await import('./payment-sandbox-fixture.mjs')
+        ).createPaymentSandboxFixture(backend, deps.database, config, sandboxConfiguration)
+      : null;
     const listen = () =>
       new Promise((resolve, reject) => {
         const listener = createApp(config, logger, {
@@ -325,6 +359,7 @@ export async function startLocalApi({
           ...collectionFixture?.dependencies,
           ...contributionFixture?.dependencies,
           ...checkoutFixture?.dependencies,
+          ...sandboxFixture?.dependencies,
         }).listen(port, '127.0.0.1', () => resolve(listener));
         listener.once('error', reject);
       });
@@ -356,6 +391,7 @@ export async function startLocalApi({
       reportingFixture,
       contributionFixture,
       checkoutFixture,
+      sandboxFixture,
       close,
       // Node-only network-fault probe; no HTTP route or database effect.
       interruptConnections: () => server.closeAllConnections(),
@@ -385,7 +421,10 @@ export async function startLocalApi({
       async seedSession({ expiresInMs = 60_000 } = {}) {
         const secret = randomBytes(32).toString('base64url');
         const user = await deps.database.darveUser.create({
-          data: { displayName: 'Synthetic local creator' },
+          data: {
+            ...(sandboxConfiguration ? { id: sandboxConfiguration.ownerId } : {}),
+            displayName: 'Synthetic local creator',
+          },
         });
         await deps.database.externalIdentity.create({
           data: {
