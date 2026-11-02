@@ -163,7 +163,7 @@ export async function openMobileQrTunnel(relay, { sourceRoot = '../darve-backend
       'tunnel',
       '--no-autoupdate',
       '--protocol',
-      'http2',
+      'auto',
       '--metrics',
       '127.0.0.1:0',
       '--url',
@@ -188,7 +188,22 @@ export async function openMobileQrTunnel(relay, { sourceRoot = '../darve-backend
         connected = false;
       const timeout = setTimeout(() => {
         clear();
-        reject(new Error('Temporary HTTPS connector was not ready.'));
+        const error = new Error('Temporary HTTPS connector was not ready.');
+        error.mobileQrDiagnostic = {
+          originDiscovered: !!origin,
+          edgeConnected: connected,
+          errors: buffer
+            .split(/\r?\n/)
+            .filter((line) => /\b(?:ERR|WRN)\b/.test(line))
+            .slice(-4)
+            .map((line) =>
+              line
+                .replace(/https?:\/\/\S+/g, '<url>')
+                .replace(/\b[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}\b/gi, '<id>')
+                .slice(0, 600),
+            ),
+        };
+        reject(error);
       }, 60000);
       const clear = () => {
         clearTimeout(timeout);
@@ -209,11 +224,15 @@ export async function openMobileQrTunnel(relay, { sourceRoot = '../darve-backend
       connector.stderr.on('data', receive);
       connector.once('error', () => {
         clear();
-        reject(new Error('Temporary HTTPS connector failed.'));
+        const error = new Error('Temporary HTTPS connector failed.');
+        error.mobileQrDiagnostic = { spawnFailed: true };
+        reject(error);
       });
       connector.once('exit', () => {
         clear();
-        reject(new Error('Temporary HTTPS connector stopped.'));
+        const error = new Error('Temporary HTTPS connector stopped.');
+        error.mobileQrDiagnostic = { originDiscovered: !!origin, edgeConnected: connected };
+        reject(error);
       });
     });
     connector.once('exit', () => void close());

@@ -587,6 +587,7 @@ try {
     JSON.stringify({
       stage,
       error: error.name,
+      ...(error.mobileQrDiagnostic ? { mobileQrDiagnostic: error.mobileQrDiagnostic } : {}),
       message: error instanceof assert.AssertionError ? error.message : undefined,
     }),
   );
