@@ -8,7 +8,7 @@ export const contributionIds = {
   other: '44556677-1234-4234-8234-112233445566',
 };
 export const contributionStamp = '2026-11-02T12:00:00.000Z';
-export function publicContributionFixture() {
+export function publicContributionFixture(ready = false) {
   const unavailable = { available: false, reasonCode: 'payments_unconfigured' };
   return PublicChallengeResponseSchema.parse({
     schemaVersion: 1,
@@ -52,7 +52,7 @@ export function publicContributionFixture() {
         reviewDueAt: '2026-11-02T12:20:00.000Z',
         financialReviewRequired: false,
         timingPolicyVersion: 'funding-v1',
-        checkoutAvailability: unavailable,
+        checkoutAvailability: ready ? { available: true } : unavailable,
       },
       performance: {
         version: 1,
@@ -64,10 +64,10 @@ export function publicContributionFixture() {
         verification: 'streamer_declaration',
         streamContextStatus: 'unobserved',
       },
-      checkoutAvailability: unavailable,
+      checkoutAvailability: ready ? { available: true } : unavailable,
       availablePaymentProviders: [
-        { provider: 'stripe', availability: unavailable },
-        { provider: 'paypal', availability: unavailable },
+        { provider: 'stripe', availability: ready ? { available: true } : unavailable },
+        { provider: 'paypal', availability: ready ? { available: true } : unavailable },
       ],
       contributionUrl: null,
     },

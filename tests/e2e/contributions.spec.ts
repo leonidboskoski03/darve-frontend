@@ -91,7 +91,7 @@ test('synthetic unavailable source hides creator/text/credits and server reason 
 }) => {
   const state = await fixture(page);
   state.public.data.contentAvailability = 'unavailable';
-  state.public.data.checkoutAvailability.reasonCode = 'source_unavailable';
+  state.public.data.checkoutAvailability = { available: false, reasonCode: 'source_unavailable' };
   await open(page, 'view=public&publicId=' + ids.public);
   await expect(
     page.getByRole('heading', { name: 'Challenge content unavailable', exact: true }),
@@ -106,7 +106,7 @@ test('synthetic unavailable source hides creator/text/credits and server reason 
 for (const reason of ['deadline_passed', 'goal_reached', 'reconciliation_required'] as const)
   test(`synthetic ${reason} is a server-owned unavailable state`, async ({ page }) => {
     const state = await fixture(page);
-    state.public.data.checkoutAvailability.reasonCode = reason;
+    state.public.data.checkoutAvailability = { available: false, reasonCode: reason };
     await open(page, 'view=public&publicId=' + ids.public);
     await expect(
       page.getByRole('heading', { name: 'Contribution availability', exact: true }),

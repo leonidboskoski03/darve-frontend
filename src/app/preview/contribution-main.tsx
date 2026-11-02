@@ -7,7 +7,7 @@ import { AppProviders } from '../providers';
 import '@/design-system/styles.css';
 import './collection-fixture.css';
 
-// Explicit synthetic read-only browser fixture. Product entries never load this module.
+// Explicit synthetic browser fixture. Product entries never load this module.
 const params = new URLSearchParams(window.location.search);
 const view = params.get('view');
 const path =
@@ -31,7 +31,7 @@ createRoot(root).render(
     <AppProviders>
       <RouterProvider router={createAppRouter({ apiOrigin: 'http://127.0.0.1:3310' })} />
       <aside className="collection-fixture-label" aria-label="Synthetic acceptance fixture">
-        SYNTHETIC READ FIXTURE · NO CHECKOUT OR PAYMENT
+        SYNTHETIC ACCEPTANCE FIXTURE · NO EXTERNAL PAYMENT
       </aside>
     </AppProviders>
   </StrictMode>,

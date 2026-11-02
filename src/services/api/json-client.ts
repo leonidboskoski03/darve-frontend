@@ -48,7 +48,7 @@ function allowedPath(audience: Audience, pathname: string) {
   if (audience === 'staff') return pathname.startsWith('/admin/v1/');
   if (!pathname.startsWith('/api/')) return false;
   if (audience === 'guest')
-    return /^\/api\/(public\/challenges\/[^/]+\/checkouts|checkouts\/[^/]+(?:\/complete)?)$/.test(
+    return /^\/api\/(public\/challenges\/[^/]+\/checkouts|checkouts\/[^/]+(?:\/(?:complete|resume))?)$/.test(
       pathname,
     );
   if (audience === 'overlay') return /^\/api\/overlays\/[^/]+\/(session|snapshot)$/.test(pathname);

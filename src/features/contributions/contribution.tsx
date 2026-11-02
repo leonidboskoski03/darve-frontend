@@ -7,12 +7,14 @@ import {
   type ContributionRuntime,
 } from '@/services/contributions/index';
 import './contributions.css';
+import { CheckoutFlow } from './checkout-flow';
 
 const reasons = {
   account_restricted: 'Contributions are unavailable for this creator.',
   source_unavailable: 'The challenge source is unavailable.',
   deadline_passed: 'The funding window has closed.',
   payments_unconfigured: 'Payments are not enabled for this challenge.',
+  receiving_unavailable: 'This method cannot currently receive the contribution.',
   goal_reached: 'The funding goal has been recognized. New contributions are closed.',
   reconciliation_required:
     'Payment information is being reviewed. New contributions are unavailable.',
@@ -27,9 +29,11 @@ const time = (value: string) =>
 export function Contribution({
   runtime,
   publicId,
+  onReceipt,
 }: {
   runtime: ContributionRuntime;
   publicId: string;
+  onReceipt: (id: string) => void;
 }) {
   const query = useQuery(
     {
@@ -135,12 +139,20 @@ export function Contribution({
             aria-labelledby="payment-availability-heading"
           >
             <h2 id="payment-availability-heading">Contribution availability</h2>
-            <p role="status">{reasons[value.checkoutAvailability.reasonCode]}</p>
+            <p role="status">
+              {value.checkoutAvailability.available
+                ? 'An available method can prepare checkout. The server rechecks admission before continuing.'
+                : reasons[value.checkoutAvailability.reasonCode]}
+            </p>
             <ul>
               {value.availablePaymentProviders.map((row) => (
                 <li key={row.provider}>
                   <strong>{row.provider === 'stripe' ? 'Stripe' : 'PayPal'}</strong>
-                  <span>{reasons[row.availability.reasonCode]}</span>
+                  <span>
+                    {row.availability.available
+                      ? 'Available for review'
+                      : reasons[row.availability.reasonCode]}
+                  </span>
                 </li>
               ))}
             </ul>
@@ -205,6 +217,11 @@ export function Contribution({
           </details>
         </>
       )}
+      <CheckoutFlow
+        runtime={runtime}
+        current={query.isFetching ? null : (value ?? null)}
+        onReceipt={onReceipt}
+      />
       <p className="contribution-footnote">
         Already contributed? <a href="/receipts">Check a private receipt</a> in the original
         browser.

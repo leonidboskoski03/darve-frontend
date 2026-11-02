@@ -7,19 +7,23 @@ export const createAppRouter = ({
   apiOrigin = environment.apiOrigin,
 }: { apiOrigin?: string } = {}) =>
   createBrowserRouter([
-    ...['/contribute/:publicId', '/receipts', '/receipts/:checkoutId', '/payments/return'].map(
-      (path) => ({
-        path,
-        hydrateFallbackElement: (
-          <p role="status" className="message-page">
-            Opening contribution page…
-          </p>
-        ),
-        lazy: () => import('./contribution'),
-        errorElement: <RouteError />,
-        handle: { apiOrigin },
-      }),
-    ),
+    ...[
+      '/contribute/:publicId',
+      '/receipts',
+      '/receipts/:checkoutId',
+      '/payments/return',
+      '/payments/cancel',
+    ].map((path) => ({
+      path,
+      hydrateFallbackElement: (
+        <p role="status" className="message-page">
+          Opening contribution page…
+        </p>
+      ),
+      lazy: () => import('./contribution'),
+      errorElement: <RouteError />,
+      handle: { apiOrigin },
+    })),
     {
       element: <CreatorRuntime origin={apiOrigin} />,
       hydrateFallbackElement: (

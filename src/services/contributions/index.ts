@@ -11,3 +11,10 @@ export {
   type Receipt,
 } from './client';
 export { sanitizePaymentReturn, validReceiptId } from './navigation';
+export {
+  CheckoutError,
+  checkoutMessage,
+  checkoutUncertain,
+  type CheckoutAttempt,
+  type CaptureAttempt,
+} from './checkout';

@@ -176,6 +176,45 @@
   gap: 1rem;
   margin: 2rem 0;
 }
+.contribution-checkout {
+  margin-block: 2rem;
+  padding-block: 1.5rem;
+  border-block: 1px solid var(--color-border);
+}
+.contribution-checkout h2 {
+  font-size: 1.25rem;
+}
+.contribution-checkout form,
+.contribution-checkout fieldset {
+  display: grid;
+  gap: 1rem;
+}
+.contribution-checkout fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0 0 1rem;
+  min-width: 0;
+}
+.contribution-checkout legend {
+  margin-bottom: 1rem;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+}
+.contribution-consent {
+  display: grid;
+  grid-template-columns: 1.25rem minmax(0, 1fr);
+  gap: 0.65rem;
+  align-items: start;
+  margin-block: 1rem;
+  font-size: 0.875rem;
+}
+.contribution-consent input {
+  margin-top: 0.25rem;
+  accent-color: var(--color-brand);
+}
+.contribution-checkout .ds-button {
+  margin: 0.5rem 0.5rem 0.5rem 0;
+}
 .contribution-shell a:focus-visible,
 .contribution-shell button:focus-visible,
 .contribution-shell input:focus-visible,
