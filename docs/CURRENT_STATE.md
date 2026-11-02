@@ -1,6 +1,6 @@
 # Current frontend state
 
-Checkpoint: 2026-10-29, Europe/Warsaw. F04-03 is integrated on dev `ba51e9a`; F05 dashboard/history/declaration branches from it and has passed local qualification. Read actual Git/PR state before resuming; the F05 owner records qualification and integration custody. The [tracker](FRONTEND_TASK_TRACKER.md) owns statuses and [PLAN](PLAN.md) owns scope.
+Checkpoint: 2026-11-02, Europe/Warsaw. F05 is integrated on dev `3ca8586` through PR #13. F06 is authorized and its first public challenge/private receipt read slice branches from that clean baseline. [F06](F06_CONTRIBUTION_IMPLEMENTATION.md) owns current qualification and integration custody. The [tracker](FRONTEND_TASK_TRACKER.md) owns statuses and [PLAN](PLAN.md) owns scope.
 
 ## Implemented
 
@@ -26,6 +26,8 @@ The [F01-01 reference audit](F01_REFERENCE_AND_COMPONENT_AUDIT.md) now inventori
 
 [F05](F05_DASHBOARD_IMPLEMENTATION.md) adds guarded dashboard, retained challenge history/detail and known-round analytics. Applied civil-date/timezone/source filters live in the URL; exact currency rows, unknown adjustments, current audience and snapshot freshness stay distinct. Multiple overlapping challenges and expired funding windows remain in retained history. Explicit original/authorized-stream completion requires unchecked confirmation of immutable terms/authority, preserves same-key uncertain replay and reconciles server projections. A funded goal never declares completion automatically. The full local gate passed 184 unit/component cases and all 124 desktop/mobile browser cases; sixteen controlled actual API/SQL checks passed with synthetic provider/model/receiving/financial evidence. No external charge, verified live stream or joint payment/OBS acceptance is claimed.
 
+[F06](F06_CONTRIBUTION_IMPLEMENTATION.md) implements the selected A public contribution view and independently scoped private receipt reads, with early return cleanup and no creator login requirement. Local qualification passed 212 unit/component, all 156 browser and thirteen controlled actual API checks. Backend B07-ACT-01 deliberately keeps ordinary payment creation OFF, and the pinned public contract represents unavailable providers only. F06-03 payable creation/Stripe navigation/PayPal capture remains blocked on reviewed exposure/availability/return custody, and F06-04 actual fresh-viewer sandbox acceptance remains open. No frontend flag bypasses these boundaries. Whole F06 stays in progress.
+
 ## Not implemented or verified
 
 - Remaining feature-specific visual/design acceptance, including missing staff/coin/template surfaces and actual OBS reference fit, with their owning feature batches. The F04-02 collection workspace has local responsive/accessibility evidence.
@@ -41,4 +43,4 @@ Use task branches/PRs into dev with light hosted validation; main is reserved fo
 
 ## Next action
 
-Complete F05 protected dev integration as recorded in its owner. The next planned product batch is F06 guest contribution/private receipts, subject to its authorization and receiving/payment prerequisites. Whole F04 connected acceptance still needs F04-G01 unknown-round recovery, F04-G03 source-link projection, F04-G05 commercial-policy/extension disclosure and actual receiving/reader/model prerequisites. Earlier scopes retain their own evidence; do not repeat them or start every planned feature. Use the [new-chat template](NEW_CHAT_TASK_TEMPLATE.md) to resume one explicit task. Recheck ports, services, dirty work and sibling backend source/schema before API tests; earlier liveness is not guaranteed.
+Finish F06-02 local qualification/protected dev integration as recorded in its owner. F06-03 then needs backend B07-ACT-01 exposure review and a compatible authoritative availability contract; F06-04 needs separately coordinated receiving/disclosures/sandbox approval. Keep F06 open for those outcomes. Whole F04 connected acceptance still needs F04-G01 unknown-round recovery, F04-G03 source-link projection, F04-G05 commercial-policy/extension disclosure and actual receiving/reader/model prerequisites. Earlier scopes retain their own evidence; do not repeat them or start every planned feature. Use the [new-chat template](NEW_CHAT_TASK_TEMPLATE.md) to resume one explicit task. Recheck ports, services, dirty work and sibling backend source/schema before API tests; earlier liveness is not guaranteed.

@@ -1,0 +1,211 @@
+.contribution-shell {
+  display: grid;
+  grid-template-columns: minmax(17rem, 30%) minmax(0, 1fr);
+  min-height: 100svh;
+  background: var(--color-background);
+  color: var(--color-text);
+}
+.contribution-brand-rail {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 4rem;
+  padding: clamp(1.5rem, 4vw, 3rem);
+  background: var(--color-brand);
+  color: #ffffff;
+}
+.contribution-brand-rail a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  text-decoration: none;
+  width: fit-content;
+}
+.contribution-brand-rail .brand-wordmark {
+  color: #ffffff;
+}
+.contribution-brand-rail .alpha-label {
+  background: #ffffff14;
+  border-color: #ffffff40;
+  color: #ffffff;
+}
+.contribution-brand-rail p {
+  font-size: clamp(1.75rem, 3vw, 2.75rem);
+  font-weight: 700;
+  line-height: 1.18;
+  letter-spacing: -0.04em;
+  max-width: 12ch;
+  text-wrap: balance;
+}
+.contribution-brand-rail small {
+  opacity: 0.85;
+}
+.contribution-main {
+  min-width: 0;
+  width: 100%;
+  max-width: 43rem;
+  margin: auto;
+  padding: clamp(1.5rem, 5vw, 4.5rem);
+}
+.contribution-heading {
+  margin-bottom: 1.75rem;
+}
+.contribution-heading h1 {
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  line-height: 1.16;
+  letter-spacing: -0.04em;
+  overflow-wrap: anywhere;
+  margin: 0.6rem 0 1rem;
+}
+.contribution-heading p,
+.contribution-muted,
+.contribution-footnote {
+  color: var(--color-muted);
+}
+.contribution-kicker {
+  color: var(--color-brand-readable);
+  font-weight: 600;
+  font-size: 0.8125rem;
+}
+.contribution-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-large);
+  padding: clamp(1rem, 3vw, 1.5rem);
+  margin: 1.5rem 0;
+}
+.contribution-card h2,
+.contribution-availability h2 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 0.5rem 0 1rem;
+  overflow-wrap: anywhere;
+}
+.contribution-viewer-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.contribution-raised {
+  font-size: 1.125rem;
+  color: var(--color-brand-readable);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.contribution-raised span {
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  font-weight: 400;
+}
+.contribution-card progress {
+  width: 100%;
+  height: 0.45rem;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--color-raised);
+  accent-color: var(--color-brand);
+}
+.contribution-card progress::-webkit-progress-bar {
+  background: var(--color-raised);
+  border-radius: var(--radius-pill);
+}
+.contribution-card progress::-webkit-progress-value {
+  background: var(--color-brand);
+  border-radius: var(--radius-pill);
+}
+.contribution-details {
+  display: grid;
+  gap: 0.875rem;
+  margin: 1.25rem 0;
+}
+.contribution-details > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  gap: 1rem;
+  align-items: baseline;
+}
+.contribution-details dt {
+  font-size: 0.8125rem;
+  color: var(--color-muted);
+}
+.contribution-details dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.contribution-availability {
+  margin: 2rem 0;
+  padding: 1.25rem 0;
+  border-block: 1px solid var(--color-border);
+}
+.contribution-availability ul {
+  display: grid;
+  gap: 0.875rem;
+  padding: 0;
+  list-style: none;
+}
+.contribution-availability li {
+  display: grid;
+  grid-template-columns: 4rem minmax(0, 1fr);
+  gap: 0.75rem;
+  font-size: 0.875rem;
+}
+.contribution-disclosure {
+  margin: 1.5rem 0;
+}
+.contribution-disclosure summary,
+.contribution-card summary {
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.contribution-card ul {
+  padding-left: 1.25rem;
+  overflow-wrap: anywhere;
+}
+.contribution-muted,
+.contribution-footnote {
+  font-size: 0.8125rem;
+  overflow-wrap: anywhere;
+}
+.contribution-footnote {
+  margin-top: 2rem;
+}
+.contribution-lookup {
+  display: grid;
+  gap: 1rem;
+  margin: 2rem 0;
+}
+.contribution-shell a:focus-visible,
+.contribution-shell button:focus-visible,
+.contribution-shell input:focus-visible,
+.contribution-shell summary:focus-visible {
+  outline-color: var(--color-focus);
+}
+@media (max-width: 48rem) {
+  .contribution-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .contribution-brand-rail {
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+  }
+  .contribution-brand-rail p,
+  .contribution-brand-rail small {
+    display: none;
+  }
+  .contribution-main {
+    padding: 2rem 1.5rem;
+  }
+}
+@media (max-width: 23rem) {
+  .contribution-main {
+    padding-inline: 1rem;
+  }
+  .contribution-details > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.25rem;
+  }
+}

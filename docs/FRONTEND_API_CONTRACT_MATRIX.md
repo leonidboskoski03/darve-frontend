@@ -57,6 +57,8 @@ The register gives each individual method, request/query, response/status and so
 
 ## Errors, replay and known gaps
 
+[F06](F06_CONTRIBUTION_IMPLEMENTATION.md) maps the public challenge and private receipt read boundary. The pinned public/provider availability schema accepts only `available:false`, and ordinary Stripe/PayPal creation is intentionally disabled under backend B07-ACT-01. Public reads omit credentials, private receipt reads require the guest cookie, and provider return cannot confirm money. Payable checkout/capture requires reviewed exposure and a compatible authoritative availability projection; no cast, frontend flag or invented ready response can substitute for that prerequisite.
+
 `ErrorResponseSchema` and `parseConsumerResponse` distinguish 401 sign_in, 403 denied, 404 not_found, 409 refetch, approved 429/503 retry and protocol_error. They neither fetch nor retry. Use safe code/request ID and applicable Retry-After, not raw message/stack/payload. Commands default to no automatic retry. Reconcile uncertain results through the correct private read before any deliberate repeat with the original key/terms.
 
 The register assigns five gaps:
