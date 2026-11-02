@@ -22,6 +22,7 @@ export function RootLayout() {
   }, [pathname]);
   if (
     pathname === '/dashboard' ||
+    pathname === '/obs' ||
     pathname === '/challenges' ||
     pathname.startsWith('/challenges/') ||
     pathname === '/collection' ||

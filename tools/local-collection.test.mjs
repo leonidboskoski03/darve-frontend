@@ -2,6 +2,28 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { startLocalApi } from './local-api.mjs';
 
+test('OBS qualification cannot enable payments or escape its reviewed disposable composition', async () => {
+  const base = {
+    backend: 'not-used',
+    task: 'f07',
+    port: 3310,
+    origins: ['http://127.0.0.1:4175'],
+    overlay: true,
+    collection: true,
+    review: true,
+    terms: true,
+  };
+  for (const change of [
+    { overlay: false },
+    { terms: false },
+    { origins: ['https://public.example.test'] },
+    { port: 3311 },
+    { collection: false, review: false },
+  ])
+    await assert.rejects(startLocalApi({ ...base, ...change }), /OBS acceptance/);
+  await assert.rejects(startLocalApi({ ...base, checkout: true }), /Controlled checkout/);
+});
+
 test('sandbox payments fail closed before configuration/storage unless separately approved and isolated', async () => {
   const permitted = {
     backend: 'not-used',

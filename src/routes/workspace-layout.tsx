@@ -1,6 +1,15 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
-import { Cable, Menu, Radio, FileText, ArrowUpRight, LayoutDashboard, History } from 'lucide-react';
+import {
+  Cable,
+  Menu,
+  Radio,
+  FileText,
+  ArrowUpRight,
+  LayoutDashboard,
+  History,
+  Monitor,
+} from 'lucide-react';
 import { Brand } from '@/design-system/brand';
 import { Button } from '@/design-system/button';
 import { Dialog } from '@/design-system/dialog';
@@ -10,6 +19,7 @@ const navigation = [
   { href: '/dashboard', label: 'Dashboard', Icon: LayoutDashboard },
   { href: '/challenges', label: 'Challenge history', Icon: History },
   { href: '/collection', label: 'Collection', Icon: Radio },
+  { href: '/obs', label: 'OBS display', Icon: Monitor },
   { href: '/integrations', label: 'Connections', Icon: Cable },
   { href: '/terms', label: 'Account terms', Icon: FileText },
 ];

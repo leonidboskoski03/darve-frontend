@@ -1,0 +1,95 @@
+.obs-settings {
+  max-width: 1040px;
+  display: grid;
+  gap: var(--space-8);
+}
+.obs-settings h1 {
+  font-size: var(--font-size-page);
+  margin: 0 0 var(--space-3);
+}
+.obs-settings p {
+  max-width: 72ch;
+  color: var(--color-muted);
+}
+.obs-settings-section {
+  padding: var(--space-6) 0;
+  border-top: 1px solid var(--color-border);
+}
+.obs-settings-section h2 {
+  margin-top: 0;
+  font-size: var(--font-size-title);
+}
+.obs-settings label {
+  display: grid;
+  gap: var(--space-2);
+  margin: var(--space-4) 0;
+}
+.obs-settings input:not([type='checkbox']),
+.obs-settings select {
+  width: 100%;
+  min-height: 44px;
+  color: var(--color-text);
+  background: var(--color-input);
+  border: 1px solid var(--color-control-border);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-control);
+}
+.obs-settings input:focus-visible,
+.obs-settings select:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 3px;
+}
+.obs-settings .obs-check {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+.obs-check input {
+  margin-top: 5px;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+}
+.obs-inline {
+  margin: var(--space-6) 0;
+}
+.obs-challenges {
+  padding: 0;
+  list-style: none;
+}
+.obs-challenges li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+.obs-challenges strong {
+  overflow-wrap: anywhere;
+}
+.obs-challenges button {
+  flex-shrink: 0;
+}
+.obs-challenges p {
+  margin: var(--space-2) 0;
+}
+.obs-selection-review {
+  padding: var(--space-5);
+  background: var(--color-raised);
+  border-radius: var(--radius-panel);
+}
+.obs-selection-review p {
+  overflow-wrap: anywhere;
+}
+.obs-style-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--space-4);
+}
+@media (max-width: 600px) {
+  .obs-challenges li {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

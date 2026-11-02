@@ -1,6 +1,6 @@
 # Current frontend state
 
-Checkpoint: 2026-11-02, Europe/Warsaw. F06 is qualified and CLOSED for local engineering and actual founder-assisted Stripe/PayPal sandbox journeys. PR16 owns completion integration after PR14/15; backend PR83/84 are integrated. Ordinary/live payment activation remains disabled. [F06](F06_CONTRIBUTION_IMPLEMENTATION.md#final-f06-qualification-and-integration) owns exact proof and final Git custody.
+Checkpoint: 2026-11-02, Europe/Warsaw. F06 is CLOSED and integrated through PR16, with verified ancestry/identical tree and clean dev synchronization. F07 OBS is authorized and in progress; [its owner](F07_OBS_IMPLEMENTATION.md) records source, implementation and remaining qualification. Ordinary/live payment activation remains disabled.
 
 ## Implemented
 
@@ -43,4 +43,4 @@ Use task branches/PRs into dev with light hosted validation; main is reserved fo
 
 ## Next action
 
-Finish protected PR16 integration/cleanup using the F06 owner if still pending. The next planned batch is F07 OBS, starting with its selected M/R/QR/reader authority map when the user authorizes it. Whole F04 connected acceptance and F07–F11 remain with their owners. Keep the original dirty backend checkout/persistent services untouched and retain the reviewed isolated backend source for reproducible acceptance. No task runtime is required.
+Continue F07 reader/setup and joint qualification on `feat/f07-obs-presentation`. Record actual OBS and physical QR observations separately from browser/API checks. Keep the original dirty backend checkout and persistent data unchanged. F08–F11 remain planned; no deployment or live payment activation follows.

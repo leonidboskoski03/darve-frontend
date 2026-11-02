@@ -1,0 +1,50 @@
+# F07 OBS presentation
+
+Scope authorized 2026-11-02, Europe/Warsaw. Build the selected M/R broadcast presentation and creator setup on the existing overlay contracts and F02-03 transport. Main/deployment, live payments, paid templates and real provider actions remain separate.
+
+## Tasks and acceptance
+
+- F07-01: inspect selected M/R renderer/settings/card and standalone reference; map owner/reader authority, exact operations, state/QR/template behavior and qualification limits.
+- F07-02: independent transparent entry, fragment bootstrap and sanitized reload, versioned SSE rendering, exact money, safe credits, deadline/stale/revoked hiding and local QR encoding. Browser and actual disposable API acceptance.
+- F07-03: creator grant issue/revoke, explicit version-confirmed display selection and validated preferences. No grant issuance on mount or automatic replacement after uncertain results. Responsive/keyboard/authority tests.
+- F07-04: current-source joint local acceptance, decoded QR at 1080p/720p, actual OBS lifecycle and physical QR observation recorded separately. External observations cannot be inferred from browser fixtures.
+
+## Source and contract map
+
+Baseline frontend dev is `00137d62fa88095aaca47f392a2f521416eee7cc`, following merged F06 PR16. Current backend artifact/source is `4a91709b530b333fd8f094ff797946a6ec8a99cd` in the retained clean `../tmp/backend-f06-readiness` worktree. The original dirty backend checkout and persistent development storage remain untouched.
+
+Visual owners: M `frontend/src/pages/OverlayRenderer.tsx`, `OverlaySettings.tsx`, `components/overlay/OverlayCardUniversal.tsx` and `overlay-universal-preview.css`; R carries the related React design. Preserve horizontal dark broadcast card, status/timer, challenge/credit hierarchy, funding and separated white QR panel. The M card is 960×236 before fit/scale. Replace decorative QR, fixed URL, euro rounding, local donations and fabricated countdowns. Older B06 backend notes describe standalone styling; the later selected frontend M/R baseline governs appearance, while backend fields govern supported preferences. Standalone remains historical comparison, not a competing redesign.
+
+| Operation                                              | Authority and behavior                                                                                                                                                                                                                 |
+| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| POST `/api/overlay-grants`                             | Creator cookie, Origin, CSRF; explicit issue only, optional expiry. Returns grant ID, display, selection and private presentation URL once. No list/recovery endpoint exists.                                                          |
+| DELETE `/api/overlay-grants/:id`                       | Creator cookie, Origin, CSRF; repeatable revocation, 204. Revoking an old known ID is separate from issuing a replacement.                                                                                                             |
+| GET `/api/overlay-displays/:id`                        | Owner-only current selection. Does not issue a grant; display ID must already be known.                                                                                                                                                |
+| PUT `/api/overlay-displays/:id/selection`              | Exact `{expectedVersion,roundId,challengeId}`. Idle is both null; challenge belongs to its exact round. Stale/uncertain results require canonical refetch and renewed review.                                                          |
+| GET/PATCH `/api/overlay-preferences?protocolVersion=2` | Creator-only; mutation needs CSRF and complete styles with current expectedVersion. Template descriptor is server-owned; selecting/redeeming templates belongs to F09.                                                                 |
+| POST `/api/overlays/:id/session`                       | Reader bootstrap `{secret}` from private `#grant=` link, allowlisted Origin; independent HttpOnly grant cookie. Remove secret fragment before any request/UI; retain only non-secret `#grantId=` after successful validated bootstrap. |
+| GET `/api/overlays/:id/snapshot` and `/events`         | Reader cookie plus matching grantId and explicit protocolVersion 2. Existing bounded Fetch/SSE handles full resync on the same connection, versions, 15-second freshness, reconnect and terminal denial. Never creator authority.      |
+
+Starting a new round automatically selects that preparing round transactionally on the backend. Acceptance, preferences and grant issuance do not select a challenge implicitly. Multiple challenges retain their own immutable terms/money/public link; explicit owner selection chooses one display binding only. No undisclosed endpoint or newest-challenge inference is permitted.
+
+## Rendering and security
+
+The isolated presentation entry must avoid creator providers/router/navigation, marketing and motion engines. Host `/overlay/:displayId` through the built presentation HTML; dev/preview provide the same rewrite. Production hosting must configure that rewrite under F11. Background is transparent even before JavaScript. No analytics, external QR service, provider scripts, browser storage, private logs, screenshots or traces.
+
+V2 uses the full server template descriptor. Render only supported locally implemented renderer/version pairs; unavailable or unsupported templates hide presentation instead of silently substituting. Stale/disconnected/hidden/revoked/wrong-resource state clears content and QR immediately. Reload of a sanitized reader URL uses only its matching grant cookie; copying that URL to another browser does not transfer access. Reuse the original private access link in OBS, never a sanitized session identifier.
+
+QR encodes only the selected snapshot's exact public contribution URL, when current helper freshness/cutoff/source gates permit it. Encode locally with a maintained QR encoder and decode rendered pixels independently; no hand-drawn pseudo-QR. Eligibility progress uses exact backend eligible amounts and goal, distinct from verified/unclassified/late amounts and performance declaration. Do not infer funded or completed from a progress bar or timer zero.
+
+OBS lifecycle reference: [official Browser Source settings](https://obsproject.com/kb/browser-source). Shutdown when invisible unloads the page; scene activation can refresh it. Both require reload/reconnect proof. QR encoder API reference: [node-qrcode](https://github.com/soldair/node-qrcode). Actual OBS and physical scanning remain separate evidence.
+
+## Restart and qualification
+
+Working branch: `feat/f07-obs-presentation`. Reader and creator controls are implemented. The full local gate passes 235 unit/component cases and the complete production browser run passes 194 desktop/mobile cases, including the OBS visibility/activation lifecycle, exact QR pixel decoding, funded/declaration distinction and 320px/axe setup checks. The first actual disposable API run `6f51070c-7fc9-4c67-aee0-e612f37b330e` passes twelve checks with no page errors; current-source rerun and coordinated OBS/physical QR observations follow. No actual OBS/physical QR pass is claimed yet. F06 sandbox processes are cleaned; no new payment is needed for F07. The tracker is the sole status ledger.
+
+The initial focused browser attempt passed eight creator/entry cases but failed ten display cases because the synthetic stream omitted the mandatory initial resync event. Correcting the fixture to send resync then a newer clock snapshot passed all eighteen focused cases. Subsequent source lifecycle and funded/declaration cases pass within the complete 194-case run; no transport guard or assertion was weakened. During review, setup Save was corrected to submit its form and selection review was bound to the exact version shown, rather than substituting a later version. Bootstrap consumes and clears the shared entry secret before its POST, with disposal/late-result fences.
+
+The supported renderer is the backend's available `standalone` descriptor at assetVersion 1 with built-in renderer key and null asset hash. It presents the selected M/R visual hierarchy. Unsupported or paid renderer descriptors remain hidden until F09 implements their reviewed assets; no silent fallback or entitlement promise is made. Long wording/credits are bounded visually on the broadcast card while full accepted terms remain on the exact challenge page. No donor information is projected.
+
+New pinned dependencies are `qrcode@1.5.4`, its `@types/qrcode@1.5.6`, and test-only independent decoder `jsqr@1.4.0`. Local npm audit reports the existing fourteen dependency findings in Zod/contracts and the ESLint/minimatch chain, with no QR-library finding. They remain a release/security-gate concern; no forced unrelated upgrade was performed. No backend schema, contract artifact bytes or persistent data changed.
+
+Safe results live in ignored `artifacts.local/f07/acceptance.json`, runtime/observation status and the task's check/browser logs. The synthetic card capture contains only fake public data; private owner/source URLs and actual browser traces/screenshots are excluded. The bounded observer handoff is served only on loopback at `/__f07_observation`, keeps the new read-only private link in Node RAM and creates no product authentication endpoint. It expires after thirty minutes and revokes its temporary grant before cleaning owned services/storage. A phone can decode the exact loopback URL but cannot load this computer's loopback page; record those observations separately. Do not expose a tunnel or enable payments to disguise that local limitation.
