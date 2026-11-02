@@ -1,6 +1,6 @@
 # Frontend API contract matrix
 
-Owner: F02-01/02, updated by F06-03 against backend `bfb6323d50c08099af73514b952771903b54d58b` on 2026-11-02. Mapping/pinned contracts and transport/creator session are supplied; complete feature/provider wiring remains with its owners. This does not define a new API. [INTEGRATION](INTEGRATION.md) owns client rules; backend source and feature owners own behavior.
+Owner: F02-01/02, updated by F06-03 against backend `4a91709b530b333fd8f094ff797946a6ec8a99cd` on 2026-11-02. Mapping/pinned contracts and transport/creator session are supplied; complete feature/provider wiring remains with its owners. This does not define a new API. [INTEGRATION](INTEGRATION.md) owns client rules; backend source and feature owners own behavior.
 
 The [operation register](contracts/api-map.json) records every method/path, source handler/line, authority, body/query, response/status, idempotency and public-export reference. It contains **116 browser operations**, plus seven excluded registrations: four health probes and Stripe/PayPal/Kick ingress. Paths join actual composition prefixes; root router trailing slashes are normalized. The register fingerprints 117 API/admin source files and records five contract gaps. F06-03 adds POST `/api/checkouts/:id/resume`: guest cookie/Origin, strict empty body, 200/202 `CheckoutResponseSchema`, no idempotency key because it reauthorizes/retrieves an existing object without create/capture. Ordinary availability/creation remains closed; explicit isolated composition owns controlled ready-state proof.
 

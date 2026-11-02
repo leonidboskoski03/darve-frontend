@@ -72,7 +72,10 @@ async function setup(page: Page, provider: 'stripe' | 'paypal' = 'stripe') {
         const value = structuredClone(state.receipt);
         value.data.nextAction =
           provider === 'stripe'
-            ? { type: 'redirect', url: 'https://checkout.stripe.com/c/pay/cs_test_SYNTHETIC' }
+            ? {
+                type: 'redirect',
+                url: 'https://checkout.stripe.com/c/pay/cs_test_SYNTHETIC#synthetic-stripe-configuration',
+              }
             : {
                 type: 'paypal_approval',
                 orderId: 'SYNTHETICORDER',

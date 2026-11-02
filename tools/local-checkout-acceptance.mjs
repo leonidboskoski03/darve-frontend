@@ -149,6 +149,22 @@ try {
   checks.push(
     'actual ready public projection exposes controlled Stripe and PayPal without a creator login',
   );
+  const overlapping = await Promise.all(
+    Array.from({ length: 3 }, () =>
+      guest.request.get(api.apiOrigin + '/api/public/challenges/' + publicId, {
+        headers: { Origin: origin },
+      }),
+    ),
+  );
+  for (const response of overlapping) {
+    assert.equal(response.status(), 200);
+    const projection = (await response.json()).data;
+    assert.equal(projection.checkoutAvailability.available, true);
+    assert.ok(projection.availablePaymentProviders.every((row) => row.availability.available));
+  }
+  checks.push(
+    'overlapping actual public HTTP reads retain both verified methods through actual receiving services and SQL without a manual refresh',
+  );
   async function prepare(provider) {
     await visit('/contribute/' + publicId);
     await page

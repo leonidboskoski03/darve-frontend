@@ -60,6 +60,8 @@ export function checkoutMessage(error: unknown) {
   if (!(error instanceof CheckoutError))
     return 'Access changed or the checkout could not be checked. Refresh its private receipt before another action.';
   const code = error.problem.code;
+  if (code === 'INVALID_CHECKOUT_DESTINATION')
+    return 'The payment provider destination could not be verified. Refresh this private receipt and try continuing the same checkout.';
   if (code === 'GUEST_PROOF_REQUIRED')
     return 'Private receipt access was initialized in this browser. Continue the same reviewed contribution to prepare its checkout.';
   if (checkoutUncertain(error))
@@ -264,13 +266,7 @@ export function createCheckoutCommands({
       if (action) {
         const target = action.url ? new URL(action.url) : null;
         if (target) {
-          if (
-            target.protocol !== 'https:' ||
-            target.username ||
-            target.password ||
-            target.port ||
-            target.hash
-          )
+          if (target.protocol !== 'https:' || target.username || target.password || target.port)
             reject('INVALID_CHECKOUT_DESTINATION', 'protocol');
           if (action.type === 'redirect') {
             if (
@@ -281,6 +277,7 @@ export function createCheckoutCommands({
               reject('INVALID_CHECKOUT_DESTINATION', 'protocol');
           } else if (
             receipt.paymentProvider !== 'paypal' ||
+            target.hash ||
             target.hostname !== 'www.sandbox.paypal.com' ||
             target.pathname !== '/checkoutnow' ||
             target.searchParams.getAll('token').length !== 1 ||

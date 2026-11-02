@@ -151,8 +151,9 @@ export function ReceiptActions({
       )}
       {uncertain && (
         <p>
-          Refresh the canonical receipt or deliberately retry the same held completion request. Do
-          not start another payment to resolve an unknown result.
+          {captureAttempt
+            ? 'Refresh the canonical receipt or deliberately retry the same held completion request. Do not start another payment to resolve an unknown result.'
+            : 'Refresh the canonical receipt, then retry continuing this same checkout. Continuing does not create a replacement checkout.'}
         </p>
       )}
     </section>

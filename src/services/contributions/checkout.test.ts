@@ -157,7 +157,10 @@ describe('explicit guest checkout commands', () => {
       const value = wire(provider);
       value.data.nextAction =
         provider === 'stripe'
-          ? { type: 'redirect', url: 'https://checkout.stripe.com/c/pay/cs_test_SYNTHETIC' }
+          ? {
+              type: 'redirect',
+              url: 'https://checkout.stripe.com/c/pay/cs_test_SYNTHETIC#synthetic-provider-configuration',
+            }
           : {
               type: 'paypal_approval',
               orderId: 'SYNTHETICORDER',
@@ -179,7 +182,6 @@ describe('explicit guest checkout commands', () => {
     'https://evil.test/c/pay/cs_test_a',
     'http://checkout.stripe.com/c/pay/cs_test_a',
     'https://user@checkout.stripe.com/c/pay/cs_test_a',
-    'https://checkout.stripe.com/c/pay/cs_test_a#proof',
   ])('rejects unsafe provider continuation %s', async (url) => {
     const value = wire();
     value.data.nextAction = { type: 'redirect', url };
@@ -201,6 +203,17 @@ describe('explicit guest checkout commands', () => {
         .mockResolvedValueOnce(response(value, 202)),
     );
     await expect(f.commands.resume(receipt('paypal'))).rejects.toThrow();
+    await expect(f.commands.resume(receipt('paypal'))).rejects.toThrow();
+    expect(f.navigate).not.toHaveBeenCalled();
+  });
+  it('rejects PayPal fragments while retaining the exact order-token binding', async () => {
+    const value = wire('paypal');
+    value.data.nextAction = {
+      type: 'paypal_approval',
+      orderId: 'ORIGINAL',
+      url: 'https://www.sandbox.paypal.com/checkoutnow?token=ORIGINAL#unexpected',
+    };
+    const f = setup(vi.fn<typeof fetch>().mockResolvedValue(response(value)));
     await expect(f.commands.resume(receipt('paypal'))).rejects.toThrow();
     expect(f.navigate).not.toHaveBeenCalled();
   });

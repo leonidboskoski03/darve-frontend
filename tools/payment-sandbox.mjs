@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
-import { randomUUID } from 'node:crypto';
+import { randomUUID, createHash } from 'node:crypto';
+import { execFileSync } from 'node:child_process';
 import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
 import { chromium } from '@playwright/test';
 import { createServer } from 'vite';
@@ -15,7 +16,7 @@ let api,
   stage = 'startup';
 try {
   api = await startLocalApi({
-    backend: process.argv[4] ?? '../tmp/backend-f06-checkout',
+    backend: process.argv[4] ?? '../tmp/backend-f06-readiness',
     origins: [origin],
     task: 'f06-04',
     collection: true,
@@ -139,7 +140,27 @@ try {
   }
   stage = 'verify original sandbox receiving binding';
   await api.sandboxFixture.configure(creator.userId, creator.secret, session.csrfToken);
+  const directory = 'artifacts.local/f06-04-' + selectedProvider;
+  mkdirSync(directory, { recursive: true });
   if (api.sandboxFixture.requiresSetup) {
+    writeFileSync(
+      directory + '/status.json',
+      JSON.stringify(
+        {
+          task: 'F06-04',
+          runId: api.runId,
+          source: api.source,
+          provider: selectedProvider,
+          stage: 'awaiting_existing_seller_consent',
+          setupUrl: origin + '/sandbox/setup',
+          expiresAt: new Date(operatorDeadline).toISOString(),
+          ordinaryPaymentsEnabled: false,
+          newAccountsAllowed: false,
+        },
+        null,
+        2,
+      ),
+    );
     console.log(
       JSON.stringify({
         stage: 'awaiting_existing_seller_consent',
@@ -156,8 +177,28 @@ try {
   await owner.close();
   await browser.close();
   browser = undefined;
-  const directory = 'artifacts.local/f06-04-' + selectedProvider;
-  mkdirSync(directory, { recursive: true });
+  const frontendSource = {
+    revision: execFileSync('git', ['rev-parse', 'HEAD'], {
+      encoding: 'utf8',
+      windowsHide: true,
+    }).trim(),
+    dirty: !!execFileSync('git', ['status', '--porcelain'], {
+      encoding: 'utf8',
+      windowsHide: true,
+    }).trim(),
+    files: Object.fromEntries(
+      [
+        'tools/payment-sandbox.mjs',
+        'tools/payment-sandbox-config.mjs',
+        'tools/payment-sandbox-fixture.mjs',
+        'tools/paypal-payment-sandbox.mjs',
+        'tools/local-api.mjs',
+        'src/services/contributions/checkout.ts',
+        'src/features/contributions/receipt-actions.tsx',
+        'vendor/contracts/provenance.json',
+      ].map((file) => [file, createHash('sha256').update(readFileSync(file)).digest('hex')]),
+    ),
+  };
   const statusFile = directory + '/status.json',
     controlFile = directory + '/control.json';
   const readyAt = Date.now(),
@@ -171,7 +212,7 @@ try {
           task: 'F06-04',
           runId: api.runId,
           source: api.source,
-          frontendSource: '59ee61f30f64ebf0781e1bf14573aebb3a226d7f plus explicit sandbox tooling',
+          frontendSource,
           provider: selectedProvider,
           stage: current,
           publicUrl,
@@ -234,7 +275,7 @@ try {
           ...audit,
           runId: api.runId,
           backendSource: api.source,
-          frontendSource: '59ee61f30f64ebf0781e1bf14573aebb3a226d7f plus sandbox tooling',
+          frontendSource,
           migrations: api.migrations,
           freshViewerAndProviderApproval: true,
           canonicalReceiptReload: true,
