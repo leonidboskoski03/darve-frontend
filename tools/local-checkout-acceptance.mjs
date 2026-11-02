@@ -149,6 +149,22 @@ try {
   checks.push(
     'actual ready public projection exposes controlled Stripe and PayPal without a creator login',
   );
+  const overlapping = await Promise.all(
+    Array.from({ length: 3 }, () =>
+      guest.request.get(api.apiOrigin + '/api/public/challenges/' + publicId, {
+        headers: { Origin: origin },
+      }),
+    ),
+  );
+  for (const response of overlapping) {
+    assert.equal(response.status(), 200);
+    const projection = (await response.json()).data;
+    assert.equal(projection.checkoutAvailability.available, true);
+    assert.ok(projection.availablePaymentProviders.every((row) => row.availability.available));
+  }
+  checks.push(
+    'overlapping actual public HTTP reads retain both verified methods through actual receiving services and SQL without a manual refresh',
+  );
   async function prepare(provider) {
     await visit('/contribute/' + publicId);
     await page
@@ -233,7 +249,30 @@ try {
     page.getByRole('button', { name: 'Complete PayPal payment', exact: true }),
   ).toBeDisabled();
   assert.equal((await api.checkoutFixture.audit()).captures, 0);
+  await page.getByRole('checkbox', { name: /I approved this order on PayPal/ }).check();
+  await page.getByRole('button', { name: 'Complete PayPal payment', exact: true }).click();
+  await expect(
+    page.getByRole('status').filter({ hasText: 'Payment is not confirmed' }),
+  ).toBeVisible();
+  assert.equal((await api.checkoutFixture.audit()).captures, 0);
+  await page.route('https://www.sandbox.paypal.com/**', (route) =>
+    route.fulfill({
+      contentType: 'text/html',
+      body: '<h1>Synthetic original PayPal approval</h1>',
+    }),
+  );
+  await page.getByRole('checkbox', { name: /I reviewed this checkout/ }).check();
+  await page.getByRole('button', { name: 'Continue to PayPal', exact: true }).click();
+  await expect(
+    page.getByRole('heading', { name: 'Synthetic original PayPal approval', exact: true }),
+  ).toBeVisible();
+  assert.equal((await api.checkoutFixture.audit()).paypalCreates, 1);
+  assert.equal((await api.checkoutFixture.audit()).captures, 0);
+  checks.push(
+    'completion before approval performs no capture and still permits continuation of the same original PayPal order',
+  );
   await api.checkoutFixture.approve(paypalId);
+  await visit('/payments/return?checkout=' + paypalId + '&token=ORDER1');
   await page.getByRole('checkbox', { name: /I approved this order on PayPal/ }).check();
   await page.getByRole('button', { name: 'Complete PayPal payment', exact: true }).click();
   await expect(page.getByText('Verified payment recorded', { exact: true })).toBeVisible();

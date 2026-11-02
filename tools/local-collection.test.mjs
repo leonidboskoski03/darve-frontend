@@ -2,6 +2,32 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { startLocalApi } from './local-api.mjs';
 
+test('sandbox payments fail closed before configuration/storage unless separately approved and isolated', async () => {
+  const permitted = {
+    backend: 'not-used',
+    task: 'f06-04',
+    port: 3310,
+    origins: ['http://127.0.0.1:4175'],
+    collection: true,
+    review: true,
+    sandboxPayment: { provider: 'stripe', approval: 'F06-04', sourceRoot: 'not-used' },
+  };
+  for (const override of [
+    { task: 'f06-03' },
+    { sandboxPayment: undefined },
+    { port: 3000 },
+    { checkout: true },
+    { contributionReads: true },
+    { reporting: true },
+    { operatorOAuth: {} },
+    { review: false },
+    { origins: ['https://public.example.test'] },
+    { sandboxPayment: { ...permitted.sandboxPayment, approval: 'yes' } },
+    { sandboxPayment: { ...permitted.sandboxPayment, provider: 'live' } },
+  ])
+    await assert.rejects(startLocalApi({ ...permitted, ...override }), /Payment sandbox requires/);
+});
+
 test('controlled checkout requires explicit isolated selection before Docker or source access', async () => {
   for (const options of [
     { task: 'f06', collection: true, review: true, checkout: true },

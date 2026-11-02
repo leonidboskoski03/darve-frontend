@@ -19,7 +19,7 @@ async function setup(page: Page, provider: 'stripe' | 'paypal' = 'stripe') {
     public: publicContributionFixture(true),
     receipt: privateReceiptFixture(provider),
     commands: [] as { path: string; key: string | undefined; body: string | null }[],
-    mode: 'proof' as 'proof' | 'unknown' | 'stale' | 'okay',
+    mode: 'proof' as 'proof' | 'unknown' | 'stale' | 'okay' | 'needs_approval',
     captured: false,
   };
   state.receipt.data.amount.amountMinor = '1000';
@@ -72,7 +72,10 @@ async function setup(page: Page, provider: 'stripe' | 'paypal' = 'stripe') {
         const value = structuredClone(state.receipt);
         value.data.nextAction =
           provider === 'stripe'
-            ? { type: 'redirect', url: 'https://checkout.stripe.com/c/pay/cs_test_SYNTHETIC' }
+            ? {
+                type: 'redirect',
+                url: 'https://checkout.stripe.com/c/pay/cs_test_SYNTHETIC#synthetic-stripe-configuration',
+              }
             : {
                 type: 'paypal_approval',
                 orderId: 'SYNTHETICORDER',
@@ -80,8 +83,8 @@ async function setup(page: Page, provider: 'stripe' | 'paypal' = 'stripe') {
               };
         await reply(value);
       } else if (path.endsWith('/complete')) {
-        state.captured = true;
-        state.receipt.data.state = 'unknown';
+        state.captured = state.mode !== 'needs_approval';
+        state.receipt.data.state = state.mode === 'needs_approval' ? 'awaiting' : 'unknown';
         await reply(state.receipt, 202);
       } else await error('NOT_FOUND', 404);
     } else if (path === '/api/public/challenges/' + ids.public) await reply(state.public);
@@ -196,6 +199,36 @@ test('synthetic PayPal return never captures automatically and explicit completi
   expect(state.commands[0]?.path).toMatch(/\/complete$/);
   expect(state.commands[0]?.body).toBe('{}');
   expect(state.commands[0]?.key).toBeTruthy();
+});
+test('synthetic unapproved PayPal completion keeps continuation of the original order available', async ({
+  page,
+}) => {
+  const state = await setup(page, 'paypal');
+  state.mode = 'needs_approval';
+  await page.route('https://www.sandbox.paypal.com/**', (route) =>
+    route.fulfill({
+      contentType: 'text/html',
+      body: '<h1>Synthetic original PayPal approval</h1>',
+    }),
+  );
+  await page.goto(base + '?view=receipt&checkout=' + ids.checkout, {
+    waitUntil: 'domcontentloaded',
+  });
+  await page.getByRole('checkbox', { name: /I approved this order on PayPal/ }).check();
+  await page.getByRole('button', { name: 'Complete PayPal payment', exact: true }).click();
+  await expect(
+    page.getByRole('status').filter({ hasText: 'Payment is not confirmed' }),
+  ).toBeVisible();
+  await page.getByRole('checkbox', { name: /I reviewed this checkout/ }).check();
+  await page.getByRole('button', { name: 'Continue to PayPal', exact: true }).click();
+  await expect(
+    page.getByRole('heading', { name: 'Synthetic original PayPal approval' }),
+  ).toBeVisible();
+  expect(state.captured).toBe(false);
+  expect(state.commands.map((row) => row.path)).toEqual([
+    '/api/checkouts/' + ids.checkout + '/complete',
+    '/api/checkouts/' + ids.checkout + '/resume',
+  ]);
 });
 test('synthetic checkout form supports keyboard, reduced motion, 320px reflow and accessibility', async ({
   page,

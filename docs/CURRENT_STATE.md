@@ -1,6 +1,6 @@
 # Current frontend state
 
-Checkpoint: 2026-11-02, Europe/Warsaw. F06-01/02 are integrated through PR14 on dev `df0802f`. F06-03 implements checkout creation/private continuation/PayPal confirmation, under final qualification. Its backend dependency PR83 is integrated; ordinary payment creation remains disabled. [F06](F06_CONTRIBUTION_IMPLEMENTATION.md) owns proof and restart custody.
+Checkpoint: 2026-11-02, Europe/Warsaw. F06 is qualified and CLOSED for local engineering and actual founder-assisted Stripe/PayPal sandbox journeys. PR16 owns completion integration after PR14/15; backend PR83/84 are integrated. Ordinary/live payment activation remains disabled. [F06](F06_CONTRIBUTION_IMPLEMENTATION.md#final-f06-qualification-and-integration) owns exact proof and final Git custody.
 
 ## Implemented
 
@@ -26,14 +26,14 @@ The [F01-01 reference audit](F01_REFERENCE_AND_COMPONENT_AUDIT.md) now inventori
 
 [F05](F05_DASHBOARD_IMPLEMENTATION.md) adds guarded dashboard, retained challenge history/detail and known-round analytics. Applied civil-date/timezone/source filters live in the URL; exact currency rows, unknown adjustments, current audience and snapshot freshness stay distinct. Multiple overlapping challenges and expired funding windows remain in retained history. Explicit original/authorized-stream completion requires unchecked confirmation of immutable terms/authority, preserves same-key uncertain replay and reconciles server projections. A funded goal never declares completion automatically. The full local gate passed 184 unit/component cases and all 124 desktop/mobile browser cases; sixteen controlled actual API/SQL checks passed with synthetic provider/model/receiving/financial evidence. No external charge, verified live stream or joint payment/OBS acceptance is claimed.
 
-[F06](F06_CONTRIBUTION_IMPLEMENTATION.md) adds the selected A public/guest journey without creator login. F06-03 now includes exact reviewed contributions, same-key uncertainty/cookie-handshake replay, canonical private receipt custody, transient validated Stripe/PayPal continuation and separate explicit PayPal completion. The reviewed backend availability/continuation contract keeps ordinary creation OFF. Current local gate passes 228 unit/component cases and controlled actual API/SQL proof passes eleven checks; full browser regression is being finalized. Fresh actual provider sandbox acceptance remains F06-04, so whole F06 stays in progress.
+[F06](F06_CONTRIBUTION_IMPLEMENTATION.md#final-f06-qualification-and-integration) implements the selected A public contribution/private receipt journey without creator login. Exact reviewed create/same-key replay, server availability, original-object provider continuation, sanitized return/cancel and separate explicit PayPal capture are qualified. Tests pass 228 unit/component, 172 browser and thirteen controlled actual API checks. Actual founder-assisted fresh-viewer sandbox runs verify one EUR10 Stripe payment and one USD10 PayPal capture/payment with synthetic 0.70 fees and original-cookie private receipt reload. Concurrent receiving, valid Stripe fragments and premature PayPal completion/continuation defects are corrected. Verified money stays separate from timing/funding/performance; ordinary/live activation stays OFF.
 
 ## Not implemented or verified
 
 - Remaining feature-specific visual/design acceptance, including missing staff/coin/template surfaces and actual OBS reference fit, with their owning feature batches. The F04-02 collection workspace has local responsive/accessibility evidence.
 - Mapped staff/support/moderation public-contract gaps; full guest/reader/staff feature authority lifecycles and joint acceptance remain with their feature owners.
-- Actual connected collection/analysis/receiving/OBS and guest checkout/private receipt, staff/support and coins/templates journeys. Registered-development-app creator OAuth/consent now has actual evidence.
-- External provider/payment/Resend delivery acceptance or deployment. The default shell requires no Docker; configured session inspection and isolated API acceptance are now available.
+- Joint connected collection/analysis/OBS, staff/support and coins/templates journeys. Actual creator OAuth and F06 sandbox receiving/guest checkout/private receipts have their separate recorded acceptance; full live-system acceptance remains open.
+- Live payment/Resend delivery or deployment acceptance. Actual Stripe/PayPal sandbox receiving/payment/private-receipt acceptance is now qualified under F06; no live activation follows. The default shell requires no Docker.
 
 ## Confirmed decisions
 
@@ -43,4 +43,4 @@ Use task branches/PRs into dev with light hosted validation; main is reserved fo
 
 ## Next action
 
-Finish F06-03 final browser/API qualification and protected dev integration, then coordinate F06-04 fresh-viewer sandbox approval using its concrete bounded proposal. The original backend checkout and its three documentation edits remain untouched; isolated API tests require the clean pinned backend worktree documented in the owner. Whole F04 connected acceptance and F07–F11 remain with their own owners. Recheck source/build, ports and task/run labels before resuming.
+Finish protected PR16 integration/cleanup using the F06 owner if still pending. The next planned batch is F07 OBS, starting with its selected M/R/QR/reader authority map when the user authorizes it. Whole F04 connected acceptance and F07–F11 remain with their owners. Keep the original dirty backend checkout/persistent services untouched and retain the reviewed isolated backend source for reproducible acceptance. No task runtime is required.

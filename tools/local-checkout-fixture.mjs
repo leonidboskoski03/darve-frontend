@@ -17,9 +17,35 @@ export async function createLocalCheckoutFixture(backend, database, config) {
   const repository = db.createFinancialStorageRepository(database, {
     guestEpoch: randomUUID(),
     environment: 'test',
-    platformAccountIds: { stripe: 'acct_checkout_synthetic', paypal: scope.partnerMerchantId },
+    platformAccountIds: { stripe: 'acct_checkoutsynth', paypal: scope.partnerMerchantId },
     paypalScope: scope,
   });
+  const stripeObservation = (accountId, country) => ({
+    accountId,
+    country,
+    currencies: ['EUR', 'USD'],
+    chargesEnabled: true,
+    payoutsEnabled: true,
+    capabilityActive: true,
+  });
+  const stripeReceiving = domain.createStripeReceivingService(
+    db.createStripeReceivingRepository(database, {
+      platformAccountId: 'acct_checkoutsynth',
+      platformCountry: 'SG',
+      epoch: randomUUID(),
+    }),
+    {
+      create: async (id, country) =>
+        stripeObservation('acct_synthetic' + id.replaceAll('-', ''), country),
+      observe: async (_id, accountId, country) => stripeObservation(accountId, country),
+      link: async (_id, accountId, country) => ({
+        url: 'https://connect.stripe.com/synthetic',
+        expiresAt: new Date(Date.now() + 60000),
+        observation: stripeObservation(accountId, country),
+      }),
+    },
+    config.termsPolicy,
+  );
   const receiving = domain.createPayPalReceivingService(
     db.createPayPalReceivingRepository(database, scope, config.credentialCipher),
     {
@@ -52,11 +78,19 @@ export async function createLocalCheckoutFixture(backend, database, config) {
   const readiness = {
     async check(ownerId, currency) {
       if (!enabled || !owners.has(ownerId)) return { state: 'not_ready' };
-      const paypal = await receiving.readiness.check(ownerId, currency);
+      const [stripe, paypal] = await Promise.all([
+        stripeReceiving.readiness.check(ownerId, currency),
+        receiving.readiness.check(ownerId, currency),
+      ]);
+      const methods = [
+        ...(stripe.state === 'ready' ? ['STRIPE'] : []),
+        ...(paypal.state === 'ready' ? ['PAYPAL'] : []),
+      ];
+      if (!methods.length) return { state: 'not_ready' };
       return {
         state: 'ready',
         ownerId,
-        methods: ['STRIPE', ...(paypal.state === 'ready' ? ['PAYPAL'] : [])],
+        methods,
       };
     },
   };
@@ -182,26 +216,8 @@ export async function createLocalCheckoutFixture(backend, database, config) {
           },
         },
       });
-      const recipient = await repository.bindRecipient({
-        owner,
-        paymentProvider: 'stripe',
-        environment: 'test',
-        platformAccountId: 'acct_checkout_synthetic',
-        accountId: 'recipient_' + owner,
-        country: 'SG',
-      });
-      const now = new Date();
-      await repository.observeRecipient({
-        id: recipient.id,
-        expectedVersion: recipient.version,
-        observedAt: now,
-        validUntil: new Date(now.valueOf() + 120000),
-        currencies: ['EUR'],
-        chargesEnabled: true,
-        payoutsEnabled: true,
-        capabilityActive: true,
-      });
       const actor = { userId: owner, secretHash: hash(secret), csrfHash: hash(csrf) };
+      await stripeReceiving.onboarding(actor, randomUUID(), 'SG');
       await receiving.onboarding(actor, randomUUID(), 'US', true);
       await receiving.refresh(actor);
       owners.add(owner);

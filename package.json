@@ -45,7 +45,7 @@
     "test:checkout:local": "node tools/local-checkout-acceptance.mjs"
   },
   "dependencies": {
-    "@darve/contracts": "file:vendor/contracts/darve-contracts-bfb6323d50c08099af73514b952771903b54d58b.tgz",
+    "@darve/contracts": "file:vendor/contracts/darve-contracts-4a91709b530b333fd8f094ff797946a6ec8a99cd.tgz",
     "@gsap/react": "2.1.2",
     "@tanstack/react-query": "5.104.5",
     "framer-motion": "14.6.0",
