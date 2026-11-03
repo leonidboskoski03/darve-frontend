@@ -1,0 +1,150 @@
+.staff-admin-shell {
+  min-height: 100dvh;
+  background: var(--color-background);
+  color: var(--color-text);
+}
+.staff-admin-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  flex-wrap: wrap;
+  padding: var(--space-4) var(--space-6);
+  border-bottom: 1px solid var(--color-border);
+}
+.staff-admin-header nav {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+.staff-admin-shell main {
+  max-width: 82rem;
+  margin: auto;
+  padding: var(--space-8) var(--space-6);
+  display: grid;
+  gap: var(--space-6);
+}
+.staff-admin-shell h1 {
+  font-size: var(--font-size-page);
+  margin: 0 0 var(--space-2);
+}
+.staff-admin-shell h2 {
+  font-size: var(--font-size-title);
+}
+.staff-admin-shell h3 {
+  font-size: 1rem;
+}
+.staff-admin-shell p {
+  max-width: 72ch;
+  color: var(--color-muted);
+  text-wrap: pretty;
+}
+.staff-admin-shell p,
+.staff-admin-shell dd,
+.staff-admin-shell code {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.staff-admin-toolbar,
+.staff-admin-toolbar > div {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+.staff-admin-filters {
+  display: flex;
+  gap: var(--space-8);
+  flex-wrap: wrap;
+  border-block: 1px solid var(--color-border);
+  padding-block: var(--space-5);
+}
+.staff-admin-filters form {
+  flex: 1;
+  min-width: min(100%, 18rem);
+}
+.staff-admin-shell form {
+  display: grid;
+  gap: var(--space-3);
+  max-width: 44rem;
+}
+.staff-admin-shell input,
+.staff-admin-shell select {
+  min-width: 0;
+  width: 100%;
+}
+.staff-admin-records {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.staff-admin-records > li {
+  border-bottom: 1px solid var(--color-border);
+  padding-block: var(--space-6);
+}
+.staff-admin-records > li > h2 {
+  margin: 0 0 var(--space-3);
+}
+.staff-admin-action {
+  margin-block: var(--space-6);
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-5);
+}
+.staff-admin-binding {
+  color: var(--color-text);
+}
+.staff-admin-check {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+.staff-admin-check input {
+  width: 1rem;
+  min-width: 1rem;
+  min-height: 1rem;
+  margin-top: 0.3rem;
+}
+.staff-admin-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
+  gap: var(--space-5);
+  border-block: 1px solid var(--color-border);
+  padding-block: var(--space-5);
+}
+.staff-admin-shell dt {
+  font-size: var(--font-size-small);
+  color: var(--color-muted);
+}
+.staff-admin-shell dd {
+  margin: var(--space-1) 0 var(--space-4);
+}
+.staff-admin-notice {
+  padding: var(--space-5);
+  background: var(--color-raised);
+  border-radius: var(--radius-small);
+  max-width: 48rem;
+}
+.staff-admin-private {
+  display: grid;
+  gap: var(--space-2);
+  margin-block: var(--space-4);
+}
+.staff-admin-invitations {
+  border-top: 1px solid var(--color-border);
+  margin-top: var(--space-8);
+  padding-top: var(--space-6);
+  max-width: 44rem;
+}
+@media (max-width: 40rem) {
+  .staff-admin-header {
+    padding: var(--space-4);
+  }
+  .staff-admin-header nav {
+    margin-left: 0;
+  }
+  .staff-admin-shell main {
+    padding: var(--space-6) var(--space-4);
+  }
+}

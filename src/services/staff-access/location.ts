@@ -1,5 +1,26 @@
 const paths = new Set(['/', '/staff/enrol', '/tickets', '/reviews']);
 const entryPaths = new Set([...paths, '/staff/verify-email']);
+/** Preserve only public staff-tool navigation filters; proofs and arbitrary query fields are stripped. */
+export function staffReviewSearch(search: string) {
+  if (search.length > 2048) return '';
+  const input = new URLSearchParams(search),
+    output = new URLSearchParams();
+  const unique = (name: string) => (input.getAll(name).length === 1 ? input.get(name) : null);
+  const view = unique('view');
+  if (view && ['challenges', 'challenge', 'streamer', 'reviews', 'staff', 'audit'].includes(view))
+    output.set('view', view);
+  for (const key of ['id', 'owner']) {
+    const value = unique(key);
+    if (
+      value &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
+    )
+      output.set(key, value);
+  }
+  const state = unique('state');
+  if (state && ['open', 'in_review', 'resolved'].includes(state)) output.set('state', state);
+  return output.size ? '?' + output.toString() : '';
+}
 export function staffReturnPath(path: string) {
   return paths.has(path) ? path : '/';
 }

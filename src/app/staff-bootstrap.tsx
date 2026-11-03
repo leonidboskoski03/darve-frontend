@@ -2,7 +2,11 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
 import { createStaffRouter } from '@/routes/staff';
-import { createStaffAccess, readStaffEntry } from '@/services/staff-access/index';
+import {
+  createStaffAccess,
+  readStaffEntry,
+  staffReviewSearch,
+} from '@/services/staff-access/index';
 import '@/design-system/styles.css';
 
 export function mountStaffAccess(configuration: {
@@ -11,8 +15,9 @@ export function mountStaffAccess(configuration: {
   authorizationEndpoint?: string;
 }) {
   const entry = readStaffEntry(window.location.href);
-  // Strip every query/fragment before mounting or making any authority request.
-  window.history.replaceState(null, '', entry.path);
+  // Strip proofs and arbitrary queries before mounting; retain only reviewed navigation filters.
+  const search = entry.path === '/reviews' ? staffReviewSearch(window.location.search) : '';
+  window.history.replaceState(null, '', entry.path + search);
   let returnTo: (path: string) => void = () => {};
   const access = createStaffAccess({
     origin: configuration.apiOrigin,

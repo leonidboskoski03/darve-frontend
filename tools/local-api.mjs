@@ -69,13 +69,14 @@ export async function startLocalApi({
       'f07',
       'f08-04',
       'f08-05',
+      'f08-06',
     ].includes(task)
   )
     throw new Error('Invalid local task identity.');
   if (
-    (support || task === 'f08-04' || task === 'f08-05') &&
+    (support || ['f08-04', 'f08-05', 'f08-06'].includes(task)) &&
     (!support ||
-      !['f08-04', 'f08-05'].includes(task) ||
+      !['f08-04', 'f08-05', 'f08-06'].includes(task) ||
       collection ||
       review ||
       reporting ||
@@ -467,9 +468,22 @@ export async function startLocalApi({
       sandboxFixture,
       supportFixture,
       createStaffWorkbench: async () => {
-        if (task !== 'f08-05' || !supportFixture)
+        if (!['f08-05', 'f08-06'].includes(task) || !supportFixture)
           throw new Error('Staff workbench requires F08-05 disposable composition.');
-        return supportFixture.workbench(deps.redis);
+        return supportFixture.workbench(deps.redis, { administration: task === 'f08-06' });
+      },
+      seedStaffInspection: async (creator) => {
+        if (task !== 'f08-06' || !supportFixture)
+          throw new Error(
+            'Staff inspection seed requires the exact F08-06 disposable composition.',
+          );
+        return (await import('./local-staff-admin-seed.mjs')).seedStaffInspection({
+          backend,
+          deps,
+          logger,
+          runtimeInput,
+          creator,
+        });
       },
       close,
       // Node-only network-fault probe; no HTTP route or database effect.

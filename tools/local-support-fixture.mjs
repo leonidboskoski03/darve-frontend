@@ -88,7 +88,7 @@ export async function createLocalSupportFixture(backend, uri, owner, policy) {
   const command = (id, action, body) => service.execute(actor, id, action, randomUUID(), body);
   return {
     publicDatabase,
-    async workbench(redis) {
+    async workbench(redis, { administration = false } = {}) {
       const { createAdminApp } = await import(
         pathToFileURL(join(backend, 'apps/admin-api/dist/app.js')).href
       );
@@ -96,18 +96,73 @@ export async function createLocalSupportFixture(backend, uri, owner, policy) {
         pathToFileURL(join(backend, 'apps/admin-api/dist/composition/rate-limit-store.js')).href
       );
       const frontendOrigin = 'http://localhost:4176';
+      const inbox = [],
+        codes = new Map();
+      let selectedIdentity = null;
+      const provider = administration
+        ? {
+            configurationBinding: 'f08-06-controlled-password-fixture',
+            authorization({ state, nonce, challenge }) {
+              const url = new URL('http://localhost:3321/authorize');
+              for (const [key, value] of Object.entries({
+                state,
+                nonce,
+                code_challenge: challenge,
+                response_type: 'code',
+                client_id: 'controlled-staff',
+                redirect_uri: 'http://localhost:3320/admin/v1/auth/callback',
+                scope: 'openid email',
+                code_challenge_method: 'S256',
+                prompt: 'login',
+                max_age: '0',
+              }))
+                url.searchParams.set(key, value);
+              return url.href;
+            },
+            async exchange(code, verifier, nonce) {
+              const entry = codes.get(code);
+              codes.delete(code);
+              assert(
+                entry && entry.nonce === nonce && entry.challenge === crypto.challenge(verifier),
+              );
+              return {
+                issuer: staffPolicy.issuer,
+                subject: entry.subject,
+                verifiedEmail: 'controlled-staff@example.test',
+                authenticatedAt: (
+                  await owner.$queryRaw`SELECT date_trunc('milliseconds',clock_timestamp()) AS now`
+                )[0].now,
+                assurancePolicy: 'auth0-password-v1',
+              };
+            },
+          }
+        : null;
       const access = domain.createStaffAccessService(
-        db.createStaffRepository(admin, staffPolicy),
-        null,
+        db.createStaffRepository(admin, staffPolicy, administration),
+        provider,
         crypto,
         staffPolicy,
         frontendOrigin,
-        null,
+        administration
+          ? {
+              send: async (message) => {
+                inbox.push(message);
+              },
+            }
+          : null,
         true,
       );
       const app = createAdminApp({
         service: access,
         support: { service, crypto },
+        ...(administration
+          ? {
+              moderation: domain.createModerationService(
+                db.createModerationRepository(admin, staffPolicy, true),
+                crypto,
+              ),
+            }
+          : {}),
         config: { secure: false, frontendOrigin, loginSeconds: staffPolicy.loginSeconds },
         store: createStaffRateLimitStore(redis),
         ready: async () => db.staffRuntimeAuthorityReady(admin, true),
@@ -115,6 +170,74 @@ export async function createLocalSupportFixture(backend, uri, owner, policy) {
       });
       return {
         app,
+        inbox,
+        identityHandler(request, response) {
+          assert(administration);
+          const url = new URL(request.url, 'http://localhost:3321');
+          const state = url.searchParams.get('state'),
+            nonce = url.searchParams.get('nonce'),
+            challenge = url.searchParams.get('code_challenge');
+          if (
+            request.method !== 'GET' ||
+            url.pathname !== '/authorize' ||
+            !selectedIdentity ||
+            ![state, nonce, challenge].every((value) => /^[A-Za-z0-9_-]{43}$/.test(value ?? ''))
+          ) {
+            response.writeHead(400);
+            response.end();
+            return;
+          }
+          const code = randomBytes(32).toString('base64url');
+          codes.set(code, { subject: selectedIdentity.subject, nonce, challenge });
+          response.writeHead(200, {
+            'Content-Type': 'text/html; charset=utf-8',
+            'Cache-Control': 'no-store',
+            'Referrer-Policy': 'no-referrer',
+          });
+          response.end(
+            '<!doctype html><html lang="en"><title>Controlled identity fixture</title><h1>Controlled identity fixture</h1><p>Synthetic password evidence, not Auth0 acceptance.</p><form method="get" action="http://localhost:3320/admin/v1/auth/callback"><input type="hidden" name="state" value="' +
+              state +
+              '"><input type="hidden" name="code" value="' +
+              code +
+              '"><input type="hidden" name="iss" value="' +
+              staffPolicy.issuer +
+              '"><button>Continue controlled identity</button></form></html>',
+          );
+        },
+        async selectIdentity(id) {
+          assert(administration);
+          selectedIdentity = await owner.staffPrincipal.findUniqueOrThrow({ where: { id } });
+          assert(selectedIdentity.epoch === staffPolicy.epoch && selectedIdentity.active);
+        },
+        async ageIdentity(id) {
+          assert(administration);
+          await owner.staffSession.updateMany({
+            where: { principalId: id },
+            data: {
+              authenticatedAt: new Date(
+                Date.now() - (staffPolicy.recentAuthenticationSeconds + 30) * 1000,
+              ),
+            },
+          });
+        },
+        async removeSetupOwner() {
+          assert(administration);
+          await owner.staffPrincipal.update({
+            where: { id: principal.id },
+            data: { active: false },
+          });
+        },
+        async evidence(id) {
+          assert(administration);
+          return {
+            principal: await owner.staffPrincipal.findUnique({
+              where: { id },
+              select: { id: true, role: true, active: true, revision: true },
+            }),
+            invitations: await owner.staffInvitation.count({ where: { createdBy: id } }),
+            audit: await owner.staffAudit.count({ where: { actorId: id } }),
+          };
+        },
         async seed(role = 'SUPPORT') {
           assert(['SUPPORT', 'OWNER_ADMIN'].includes(role));
           const principal = await owner.staffPrincipal.create({
