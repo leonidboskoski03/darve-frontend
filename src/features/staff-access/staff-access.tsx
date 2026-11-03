@@ -3,6 +3,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import type { StaffAccess, StaffSnapshot } from '@/services/staff-access/index';
 import { Brand } from '@/design-system/brand';
 import { Button } from '@/design-system/button';
+import { ActionLink } from '@/design-system/action-link';
 import { TextField } from '@/design-system/text-field';
 import './staff-access.css';
 
@@ -273,9 +274,12 @@ function StaffScreen({ access, snapshot }: { access: StaffAccess; snapshot: Staf
                 </div>
               </dl>
               <p className="staff-secondary">
-                Ticket and review tools are not available in this workspace yet. Signing in does not
-                mark you available for tickets.
+                Review tools are not available in this workspace yet. Signing in does not mark you
+                available for tickets.
               </p>
+              {snapshot.permissions.includes('tickets.assigned.read') ? (
+                <ActionLink href="/tickets">Open support workspace</ActionLink>
+              ) : null}
               <div className="staff-actions">
                 <Button
                   tone="secondary"

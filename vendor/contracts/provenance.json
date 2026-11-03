@@ -1,7 +1,7 @@
 {
   "package": "@darve/contracts",
   "version": "0.0.0",
-  "sourceRevision": "92e5e86763a57b66346f6d0832d9ed4f9549b05b",
+  "sourceRevision": "1745f6362f3a25ee8ad3b52cc32ea2de3ff590de",
   "sourcePaths": ["packages/contracts", "tsconfig.base.json", "package-lock.json"],
   "sourceFiles": {
     "package-lock.json": "59083686090763494821add1bb0d02cd52e8e9fbc97e754440089ae8f3f5fd79",
@@ -33,7 +33,7 @@
     "packages/contracts/src/stripe-existing-account.ts": "9611fbf1170cfc3dec4ab1df18172e6767d09ea36e78281a0e8764d984378e2f",
     "packages/contracts/src/stripe-receiving.ts": "71b191fd23e2ef4491e4e345ebaffe26a4f61118cbaf5005a9a7e098f7fd6537",
     "packages/contracts/src/support-recovery.ts": "d3664d2ab323964657df69c5465e9a5a9e79a65bf9bdde8152a2d9ef25ddbba2",
-    "packages/contracts/src/support.ts": "7c0617748274ff9d239bf90bdda82c277c069d426b3f8e3b68e96ce7fc77b274",
+    "packages/contracts/src/support.ts": "61c71af6a4531ff35b56294733eae3437b7c2ed14c37da7a91b7bddab3b177d7",
     "packages/contracts/tsconfig.json": "7c0efbd3c7f9a73a7ef52be68fb457437abb56923bf807fee51340d17c045ff5",
     "tsconfig.base.json": "f518a9d90733ab1568e05681c039ce96c56537620a3bc526608d13584cbbc809"
   },
@@ -54,9 +54,9 @@
     }
   },
   "artifact": {
-    "filename": "darve-contracts-92e5e86763a57b66346f6d0832d9ed4f9549b05b.tgz",
-    "sha256": "dd6e006e2e15b27839dee02e1badc3c972af326e942d48b321a3f4c655f76783",
-    "integrity": "sha512-xRj0TzR5tkuq7HVmP3+n0FQe2AImAGC/6Rdc4Cj3vIJrtX3xiAlFKUf09MX6sYuFr4OYmAAG2v5SE+0OM8aMZg==",
+    "filename": "darve-contracts-1745f6362f3a25ee8ad3b52cc32ea2de3ff590de.tgz",
+    "sha256": "5fff00eeef8e3c0a147fe58a1402bb59c25fcba1de6291c17dcd831340b5f6d5",
+    "integrity": "sha512-AmbRoOVqtwRmFeH1HKzgt3R5T/kvLNxZlpJyFRx053dqW0hlnEHfELJaHqy4OEDZiO5pVYTSW/Cy2VQb7RxbBw==",
     "files": {
       "README.md": "3c38051c93820e6e48e2d7e77491305ed024044614219bf80e9498a675bef693",
       "dist/analysis.d.ts": "e7d3fa32d929f652b19af6bc41cff16f93612c5a0dc1f6bd55dfcbdbe85eb1a2",
@@ -101,7 +101,7 @@
       "dist/round-analytics.js": "beac2813cdfcd4efb2e2b4077e4161ee0f6f19f9977500d1a8e54fe33c9167a7",
       "dist/session.d.ts": "5fdc7e2db409e98b00e6c3ab77c6efe52a9643099bdb158ab84974d284984778",
       "dist/session.js": "62f597a12cd6cc6e9fb95103b3eeceb29db97620b98009034b62d5b219ca2340",
-      "dist/staff-support-wire.d.ts": "2aa5075d97bfb2139dec32f3b74351fae21a4b47070d4e4249f6945d5be25347",
+      "dist/staff-support-wire.d.ts": "f4af83269aab2997caee8d22b700d88c795a9b7a19f521dced22c16a9f58dcfb",
       "dist/staff-support-wire.js": "a22a6c26e5e2e03c4c83311c496a0ff23c6b313df976592c00a1765a5a359399",
       "dist/staff.d.ts": "91e7f5aaa329788e2b691ec4f7fa4be0c642b847b3178cd69c162d943ab833ec",
       "dist/staff.js": "19650ca8173a36c2a60faf7ea73211775b1b62441c43633f6e6b2ee5ae4a1727",
@@ -111,8 +111,8 @@
       "dist/stripe-receiving.js": "00441f52553f0de5e27ec7a5a2f183db7c6c995a3224e7dae0398ba18a1eea9f",
       "dist/support-recovery.d.ts": "5f941de1b9ba4fd2779ad2f8d395d4bc7e79e77950565f5e7b0067231cbfed41",
       "dist/support-recovery.js": "6d3608b04047ce961db2d1747d97eef3631a28fa1b691d062c76220cbf002def",
-      "dist/support.d.ts": "69915037c0b071ca6712d05d6eb60472f4b7c4f3feaa345be952b95aec44bd73",
-      "dist/support.js": "0d429272380372d790ea4edd026d57c1c3c6e062df7b869fbad3e2f6132d6d2c",
+      "dist/support.d.ts": "a97306f3d712ba553a8e956466bbdaff30133d719f6d200f94f0880fbbf096c6",
+      "dist/support.js": "e29ab29b98714591367bd15d582fbf95b3af1a0b6c5ab2c543e2124f5dc8aded",
       "package.json": "22d4bdc3b6638fc13eaff02f0676d3f3ae65c51b8bf92f96ddc986a78dd9cf86"
     }
   },

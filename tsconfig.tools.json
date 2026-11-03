@@ -25,6 +25,7 @@
     "src/services/realtime/fixtures.test-support.ts",
     "src/services/reporting/fixture.test-helper.ts",
     "src/services/contributions/fixture.test-helper.ts",
-    "src/services/support/fixture.test-helper.ts"
+    "src/services/support/fixture.test-helper.ts",
+    "src/services/staff-support/fixture.test-helper.ts"
   ]
 }

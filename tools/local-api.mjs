@@ -68,13 +68,14 @@ export async function startLocalApi({
       'f06-04',
       'f07',
       'f08-04',
+      'f08-05',
     ].includes(task)
   )
     throw new Error('Invalid local task identity.');
   if (
-    (support || task === 'f08-04') &&
+    (support || task === 'f08-04' || task === 'f08-05') &&
     (!support ||
-      task !== 'f08-04' ||
+      !['f08-04', 'f08-05'].includes(task) ||
       collection ||
       review ||
       reporting ||
@@ -465,6 +466,11 @@ export async function startLocalApi({
       checkoutFixture,
       sandboxFixture,
       supportFixture,
+      createStaffWorkbench: async () => {
+        if (task !== 'f08-05' || !supportFixture)
+          throw new Error('Staff workbench requires F08-05 disposable composition.');
+        return supportFixture.workbench(deps.redis);
+      },
       close,
       // Node-only network-fault probe; no HTTP route or database effect.
       interruptConnections: () => server.closeAllConnections(),

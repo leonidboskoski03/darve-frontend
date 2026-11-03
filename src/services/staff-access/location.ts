@@ -17,7 +17,13 @@ export function readStaffEntry(href: string) {
     proof !== null &&
     /^[A-Za-z0-9_-]{43}$/.test(proof);
   return {
-    path: entryPaths.has(url.pathname) ? url.pathname : '/',
+    path:
+      entryPaths.has(url.pathname) ||
+      /^\/tickets\/[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        url.pathname,
+      )
+        ? url.pathname
+        : '/',
     invitation: valid ? proof : null,
     invitationInvalid: Boolean(url.hash) && !valid,
   };

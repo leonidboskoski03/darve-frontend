@@ -2,30 +2,34 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { startLocalApi } from './local-api.mjs';
 
-test('creator support qualification cannot enable unrelated controlled or external services', async () => {
-  const base = {
-    backend: 'not-used',
-    task: 'f08-04',
-    support: true,
-    port: 3310,
-    origins: ['http://127.0.0.1:4175'],
-  };
-  for (const change of [
-    { task: 'f03' },
-    { support: false },
-    { collection: true },
-    { review: true },
-    { overlay: true },
-    { reporting: true },
-    { terms: true },
-    { checkout: true },
-    { sandboxPayment: {} },
-    { operatorOAuth: {} },
-    { port: 3000 },
-    { origins: ['https://example.test'] },
-  ])
-    await assert.rejects(startLocalApi({ ...base, ...change }), /Creator support acceptance/);
-});
+for (const task of ['f08-04', 'f08-05'])
+  test(
+    task + ' support qualification cannot enable unrelated controlled or external services',
+    async () => {
+      const base = {
+        backend: 'not-used',
+        task,
+        support: true,
+        port: 3310,
+        origins: ['http://127.0.0.1:4175'],
+      };
+      for (const change of [
+        { task: 'f03' },
+        { support: false },
+        { collection: true },
+        { review: true },
+        { overlay: true },
+        { reporting: true },
+        { terms: true },
+        { checkout: true },
+        { sandboxPayment: {} },
+        { operatorOAuth: {} },
+        { port: 3000 },
+        { origins: ['https://example.test'] },
+      ])
+        await assert.rejects(startLocalApi({ ...base, ...change }), /Creator support acceptance/);
+    },
+  );
 
 test('public QR base changes are scoped to the explicit temporary F07 HTTPS test', async () => {
   for (const options of [

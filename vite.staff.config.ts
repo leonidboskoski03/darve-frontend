@@ -18,7 +18,10 @@ function rewrite(
   next: () => void,
 ) {
   const path = (request.url ?? '/').split('?')[0];
-  if (['/', '/staff/enrol', '/staff/verify-email', '/tickets', '/reviews'].includes(path ?? ''))
+  if (
+    ['/', '/staff/enrol', '/staff/verify-email', '/tickets', '/reviews'].includes(path ?? '') ||
+    /^\/tickets\/[0-9a-f-]{36}$/i.test(path ?? '')
+  )
     request.url = '/staff.html';
   else if (path?.endsWith('.html') && path !== '/staff.html') {
     response.statusCode = 404;
