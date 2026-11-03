@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { startLocalApi } from './local-api.mjs';
 
-for (const task of ['f08-04', 'f08-05', 'f08-06', 'f08-07'])
+for (const task of ['f08-04', 'f08-05', 'f08-06', 'f08-07', 'f08-08'])
   test(
     task + ' support qualification cannot enable unrelated controlled or external services',
     async () => {
