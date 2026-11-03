@@ -28,6 +28,8 @@ Playwright captures traces/screenshots/video only under a deliberately reviewed 
 
 ## Deployment preparation
 
+Creator support uses the existing `VITE_PUBLIC_API_ORIGIN`, creator cookie and creator CSRF. No frontend support secret or separate staff permission is configured. Its backend must explicitly enable its reviewed `SUPPORT_POLICY_JSON` and independent `SUPPORT_PUBLIC_CURSOR_KEY_BASE64`; absent support configuration remains unavailable. Numeric body/page/rate/retention/live policy and cursor-key custody remain backend/operational decisions, not frontend defaults. Current pages request 20 rows; qualify the configured page limit with deployment policy. `npm run test:support:local` runs only the bounded disposable F08-04 composition against the pinned retained backend, builds the real creator entry and cleans its labelled tmpfs storage. Its short synthetic retention window, controlled identities and Node-only staff fixture are acceptance inputs, never ordinary configuration or external provider/mail evidence. [F08-04](F08_STAFF_AND_SUPPORT_IMPLEMENTATION.md#f08-04-creator-support-conversations) owns source/proof/cleanup.
+
 The [deployment-preparation checklist](DEPLOYMENT_PREPARATION_CHECKLIST.md) owns all deferred hosting, real identity/mail/provider, custody, retention, workload and final activation requirements. It retains the confirmed Resend selection and existing backend owners. Do not duplicate checkboxes or infer completion from local frontend work.
 
 ## Release handoff

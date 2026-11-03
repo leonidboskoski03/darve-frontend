@@ -46,6 +46,7 @@ export async function startLocalApi({
   checkout = false,
   sandboxPayment,
   qrPublicOrigin,
+  support = false,
 }) {
   if (
     qrPublicOrigin !== undefined &&
@@ -66,9 +67,30 @@ export async function startLocalApi({
       'f06-03',
       'f06-04',
       'f07',
+      'f08-04',
     ].includes(task)
   )
     throw new Error('Invalid local task identity.');
+  if (
+    (support || task === 'f08-04') &&
+    (!support ||
+      task !== 'f08-04' ||
+      collection ||
+      review ||
+      reporting ||
+      overlay ||
+      terms ||
+      checkout ||
+      contributionReads ||
+      sandboxPayment ||
+      operatorOAuth ||
+      port !== 3310 ||
+      origins.length !== 1 ||
+      origins[0] !== 'http://127.0.0.1:4175')
+  )
+    throw new Error(
+      'Creator support acceptance requires its exact disposable, provider-free composition.',
+    );
   assertPaymentSandboxSelection({
     task,
     port,
@@ -168,6 +190,7 @@ export async function startLocalApi({
   let deps;
   let server;
   let closing;
+  let supportFixture;
   const owned = (id) =>
     run('docker', ['inspect', '--format', '{{index .Config.Labels "darve.frontend.run"}}', id]) ===
     runId;
@@ -182,6 +205,7 @@ export async function startLocalApi({
       }
       if (deps) {
         try {
+          await supportFixture?.close();
           await deps.close();
         } catch {
           errors.push('API dependency cleanup failed.');
@@ -297,6 +321,14 @@ export async function startLocalApi({
       );
     };
     if (terms) writeTermsFixture();
+    const supportPolicy = support
+      ? {
+          ...(await import(pathToFileURL(path.join(backend, 'tests/fixtures/support.ts')).href))
+            .supportPolicy,
+          connectionSeconds: 120,
+          conversationRetentionSeconds: 1,
+        }
+      : null;
     const runtimeInput = {
       NODE_ENV: 'development',
       HOST: '127.0.0.1',
@@ -306,6 +338,12 @@ export async function startLocalApi({
       REDIS_URL: `redis://:${redisPassword}@127.0.0.1:${redisPort}`,
       CORS_ORIGINS: origins.join(','),
       RATE_LIMIT_MAX: 1000,
+      ...(support
+        ? {
+            SUPPORT_POLICY_JSON: JSON.stringify(supportPolicy),
+            SUPPORT_PUBLIC_CURSOR_KEY_BASE64: randomBytes(32).toString('base64'),
+          }
+        : {}),
       ...(contributionReads || checkout || sandboxPayment || task === 'f07'
         ? { PUBLIC_CHALLENGE_BASE_URL: (qrPublicOrigin ?? origins[0]) + '/contribute/' }
         : {}),
@@ -350,6 +388,11 @@ export async function startLocalApi({
     deps = createDependencies(config, logger);
     const ready = await deps.checkReadiness();
     if (ready.status !== 'ready') throw new Error('Isolated runtime dependencies are unavailable.');
+    supportFixture = support
+      ? await (
+          await import('./local-support-fixture.mjs')
+        ).createLocalSupportFixture(backend, databaseUrl, deps.database, supportPolicy)
+      : null;
     const collectionFixture = collection
       ? await (
           await import('./local-collection-fixture.mjs')
@@ -388,6 +431,7 @@ export async function startLocalApi({
           ...contributionFixture?.dependencies,
           ...checkoutFixture?.dependencies,
           ...sandboxFixture?.dependencies,
+          ...(supportFixture ? { database: supportFixture.publicDatabase } : {}),
         }).listen(port, '127.0.0.1', () => resolve(listener));
         listener.once('error', reject);
       });
@@ -420,6 +464,7 @@ export async function startLocalApi({
       contributionFixture,
       checkoutFixture,
       sandboxFixture,
+      supportFixture,
       close,
       // Node-only network-fault probe; no HTTP route or database effect.
       interruptConnections: () => server.closeAllConnections(),

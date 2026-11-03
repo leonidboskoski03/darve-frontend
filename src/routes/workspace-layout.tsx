@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   History,
   Monitor,
+  MessageSquare,
 } from 'lucide-react';
 import { Brand } from '@/design-system/brand';
 import { Button } from '@/design-system/button';
@@ -21,6 +22,7 @@ const navigation = [
   { href: '/collection', label: 'Collection', Icon: Radio },
   { href: '/obs', label: 'OBS display', Icon: Monitor },
   { href: '/integrations', label: 'Connections', Icon: Cable },
+  { href: '/support', label: 'Support', Icon: MessageSquare },
   { href: '/terms', label: 'Account terms', Icon: FileText },
 ];
 function Navigation({ close }: { close?: () => void }) {
@@ -48,9 +50,8 @@ export function Workspace({ children, session }: { children: ReactNode; session:
         Skip to content
       </a>
       <aside className="workspace-sidebar">
-        <Link className="brand-link" to="/" aria-label="Darve home">
-          <Brand />
-          <span className="alpha-label">ALPHA</span>
+        <Link className="brand-link" to="/" title="Darve home">
+          <Brand /> <span className="alpha-label">ALPHA</span>
         </Link>
         <Navigation />
         <p className="workspace-sidebar__foot">

@@ -180,7 +180,22 @@ export function createJsonClient(config: {
         );
         if (result.kind !== 'error')
           return failure('protocol', 'INVALID_RESPONSE', response.status);
-        return { ...result, category: result.action === 'protocol_error' ? 'protocol' : 'http' };
+        const retryHeader = response.headers.get('retry-after');
+        const headerSeconds =
+          retryHeader && /^\d{1,5}$/.test(retryHeader) ? Number(retryHeader) : null;
+        // Some current API producers send their bounded delay only in Retry-After.
+        // Never recover metadata from an invalid error envelope or shorten its own delay.
+        const retryAfterSeconds =
+          result.action !== 'protocol_error' &&
+          (response.status === 429 || response.status === 503) &&
+          headerSeconds !== null
+            ? Math.max(result.retryAfterSeconds ?? 0, headerSeconds)
+            : result.retryAfterSeconds;
+        return {
+          ...result,
+          retryAfterSeconds,
+          category: result.action === 'protocol_error' ? 'protocol' : 'http',
+        };
       }
       if (!input.success.includes(response.status as 200 | 201 | 202 | 204))
         return failure('protocol', 'UNEXPECTED_STATUS', response.status);

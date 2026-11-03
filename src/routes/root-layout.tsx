@@ -23,6 +23,8 @@ export function RootLayout() {
   if (
     pathname === '/dashboard' ||
     pathname === '/obs' ||
+    pathname === '/support' ||
+    pathname.startsWith('/support/') ||
     pathname === '/challenges' ||
     pathname.startsWith('/challenges/') ||
     pathname === '/collection' ||
