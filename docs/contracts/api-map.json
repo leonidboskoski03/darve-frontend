@@ -1,6 +1,6 @@
 {
-  "sourceRevision": "4a91709b530b333fd8f094ff797946a6ec8a99cd",
-  "status": "mapped source and public-schema references; F02-02 creator session and F02-03 overlay v1/v2 realtime qualified; inline/source-only shapes need owning feature schemas before wiring",
+  "sourceRevision": "92e5e86763a57b66346f6d0832d9ed4f9549b05b",
+  "status": "Mapped public contracts; F08-02 staff/support/moderation wire gaps and admin rate-limit error resolved at the pinned source. Staff login/UI/realtime adapters remain F08-03 onward.",
   "operations": [
     {
       "id": "public-api:GET /api/rounds/:id/suggestions",
@@ -1406,9 +1406,13 @@
       "idempotency": "none",
       "request": "none; UUID id when present",
       "query": "SupportPageQuerySchema",
-      "response": "v1 page of SupportTicketSchema (inline page/envelope)",
+      "response": "SupportTicketPageResponseSchema",
       "successStatuses": [200],
-      "publicExports": ["SupportTicketSchema", "SupportPageQuerySchema"],
+      "publicExports": [
+        "SupportPageQuerySchema",
+        "SupportTicketPageResponseSchema",
+        "SupportTicketSchema"
+      ],
       "source": {
         "file": "apps/api/src/modules/support/support.routes.ts",
         "line": 5,
@@ -1427,9 +1431,14 @@
       "idempotency": "SupportKeySchema",
       "request": "SupportCreateSchema; UUID id when present",
       "query": "empty",
-      "response": "v1 data SupportMutationResultSchema (inline envelope)",
+      "response": "SupportMutationResponseSchema",
       "successStatuses": [200],
-      "publicExports": ["SupportCreateSchema", "SupportMutationResultSchema", "SupportKeySchema"],
+      "publicExports": [
+        "SupportCreateSchema",
+        "SupportKeySchema",
+        "SupportMutationResponseSchema",
+        "SupportMutationResultSchema"
+      ],
       "source": {
         "file": "apps/api/src/modules/support/support.routes.ts",
         "line": 6,
@@ -1448,9 +1457,9 @@
       "idempotency": "none",
       "request": "none; UUID id when present",
       "query": "empty",
-      "response": "v1 data SupportTicketSchema (inline envelope)",
+      "response": "SupportTicketResponseSchema",
       "successStatuses": [200],
-      "publicExports": ["SupportTicketSchema"],
+      "publicExports": ["SupportTicketResponseSchema", "SupportTicketSchema"],
       "source": {
         "file": "apps/api/src/modules/support/support.routes.ts",
         "line": 7,
@@ -1469,9 +1478,13 @@
       "idempotency": "none",
       "request": "none; UUID id when present",
       "query": "SupportPageQuerySchema",
-      "response": "v1 page of SupportMessageSchema (inline page/envelope)",
+      "response": "SupportMessagePageResponseSchema",
       "successStatuses": [200],
-      "publicExports": ["SupportMessageSchema", "SupportPageQuerySchema"],
+      "publicExports": [
+        "SupportMessagePageResponseSchema",
+        "SupportMessageSchema",
+        "SupportPageQuerySchema"
+      ],
       "source": {
         "file": "apps/api/src/modules/support/support.routes.ts",
         "line": 8,
@@ -1490,9 +1503,14 @@
       "idempotency": "SupportKeySchema",
       "request": "SupportReplySchema; UUID id when present",
       "query": "empty",
-      "response": "v1 data SupportMutationResultSchema (inline envelope)",
+      "response": "SupportMutationResponseSchema",
       "successStatuses": [200],
-      "publicExports": ["SupportReplySchema", "SupportMutationResultSchema", "SupportKeySchema"],
+      "publicExports": [
+        "SupportKeySchema",
+        "SupportMutationResponseSchema",
+        "SupportMutationResultSchema",
+        "SupportReplySchema"
+      ],
       "source": {
         "file": "apps/api/src/modules/support/support.routes.ts",
         "line": 9,
@@ -1511,9 +1529,9 @@
       "idempotency": "none",
       "request": "none; UUID id when present",
       "query": "empty",
-      "response": "SSE support notices (source inline; GAP-SUPPORT-SSE)",
+      "response": "SSE SupportLiveEventSchema (event name + parsed JSON data; retry, no id)",
       "successStatuses": [200],
-      "publicExports": [],
+      "publicExports": ["SupportLiveEventSchema"],
       "source": {
         "file": "apps/api/src/modules/support/support.routes.ts",
         "line": 10,
@@ -1532,9 +1550,14 @@
       "idempotency": "SupportKeySchema",
       "request": "SupportReadSchema; UUID id when present",
       "query": "empty",
-      "response": "v1 data SupportMutationResultSchema (inline envelope)",
+      "response": "SupportMutationResponseSchema",
       "successStatuses": [200],
-      "publicExports": ["SupportReadSchema", "SupportMutationResultSchema", "SupportKeySchema"],
+      "publicExports": [
+        "SupportKeySchema",
+        "SupportMutationResponseSchema",
+        "SupportMutationResultSchema",
+        "SupportReadSchema"
+      ],
       "source": {
         "file": "apps/api/src/modules/support/support.routes.ts",
         "line": 11,
@@ -1553,12 +1576,13 @@
       "idempotency": "SupportKeySchema",
       "request": "SupportContextCommandSchema; UUID id when present",
       "query": "empty",
-      "response": "v1 data SupportMutationResultSchema (inline envelope)",
+      "response": "SupportMutationResponseSchema",
       "successStatuses": [200],
       "publicExports": [
         "SupportContextCommandSchema",
-        "SupportMutationResultSchema",
-        "SupportKeySchema"
+        "SupportKeySchema",
+        "SupportMutationResponseSchema",
+        "SupportMutationResultSchema"
       ],
       "source": {
         "file": "apps/api/src/modules/support/support.routes.ts",
@@ -1792,10 +1816,10 @@
       "csrf": "no mutation CSRF; Origin policy still applies",
       "idempotency": "none",
       "request": "none",
-      "query": "service bounded cursor filter (source inline)",
-      "response": "v1 page of ReviewViewSchema (source inline)",
+      "query": "ReviewPageQuerySchema",
+      "response": "ReviewPageResponseSchema",
       "successStatuses": [200],
-      "publicExports": ["ReviewViewSchema"],
+      "publicExports": ["ReviewPageQuerySchema", "ReviewPageResponseSchema", "ReviewViewSchema"],
       "source": {
         "file": "apps/admin-api/src/modules/moderation/moderation.routes.ts",
         "line": 7,
@@ -1812,11 +1836,11 @@
       "authority": "staff",
       "csrf": "Origin + x-staff-csrf; auth start is intent/session-dependent",
       "idempotency": "bounded idempotency key (service)",
-      "request": "review flag body (domain validation)",
+      "request": "ReviewFlagSchema",
       "query": "empty",
-      "response": "v1 data ReviewViewSchema (inline envelope)",
+      "response": "ReviewResponseSchema",
       "successStatuses": [200],
-      "publicExports": ["ReviewViewSchema"],
+      "publicExports": ["ReviewFlagSchema", "ReviewResponseSchema", "ReviewViewSchema"],
       "source": {
         "file": "apps/admin-api/src/modules/moderation/moderation.routes.ts",
         "line": 8,
@@ -1833,11 +1857,11 @@
       "authority": "staff",
       "csrf": "Origin + x-staff-csrf; auth start is intent/session-dependent",
       "idempotency": "bounded idempotency key (service)",
-      "request": "review transition/revision/reason confirmation (domain validation)",
+      "request": "ReviewTransitionSchema; UUID id",
       "query": "empty",
-      "response": "v1 data ReviewViewSchema (inline envelope)",
+      "response": "ReviewResponseSchema",
       "successStatuses": [200],
-      "publicExports": ["ReviewViewSchema"],
+      "publicExports": ["ReviewResponseSchema", "ReviewTransitionSchema", "ReviewViewSchema"],
       "source": {
         "file": "apps/admin-api/src/modules/moderation/moderation.routes.ts",
         "line": 9,
@@ -1856,9 +1880,9 @@
       "idempotency": "none",
       "request": "none; UUID id",
       "query": "empty",
-      "response": "v1 data RestrictionViewSchema (inline envelope)",
+      "response": "RestrictionResponseSchema",
       "successStatuses": [200],
-      "publicExports": ["RestrictionViewSchema"],
+      "publicExports": ["RestrictionResponseSchema", "RestrictionViewSchema"],
       "source": {
         "file": "apps/admin-api/src/modules/moderation/moderation.routes.ts",
         "line": 10,
@@ -1875,11 +1899,15 @@
       "authority": "staff",
       "csrf": "Origin + x-staff-csrf; auth start is intent/session-dependent",
       "idempotency": "bounded idempotency key (service)",
-      "request": "restriction revision/reason confirmation (domain validation)",
+      "request": "RestrictionCommandSchema; UUID id",
       "query": "empty",
-      "response": "v1 data RestrictionViewSchema (inline envelope)",
+      "response": "RestrictionResponseSchema",
       "successStatuses": [200],
-      "publicExports": ["RestrictionViewSchema"],
+      "publicExports": [
+        "RestrictionCommandSchema",
+        "RestrictionResponseSchema",
+        "RestrictionViewSchema"
+      ],
       "source": {
         "file": "apps/admin-api/src/modules/moderation/moderation.routes.ts",
         "line": 11,
@@ -1898,9 +1926,9 @@
       "idempotency": "none",
       "request": "StaffLoginInputSchema",
       "query": "empty",
-      "response": "v1 {authorizationUrl} (source inline; GAP-STAFF-ENVELOPE)",
+      "response": "StaffAuthorizationStartResponseSchema",
       "successStatuses": [200],
-      "publicExports": ["StaffLoginInputSchema"],
+      "publicExports": ["StaffAuthorizationStartResponseSchema", "StaffLoginInputSchema"],
       "source": {
         "file": "apps/admin-api/src/modules/staff/staff.routes.ts",
         "line": 5,
@@ -1919,9 +1947,9 @@
       "idempotency": "none",
       "request": "StaffLoginInputSchema",
       "query": "empty",
-      "response": "v1 {authorizationUrl} (source inline; GAP-STAFF-ENVELOPE)",
+      "response": "StaffAuthorizationStartResponseSchema",
       "successStatuses": [200],
-      "publicExports": ["StaffLoginInputSchema"],
+      "publicExports": ["StaffAuthorizationStartResponseSchema", "StaffLoginInputSchema"],
       "source": {
         "file": "apps/admin-api/src/modules/staff/staff.routes.ts",
         "line": 6,
@@ -1961,9 +1989,9 @@
       "idempotency": "none",
       "request": "none",
       "query": "empty",
-      "response": "v1 data StaffEmailCodeStatusSchema (inline envelope)",
+      "response": "StaffEmailCodeStatusResponseSchema",
       "successStatuses": [200],
-      "publicExports": ["StaffEmailCodeStatusSchema"],
+      "publicExports": ["StaffEmailCodeStatusResponseSchema", "StaffEmailCodeStatusSchema"],
       "source": {
         "file": "apps/admin-api/src/modules/staff/staff.routes.ts",
         "line": 8,
@@ -1982,9 +2010,13 @@
       "idempotency": "none",
       "request": "StaffEmailCodeInputSchema",
       "query": "empty",
-      "response": "v1 data StaffEmailCodeVerifiedSchema (inline envelope)",
+      "response": "StaffEmailCodeVerifiedResponseSchema",
       "successStatuses": [200],
-      "publicExports": ["StaffEmailCodeInputSchema", "StaffEmailCodeVerifiedSchema"],
+      "publicExports": [
+        "StaffEmailCodeInputSchema",
+        "StaffEmailCodeVerifiedResponseSchema",
+        "StaffEmailCodeVerifiedSchema"
+      ],
       "source": {
         "file": "apps/admin-api/src/modules/staff/staff.routes.ts",
         "line": 9,
@@ -2003,9 +2035,9 @@
       "idempotency": "none",
       "request": "{}",
       "query": "empty",
-      "response": "v1 {sent:true} (source inline)",
+      "response": "StaffEmailCodeResentResponseSchema",
       "successStatuses": [200],
-      "publicExports": [],
+      "publicExports": ["StaffEmailCodeResentResponseSchema"],
       "source": {
         "file": "apps/admin-api/src/modules/staff/staff.routes.ts",
         "line": 10,
@@ -2024,9 +2056,9 @@
       "idempotency": "none",
       "request": "{}",
       "query": "empty",
-      "response": "v1 {cancelled:true} (source inline)",
+      "response": "StaffEmailCodeCancelledResponseSchema",
       "successStatuses": [200],
-      "publicExports": [],
+      "publicExports": ["StaffEmailCodeCancelledResponseSchema"],
       "source": {
         "file": "apps/admin-api/src/modules/staff/staff.routes.ts",
         "line": 11,
@@ -2045,9 +2077,9 @@
       "idempotency": "none",
       "request": "none",
       "query": "empty",
-      "response": "v1 data StaffSessionViewSchema (inline envelope)",
+      "response": "StaffSessionResponseSchema",
       "successStatuses": [200],
-      "publicExports": ["StaffSessionViewSchema"],
+      "publicExports": ["StaffSessionResponseSchema", "StaffSessionViewSchema"],
       "source": {
         "file": "apps/admin-api/src/modules/staff/staff.routes.ts",
         "line": 12,
@@ -2066,9 +2098,9 @@
       "idempotency": "none",
       "request": "{}",
       "query": "empty",
-      "response": "v1 {accepted:true} (source inline)",
+      "response": "StaffEnrollmentAcceptedResponseSchema",
       "successStatuses": [200],
-      "publicExports": [],
+      "publicExports": ["StaffEnrollmentAcceptedResponseSchema"],
       "source": {
         "file": "apps/admin-api/src/modules/staff/staff.routes.ts",
         "line": 13,
@@ -2087,9 +2119,9 @@
       "idempotency": "none",
       "request": "{}",
       "query": "empty",
-      "response": "v1 {signedOut:true} (source inline)",
+      "response": "StaffLogoutResponseSchema",
       "successStatuses": [200],
-      "publicExports": [],
+      "publicExports": ["StaffLogoutResponseSchema"],
       "source": {
         "file": "apps/admin-api/src/modules/staff/staff.routes.ts",
         "line": 14,
@@ -2107,10 +2139,14 @@
       "csrf": "no mutation CSRF; Origin policy still applies",
       "idempotency": "none",
       "request": "none",
-      "query": "limit 1..100 default25, cursor<=4096 (inline)",
-      "response": "v1 data StaffDirectoryPageSchema (inline envelope)",
+      "query": "StaffPageQuerySchema",
+      "response": "StaffDirectoryResponseSchema",
       "successStatuses": [200],
-      "publicExports": ["StaffDirectoryPageSchema"],
+      "publicExports": [
+        "StaffDirectoryPageSchema",
+        "StaffDirectoryResponseSchema",
+        "StaffPageQuerySchema"
+      ],
       "source": {
         "file": "apps/admin-api/src/modules/staff/staff.routes.ts",
         "line": 15,
@@ -2129,9 +2165,13 @@
       "idempotency": "bounded idempotency key (service)",
       "request": "StaffInviteInputSchema",
       "query": "empty",
-      "response": "v1 data StaffInvitationViewSchema (inline envelope)",
+      "response": "StaffInvitationResponseSchema",
       "successStatuses": [200],
-      "publicExports": ["StaffInviteInputSchema", "StaffInvitationViewSchema"],
+      "publicExports": [
+        "StaffInvitationResponseSchema",
+        "StaffInvitationViewSchema",
+        "StaffInviteInputSchema"
+      ],
       "source": {
         "file": "apps/admin-api/src/modules/staff/staff.routes.ts",
         "line": 16,
@@ -2150,9 +2190,9 @@
       "idempotency": "bounded idempotency key (service)",
       "request": "StaffReasonInputSchema; UUID id",
       "query": "empty",
-      "response": "v1 {revoked:true} (source inline)",
+      "response": "StaffInvitationRevokedResponseSchema",
       "successStatuses": [200],
-      "publicExports": ["StaffReasonInputSchema"],
+      "publicExports": ["StaffInvitationRevokedResponseSchema", "StaffReasonInputSchema"],
       "source": {
         "file": "apps/admin-api/src/modules/staff/staff.routes.ts",
         "line": 17,
@@ -2171,9 +2211,13 @@
       "idempotency": "bounded idempotency key (service)",
       "request": "StaffMemberChangeInputSchema; UUID id",
       "query": "empty",
-      "response": "v1 data StaffMemberSchema (inline envelope)",
+      "response": "StaffMemberResponseSchema",
       "successStatuses": [200],
-      "publicExports": ["StaffMemberChangeInputSchema", "StaffMemberSchema"],
+      "publicExports": [
+        "StaffMemberChangeInputSchema",
+        "StaffMemberResponseSchema",
+        "StaffMemberSchema"
+      ],
       "source": {
         "file": "apps/admin-api/src/modules/staff/staff.routes.ts",
         "line": 18,
@@ -2192,9 +2236,13 @@
       "idempotency": "bounded idempotency key (service)",
       "request": "StaffMemberChangeInputSchema; UUID id",
       "query": "empty",
-      "response": "v1 data StaffMemberSchema (inline envelope)",
+      "response": "StaffMemberResponseSchema",
       "successStatuses": [200],
-      "publicExports": ["StaffMemberChangeInputSchema", "StaffMemberSchema"],
+      "publicExports": [
+        "StaffMemberChangeInputSchema",
+        "StaffMemberResponseSchema",
+        "StaffMemberSchema"
+      ],
       "source": {
         "file": "apps/admin-api/src/modules/staff/staff.routes.ts",
         "line": 19,
@@ -2212,10 +2260,10 @@
       "csrf": "no mutation CSRF; Origin policy still applies",
       "idempotency": "none",
       "request": "none",
-      "query": "limit 1..100 default25, cursor<=4096 (inline)",
-      "response": "v1 data StaffAuditPageSchema (inline envelope)",
+      "query": "StaffPageQuerySchema",
+      "response": "StaffAuditResponseSchema",
       "successStatuses": [200],
-      "publicExports": ["StaffAuditPageSchema"],
+      "publicExports": ["StaffAuditPageSchema", "StaffAuditResponseSchema", "StaffPageQuerySchema"],
       "source": {
         "file": "apps/admin-api/src/modules/staff/staff.routes.ts",
         "line": 20,
@@ -2234,9 +2282,13 @@
       "idempotency": "none",
       "request": "none",
       "query": "StaffInspectionQuerySchema",
-      "response": "v1 {items:StaffChallengeSchema[],nextCursor,fundingBasis} (source inline)",
+      "response": "StaffChallengePageResponseSchema",
       "successStatuses": [200],
-      "publicExports": ["StaffChallengeSchema", "StaffInspectionQuerySchema"],
+      "publicExports": [
+        "StaffChallengePageResponseSchema",
+        "StaffChallengeSchema",
+        "StaffInspectionQuerySchema"
+      ],
       "source": {
         "file": "apps/admin-api/src/modules/staff/staff.routes.ts",
         "line": 21,
@@ -2255,9 +2307,9 @@
       "idempotency": "none",
       "request": "none; UUID id",
       "query": "empty",
-      "response": "v1 {challenge:StaffChallengeSchema,fundingBasis} (source inline)",
+      "response": "StaffChallengeResponseSchema",
       "successStatuses": [200],
-      "publicExports": ["StaffChallengeSchema"],
+      "publicExports": ["StaffChallengeResponseSchema", "StaffChallengeSchema"],
       "source": {
         "file": "apps/admin-api/src/modules/staff/staff.routes.ts",
         "line": 22,
@@ -2276,9 +2328,9 @@
       "idempotency": "none",
       "request": "none; UUID id",
       "query": "empty",
-      "response": "v1 safe streamer inspection (source inline)",
+      "response": "StaffStreamerResponseSchema",
       "successStatuses": [200],
-      "publicExports": [],
+      "publicExports": ["StaffStreamerResponseSchema"],
       "source": {
         "file": "apps/admin-api/src/modules/staff/staff.routes.ts",
         "line": 23,
@@ -2301,8 +2353,8 @@
       "successStatuses": [200],
       "publicExports": [
         "SupportExtensionInputSchema",
-        "SupportRecoveryResponseSchema",
-        "SupportKeySchema"
+        "SupportKeySchema",
+        "SupportRecoveryResponseSchema"
       ],
       "source": {
         "file": "apps/admin-api/src/modules/support/recovery.routes.ts",
@@ -2326,8 +2378,8 @@
       "successStatuses": [200],
       "publicExports": [
         "SupportContinuationInputSchema",
-        "SupportRecoveryResponseSchema",
-        "SupportKeySchema"
+        "SupportKeySchema",
+        "SupportRecoveryResponseSchema"
       ],
       "source": {
         "file": "apps/admin-api/src/modules/support/recovery.routes.ts",
@@ -2347,9 +2399,13 @@
       "idempotency": "none",
       "request": "none; UUID id when present",
       "query": "SupportPageQuerySchema",
-      "response": "v1 page of SupportQueueItemSchema (inline page/envelope)",
+      "response": "SupportQueuePageResponseSchema",
       "successStatuses": [200],
-      "publicExports": ["SupportQueueItemSchema", "SupportPageQuerySchema"],
+      "publicExports": [
+        "SupportPageQuerySchema",
+        "SupportQueueItemSchema",
+        "SupportQueuePageResponseSchema"
+      ],
       "source": {
         "file": "apps/admin-api/src/modules/support/support.routes.ts",
         "line": 7,
@@ -2368,9 +2424,9 @@
       "idempotency": "none",
       "request": "none; UUID id when present",
       "query": "empty",
-      "response": "v1 data SupportAvailabilityViewSchema (inline envelope)",
+      "response": "SupportAvailabilityResponseSchema",
       "successStatuses": [200],
-      "publicExports": ["SupportAvailabilityViewSchema"],
+      "publicExports": ["SupportAvailabilityResponseSchema", "SupportAvailabilityViewSchema"],
       "source": {
         "file": "apps/admin-api/src/modules/support/support.routes.ts",
         "line": 8,
@@ -2389,12 +2445,13 @@
       "idempotency": "SupportKeySchema",
       "request": "SupportAvailabilitySchema; UUID id when present",
       "query": "empty",
-      "response": "v1 data SupportMutationResultSchema (inline envelope)",
+      "response": "SupportMutationResponseSchema",
       "successStatuses": [200],
       "publicExports": [
         "SupportAvailabilitySchema",
-        "SupportMutationResultSchema",
-        "SupportKeySchema"
+        "SupportKeySchema",
+        "SupportMutationResponseSchema",
+        "SupportMutationResultSchema"
       ],
       "source": {
         "file": "apps/admin-api/src/modules/support/support.routes.ts",
@@ -2414,9 +2471,13 @@
       "idempotency": "none",
       "request": "none; UUID id when present",
       "query": "SupportPageQuerySchema",
-      "response": "v1 page of StaffSupportTicketSchema (inline page/envelope)",
+      "response": "StaffSupportTicketPageResponseSchema",
       "successStatuses": [200],
-      "publicExports": ["StaffSupportTicketSchema", "SupportPageQuerySchema"],
+      "publicExports": [
+        "StaffSupportTicketPageResponseSchema",
+        "StaffSupportTicketSchema",
+        "SupportPageQuerySchema"
+      ],
       "source": {
         "file": "apps/admin-api/src/modules/support/support.routes.ts",
         "line": 10,
@@ -2435,9 +2496,9 @@
       "idempotency": "none",
       "request": "none; UUID id when present",
       "query": "empty",
-      "response": "v1 data StaffSupportTicketSchema (inline envelope)",
+      "response": "StaffSupportTicketResponseSchema",
       "successStatuses": [200],
-      "publicExports": ["StaffSupportTicketSchema"],
+      "publicExports": ["StaffSupportTicketResponseSchema", "StaffSupportTicketSchema"],
       "source": {
         "file": "apps/admin-api/src/modules/support/support.routes.ts",
         "line": 11,
@@ -2456,9 +2517,13 @@
       "idempotency": "none",
       "request": "none; UUID id when present",
       "query": "SupportPageQuerySchema",
-      "response": "v1 page of SupportMessageSchema (inline page/envelope)",
+      "response": "SupportMessagePageResponseSchema",
       "successStatuses": [200],
-      "publicExports": ["SupportMessageSchema", "SupportPageQuerySchema"],
+      "publicExports": [
+        "SupportMessagePageResponseSchema",
+        "SupportMessageSchema",
+        "SupportPageQuerySchema"
+      ],
       "source": {
         "file": "apps/admin-api/src/modules/support/support.routes.ts",
         "line": 12,
@@ -2477,12 +2542,13 @@
       "idempotency": "SupportKeySchema",
       "request": "StaffSupportReplySchema; UUID id when present",
       "query": "empty",
-      "response": "v1 data SupportMutationResultSchema (inline envelope)",
+      "response": "SupportMutationResponseSchema",
       "successStatuses": [200],
       "publicExports": [
         "StaffSupportReplySchema",
-        "SupportMutationResultSchema",
-        "SupportKeySchema"
+        "SupportKeySchema",
+        "SupportMutationResponseSchema",
+        "SupportMutationResultSchema"
       ],
       "source": {
         "file": "apps/admin-api/src/modules/support/support.routes.ts",
@@ -2502,9 +2568,13 @@
       "idempotency": "none",
       "request": "none; UUID id when present",
       "query": "SupportPageQuerySchema",
-      "response": "v1 page of SupportMessageSchema (inline page/envelope)",
+      "response": "SupportMessagePageResponseSchema",
       "successStatuses": [200],
-      "publicExports": ["SupportMessageSchema", "SupportPageQuerySchema"],
+      "publicExports": [
+        "SupportMessagePageResponseSchema",
+        "SupportMessageSchema",
+        "SupportPageQuerySchema"
+      ],
       "source": {
         "file": "apps/admin-api/src/modules/support/support.routes.ts",
         "line": 14,
@@ -2523,9 +2593,14 @@
       "idempotency": "SupportKeySchema",
       "request": "SupportNoteSchema; UUID id when present",
       "query": "empty",
-      "response": "v1 data SupportMutationResultSchema (inline envelope)",
+      "response": "SupportMutationResponseSchema",
       "successStatuses": [200],
-      "publicExports": ["SupportNoteSchema", "SupportMutationResultSchema", "SupportKeySchema"],
+      "publicExports": [
+        "SupportKeySchema",
+        "SupportMutationResponseSchema",
+        "SupportMutationResultSchema",
+        "SupportNoteSchema"
+      ],
       "source": {
         "file": "apps/admin-api/src/modules/support/support.routes.ts",
         "line": 15,
@@ -2544,9 +2619,9 @@
       "idempotency": "none",
       "request": "none; UUID id when present",
       "query": "empty",
-      "response": "SSE support notices (source inline; GAP-SUPPORT-SSE)",
+      "response": "SSE StaffSupportLiveEventSchema (event name + parsed JSON data; retry, no id)",
       "successStatuses": [200],
-      "publicExports": [],
+      "publicExports": ["StaffSupportLiveEventSchema"],
       "source": {
         "file": "apps/admin-api/src/modules/support/support.routes.ts",
         "line": 16,
@@ -2565,9 +2640,14 @@
       "idempotency": "SupportKeySchema",
       "request": "SupportReadSchema; UUID id when present",
       "query": "empty",
-      "response": "v1 data SupportMutationResultSchema (inline envelope)",
+      "response": "SupportMutationResponseSchema",
       "successStatuses": [200],
-      "publicExports": ["SupportReadSchema", "SupportMutationResultSchema", "SupportKeySchema"],
+      "publicExports": [
+        "SupportKeySchema",
+        "SupportMutationResponseSchema",
+        "SupportMutationResultSchema",
+        "SupportReadSchema"
+      ],
       "source": {
         "file": "apps/admin-api/src/modules/support/support.routes.ts",
         "line": 17,
@@ -2586,12 +2666,13 @@
       "idempotency": "SupportKeySchema",
       "request": "SupportStatusCommandSchema; UUID id when present",
       "query": "empty",
-      "response": "v1 data SupportMutationResultSchema (inline envelope)",
+      "response": "SupportMutationResponseSchema",
       "successStatuses": [200],
       "publicExports": [
-        "SupportStatusCommandSchema",
+        "SupportKeySchema",
+        "SupportMutationResponseSchema",
         "SupportMutationResultSchema",
-        "SupportKeySchema"
+        "SupportStatusCommandSchema"
       ],
       "source": {
         "file": "apps/admin-api/src/modules/support/support.routes.ts",
@@ -2611,12 +2692,13 @@
       "idempotency": "SupportKeySchema",
       "request": "SupportAssignmentSchema; UUID id when present",
       "query": "empty",
-      "response": "v1 data SupportMutationResultSchema (inline envelope)",
+      "response": "SupportMutationResponseSchema",
       "successStatuses": [200],
       "publicExports": [
         "SupportAssignmentSchema",
-        "SupportMutationResultSchema",
-        "SupportKeySchema"
+        "SupportKeySchema",
+        "SupportMutationResponseSchema",
+        "SupportMutationResultSchema"
       ],
       "source": {
         "file": "apps/admin-api/src/modules/support/support.routes.ts",
@@ -2636,12 +2718,13 @@
       "idempotency": "SupportKeySchema",
       "request": "SupportAssignmentSchema; UUID id when present",
       "query": "empty",
-      "response": "v1 data SupportMutationResultSchema (inline envelope)",
+      "response": "SupportMutationResponseSchema",
       "successStatuses": [200],
       "publicExports": [
         "SupportAssignmentSchema",
-        "SupportMutationResultSchema",
-        "SupportKeySchema"
+        "SupportKeySchema",
+        "SupportMutationResponseSchema",
+        "SupportMutationResultSchema"
       ],
       "source": {
         "file": "apps/admin-api/src/modules/support/support.routes.ts",
@@ -2661,12 +2744,13 @@
       "idempotency": "SupportKeySchema",
       "request": "SupportContextCommandSchema; UUID id when present",
       "query": "empty",
-      "response": "v1 data SupportMutationResultSchema (inline envelope)",
+      "response": "SupportMutationResponseSchema",
       "successStatuses": [200],
       "publicExports": [
         "SupportContextCommandSchema",
-        "SupportMutationResultSchema",
-        "SupportKeySchema"
+        "SupportKeySchema",
+        "SupportMutationResponseSchema",
+        "SupportMutationResultSchema"
       ],
       "source": {
         "file": "apps/admin-api/src/modules/support/support.routes.ts",
@@ -2693,7 +2777,7 @@
         "file": "apps/admin-api/src/app.ts",
         "line": 66,
         "handler": "inline health handler",
-        "sha256": "7a1259879579976375ee12b22d57277105c450d9113b0449303497289cc80501"
+        "sha256": "2a31a30dd593cdbd0f7468dd216e60bf659c605d2adeafb685f20fa897462333"
       },
       "frontend": "excluded"
     },
@@ -2714,13 +2798,13 @@
         "file": "apps/admin-api/src/app.ts",
         "line": 69,
         "handler": "inline health handler",
-        "sha256": "7a1259879579976375ee12b22d57277105c450d9113b0449303497289cc80501"
+        "sha256": "2a31a30dd593cdbd0f7468dd216e60bf659c605d2adeafb685f20fa897462333"
       },
       "frontend": "excluded"
     }
   ],
   "sourceFiles": {
-    "apps/admin-api/src/app.ts": "7a1259879579976375ee12b22d57277105c450d9113b0449303497289cc80501",
+    "apps/admin-api/src/app.ts": "2a31a30dd593cdbd0f7468dd216e60bf659c605d2adeafb685f20fa897462333",
     "apps/admin-api/src/composition/rate-limit-store.ts": "be565584ab12d8b71896e4828eef8f23aa73f3ab560239f476b9b9741627ea18",
     "apps/admin-api/src/composition/runtime.ts": "fa617598ecb3de6e4999612384ee84ce6e7d596d00b11701bfb4507ace326a06",
     "apps/admin-api/src/config/environment.ts": "f45eb93466413fa69d5fec0a1a3ca144859131e9aee5fcd45fa960df016622eb",
@@ -2730,15 +2814,15 @@
     "apps/admin-api/src/modules/coins/templates.controller.ts": "e1ee78e428bb46efc131f19d0c9c80f536906184f7da06d1dae2018749d72bdd",
     "apps/admin-api/src/modules/coins/templates.mapper.ts": "94e47d05df52d8ad975374e571cc8f0da371e52b9f3a69f945241ca69acb9b35",
     "apps/admin-api/src/modules/coins/templates.routes.ts": "7b9ae531ee314a533f6810fabea3e6d613e0a45200196c9cafeb8a2d8a1b3101",
-    "apps/admin-api/src/modules/moderation/moderation.controller.ts": "a073001d12561b31fbba1d45d4cd3252a3cba34d642b29799a9820a7bfc2e28c",
+    "apps/admin-api/src/modules/moderation/moderation.controller.ts": "e07666d717af41d39a2164f9ff72e636c0daa2e7dd1411c0ea6db7c2007644e9",
     "apps/admin-api/src/modules/moderation/moderation.routes.ts": "1824320d21f65aa3b36ea2a4687cb530af407bd59ad6b444da582eb4b42b5486",
-    "apps/admin-api/src/modules/staff/staff.controller.ts": "5bda0b323bd1f18d14ce64042c15e28ca2f0ac63edc1969fca680f32bac24f49",
+    "apps/admin-api/src/modules/staff/staff.controller.ts": "01dbd580cc6de2930525d53419f189b4090dd3d055eb0b60a3c391071f17c85d",
     "apps/admin-api/src/modules/staff/staff.mapper.ts": "a3138fa9d762001d4d731e879b2b9b4ca08c92ff4cbb35c8d2da6eac8219d8cc",
     "apps/admin-api/src/modules/staff/staff.routes.ts": "db451969c4dd3342dfd87fa94da0c83d7a97db4ca0303ada9d45edbbc35a9fe5",
     "apps/admin-api/src/modules/support/recovery.controller.ts": "bf10d87f0dc6499bdb586dfbcf1fa592f26cd511e429a3fc5c6a0ea6915052b1",
     "apps/admin-api/src/modules/support/recovery.routes.ts": "42a15baf2079f77291555dc3768e5b3b452f371102c0212495f18b2c02871da8",
-    "apps/admin-api/src/modules/support/support.controller.ts": "389599a5109c237fad59808e85d20da3b436e582d6e53e0e2601dbccd7712bf6",
-    "apps/admin-api/src/modules/support/support.mapper.ts": "05190dd3910bc74e11d13581809e4b4f0a59a528d8f742646564847d5c0aba0d",
+    "apps/admin-api/src/modules/support/support.controller.ts": "54e61bc8be5d3404d761a8a8533ab0d318438d69d210d5a46eb986aeb769e22d",
+    "apps/admin-api/src/modules/support/support.mapper.ts": "9a95b246baf9fd0d29460ad35e5d8ed2d11968803c0c242342dcb873650ff8ea",
     "apps/admin-api/src/modules/support/support.routes.ts": "d73d2bac43e5c816964f83b608f00172cab1a251de89a5f2460fd793d722a21e",
     "apps/admin-api/src/security/cookies.ts": "3d89106ebc53da73efc7f22f20e9c0754a16ebe3dd555d8ccc236ab7cdefb1e5",
     "apps/api/src/app.ts": "78e91fe94c5bba1e80a0fa12ba2e200e6f567038aadde813615718e2eab66be9",
@@ -2829,8 +2913,8 @@
     "apps/api/src/modules/session/session.routes.ts": "ebf15d7b9f66ab08decf30e4a964df480b344def53c8f2874c5d3c7ec267e0b4",
     "apps/api/src/modules/shared/http-access.ts": "db9c9a87cfe848c19ade5163b268bb98e6235cc02b4e690b8724f44cb96cf1cf",
     "apps/api/src/modules/shared/response.ts": "aada10ff447e7dca6aaa23909279131d247a2558242f3503219acdd6a20e300c",
-    "apps/api/src/modules/support/support.controller.ts": "96250f218c4b555fc18d55dde1fc9bdd9f3792761923cb0f4360e952f67eefd9",
-    "apps/api/src/modules/support/support.mapper.ts": "fbef73dd135d4fd26ee3f38d4592ee2972d110c9e2bfcda173162018a114aa90",
+    "apps/api/src/modules/support/support.controller.ts": "7c09d8c3ac03593cbe3b76deea2b95fd5f50384ec896587d49ef857b15ec61b2",
+    "apps/api/src/modules/support/support.mapper.ts": "9b2bdafda891584b6eaaf440ab32b62c4d34ca4167012670d10e8b461a230f2b",
     "apps/api/src/modules/support/support.routes.ts": "c0e43b8e531b80acb9cb67f0a17f526602bfbce0efb24240c2b115abfdfd8db1",
     "apps/api/src/security/oauth-cookies.ts": "f868bfab6b3753eda021cebaa5fbc8f5d4d9ca49005a6c589a6f07b0dcbfe629",
     "apps/api/src/security/overlay-grants.ts": "a521e8ac3ff1f092cfae7a9be8265c3aef324c4fd5b54dcd333ffb2a701bc017",
@@ -2848,23 +2932,32 @@
     {
       "id": "GAP-STAFF-ENVELOPE",
       "owner": "F08 / backend B13 public-contract owner",
-      "detail": "Staff DTOs exist, but several complete envelopes/command acknowledgements and inspection pages remain inline. Staff start omits creator AuthorizationStartSchema.expiresAt; do not reuse that complete creator schema."
+      "detail": "Staff DTOs exist, but several complete envelopes/command acknowledgements and inspection pages remain inline. Staff start omits creator AuthorizationStartSchema.expiresAt; do not reuse that complete creator schema.",
+      "status": "CLOSED by backend B13-05 and frontend F08-02 at 92e5e86763a57b66346f6d0832d9ed4f9549b05b; producer validation, 76 actual SQL/Redis cases and frontend boundary qualification; feature wiring remains separate"
     },
     {
       "id": "GAP-SUPPORT-SSE",
       "owner": "F02-03/F08 / backend B14 public-contract owner",
-      "detail": "Support SSE notification/frame payloads and several page envelopes are inline. Expose/reuse exact public wire schemas before feature wiring; never parse private outbox payloads."
+      "detail": "Support SSE notification/frame payloads and several page envelopes are inline. Expose/reuse exact public wire schemas before feature wiring; never parse private outbox payloads.",
+      "status": "CLOSED by backend B13-05 and frontend F08-02 at 92e5e86763a57b66346f6d0832d9ed4f9549b05b; producer validation, 76 actual SQL/Redis cases and frontend boundary qualification; feature wiring remains separate"
     },
     {
       "id": "GAP-MODERATION-INPUT",
       "owner": "F08 / backend B13 moderation owner",
-      "detail": "Several moderation commands use domain-local validators, without public request schemas. Map to source, then expose exact public inputs before UI submission."
+      "detail": "Several moderation commands use domain-local validators, without public request schemas. Map to source, then expose exact public inputs before UI submission.",
+      "status": "CLOSED by backend B13-05 and frontend F08-02 at 92e5e86763a57b66346f6d0832d9ed4f9549b05b; producer validation, 76 actual SQL/Redis cases and frontend boundary qualification; feature wiring remains separate"
     },
     {
       "id": "GAP-OVERLAY-V2",
       "owner": "F02-03/F07/F09 / backend B15 consumer owner",
       "status": "addressed in F02-03 frontend v1/v2 stream adapter with actual API proof; pinned backend reducer stays v1; renderer/selection/OBS acceptance remains F07/F09",
       "detail": "V2 snapshot/preferences/event schemas exist, but the B11 overlay consumer reducer accepts v1 schemas only. Do not cast V2 into v1 or drop template/entitlement fields; implement/reuse a reviewed version-aware reducer before V2 wiring."
+    },
+    {
+      "id": "F08-G01",
+      "owner": "F08-02 / backend B13 admin transport",
+      "status": "CLOSED at 92e5e86763a57b66346f6d0832d9ed4f9549b05b",
+      "detail": "Admin 429 now emits full ErrorResponseSchema, matching request ID and bounded Retry-After metadata; real shared Redis limiting/fail-closed cases and strict frontend transport boundary verified."
     }
   ]
 }
