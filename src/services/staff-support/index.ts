@@ -3,6 +3,7 @@ export {
   StaffSupportError,
   staffSupportUncertain,
   type StaffSupportClient,
+  type RecoveryRead,
   type StaffTicket,
   type QueueItem,
   type StaffMessage,

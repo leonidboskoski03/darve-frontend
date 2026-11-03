@@ -100,6 +100,12 @@
 .review-terms dt {
   color: var(--color-muted);
 }
+.review-policy-check {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin-block: var(--space-5);
+}
 .review-terms dd {
   margin: 0;
 }

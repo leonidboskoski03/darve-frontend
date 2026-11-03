@@ -135,4 +135,9 @@ export {
   RestrictionResponseSchema,
   ReviewResponseSchema,
   ReviewPageResponseSchema,
+  SupportRecoveryContextResponseSchema,
+  SupportExtensionInputSchema,
+  SupportContinuationInputSchema,
+  SupportRecoveryResponseSchema,
+  ChallengeAcceptancePolicyResponseSchema,
 } from '@darve/contracts';

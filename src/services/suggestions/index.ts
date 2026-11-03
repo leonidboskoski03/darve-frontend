@@ -5,5 +5,6 @@ export type {
   Suggestion,
   AcceptanceAttempt,
   AcceptedChallenge,
+  AcceptancePolicy,
 } from './client';
 export { reviewMessage } from './message';

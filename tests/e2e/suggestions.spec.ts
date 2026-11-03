@@ -2,6 +2,7 @@ import { test, expect, type Page, type Route } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import {
   reviewFixture,
+  acceptancePolicyFixture,
   acceptedFixture,
   challengeFixture,
   reviewIds as ids,
@@ -47,6 +48,7 @@ async function scenario(
     partial?: boolean;
     accept?: (route: Route) => Promise<void>;
     disposition?: (route: Route) => Promise<void>;
+    policy?: unknown;
   } = {},
 ) {
   const state: {
@@ -81,6 +83,15 @@ async function scenario(
         state.data.items[0].selectedChallengeId = ids.challenge;
         await json(route, envelope(acceptedFixture()), 201);
       }
+      return;
+    }
+    if (url.pathname === '/api/rounds/acceptance-policy') {
+      await json(
+        route,
+        envelope({
+          policy: options.policy === undefined ? acceptancePolicyFixture() : options.policy,
+        }),
+      );
       return;
     }
     if (url.pathname.endsWith('/disposition')) {
@@ -127,6 +138,46 @@ async function openTerms(page: Page) {
     page.getByRole('heading', { name: 'Confirm challenge terms', exact: true }),
   ).toBeVisible();
 }
+test('synthetic acceptance requires current optional disclosure and sends its exact reviewed version', async ({
+  page,
+}) => {
+  const policy = {
+    ...acceptancePolicyFixture(),
+    extensionPolicy: {
+      version: 'support-extension-v1',
+      disclosure:
+        'An authorized deadline extension committed before funding closes changes the cutoff for all contributions, including payments already started. Payment eligibility uses verified provider timing against the effective deadline.',
+    },
+  };
+  const state = await scenario(page, { policy });
+  await page.goto(fixture);
+  await page.getByRole('button', { name: 'Accept idea 1', exact: true }).click();
+  await page.getByLabel('Funding goal', { exact: true }).fill('25.50');
+  await page.getByLabel('Funding duration in seconds', { exact: true }).fill('600');
+  await expect(
+    page.getByRole('button', { name: 'Review exact terms', exact: true }),
+  ).toBeDisabled();
+  await page
+    .getByRole('checkbox', { name: /I understand and accept this funding extension policy/ })
+    .check();
+  await page.getByRole('button', { name: 'Review exact terms', exact: true }).click();
+  await expect(page.getByText('Accepted extension disclosure', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Confirm acceptance', exact: true }).click();
+  await expect.poll(() => state.accepts.length).toBe(1);
+  expect(state.accepts[0].body.extensionPolicyVersion).toBe('support-extension-v1');
+});
+test('synthetic acceptance without configured policy remains unavailable', async ({ page }) => {
+  const state = await scenario(page, { policy: null });
+  await page.goto(fixture);
+  await page.getByRole('button', { name: 'Accept idea 1', exact: true }).click();
+  await expect(
+    page.getByText('Challenge acceptance is not configured.', { exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: 'Review exact terms', exact: true }),
+  ).toBeDisabled();
+  expect(state.accepts).toHaveLength(0);
+});
 async function capture(page: Page, name: string) {
   if (!process.env.F04_CAPTURE_DIR) return;
   await page.locator('main').focus();

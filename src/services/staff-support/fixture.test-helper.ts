@@ -1,6 +1,7 @@
 import type {
   SupportMessagePageResponseSchema,
   StaffSupportTicketResponseSchema,
+  SupportRecoveryContextResponseSchema,
 } from '../contracts/index';
 export const ids = {
   ticket: '12345678-1234-4234-8234-123456789012',
@@ -58,6 +59,60 @@ export const envelope = (data: unknown) => ({
   serverTime: new Date().toISOString(),
   data,
 });
+export const recoveryChallenge = '52345678-1234-4234-8234-123456789012';
+export function recoveryFixture(): Extract<
+  ReturnType<typeof SupportRecoveryContextResponseSchema.parse>['data'],
+  { state: 'ready' }
+> {
+  const time = Date.now(),
+    originalClosesAt = new Date(time + 600000).toISOString();
+  return {
+    state: 'ready',
+    ticketId: ids.ticket,
+    challengeId: recoveryChallenge,
+    provider: 'TWITCH',
+    ticketRevision: 9,
+    contextRevision: 0,
+    authorityRevision: 5,
+    fundingRevision: 0,
+    performanceRevision: 0,
+    policy: {
+      version: 'synthetic-recovery-v1',
+      maximumExtensionSeconds: 120,
+      maximumCumulativeSeconds: 180,
+      maximumCommandsPerMinute: 100,
+    },
+    fundingWindow: {
+      version: 1,
+      revision: 0,
+      policyVersion: 'support-extension-v1',
+      disclosure: 'Synthetic disclosure.',
+      originalClosesAt,
+      effectiveClosesAt: originalClosesAt,
+      cumulativeSeconds: 0,
+    },
+    performanceAuthority: {
+      version: 1,
+      revision: 0,
+      authorizationId: null,
+      originalBroadcastId: ids.agent,
+      broadcastId: ids.agent,
+      connectionId: ids.owner,
+    },
+    extension: { available: true, reasonCode: 'ready' },
+    continuation: { available: true, reasonCode: 'ready' },
+    replacements: [
+      {
+        id: ids.other,
+        provider: 'TWITCH',
+        startedAt: new Date(time - 1000).toISOString(),
+        observedAt: new Date(time - 1000).toISOString(),
+        validUntil: new Date(time + 29000).toISOString(),
+      },
+    ],
+    replacementsTruncated: false,
+  };
+}
 export const errorBody = (code = 'UNAUTHENTICATED') => ({
   schemaVersion: 1,
   serverTime: new Date().toISOString(),

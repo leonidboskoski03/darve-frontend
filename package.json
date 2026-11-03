@@ -50,10 +50,11 @@
     "test:support:local": "node tools/local-support-acceptance.mjs ../tmp/backend-f06-checkout",
     "test:staff-support:local": "node tools/local-staff-support-acceptance.mjs ../tmp/backend-f06-checkout",
     "test:obs:phone": "node --use-system-ca tools/local-obs-acceptance.mjs ../tmp/backend-f06-readiness --observe --phone",
-    "test:staff-admin:local": "node tools/local-staff-admin-acceptance.mjs ../tmp/backend-f06-checkout"
+    "test:staff-admin:local": "node tools/local-staff-admin-acceptance.mjs ../tmp/backend-f06-checkout",
+    "test:staff-recovery:local": "node tools/local-staff-recovery-acceptance.mjs ../tmp/backend-f06-checkout"
   },
   "dependencies": {
-    "@darve/contracts": "file:vendor/contracts/darve-contracts-1745f6362f3a25ee8ad3b52cc32ea2de3ff590de.tgz",
+    "@darve/contracts": "file:vendor/contracts/darve-contracts-442fc709c08d006bbc625de1751124f515344d07.tgz",
     "@gsap/react": "2.1.2",
     "@tanstack/react-query": "5.104.5",
     "framer-motion": "14.6.0",

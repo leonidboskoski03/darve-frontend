@@ -13,6 +13,10 @@ import {
   SupportAvailabilitySchema,
   SupportPageQuerySchema,
   SupportContextSchema,
+  SupportRecoveryContextResponseSchema,
+  SupportExtensionInputSchema,
+  SupportContinuationInputSchema,
+  SupportRecoveryResponseSchema,
 } from '@/services/contracts/index';
 import { failure, type ApiFailure, type JsonRequest } from '@/services/api/index';
 import type { StaffAccess } from '@/services/staff-access/index';
@@ -24,8 +28,22 @@ export type StaffMessage = ReturnType<
   typeof SupportMessagePageResponseSchema.parse
 >['data']['items'][number];
 export type Availability = ReturnType<typeof SupportAvailabilityResponseSchema.parse>['data'];
+export type RecoveryRead = Readonly<{
+  data: ReturnType<typeof SupportRecoveryContextResponseSchema.parse>['data'];
+  serverTime: string;
+  receivedAt: number;
+}>;
 export type StaffAttempt = Readonly<{
-  kind: 'availability' | 'claim' | 'reassign' | 'reply' | 'note' | 'read' | 'status';
+  kind:
+    | 'availability'
+    | 'claim'
+    | 'reassign'
+    | 'reply'
+    | 'note'
+    | 'read'
+    | 'status'
+    | 'extension'
+    | 'continuation';
   id: string | null;
   key: string;
   body: Readonly<Record<string, unknown>>;
@@ -45,9 +63,19 @@ const invalid = (): never => {
 const mismatch = (): never => {
   throw new StaffSupportError(failure('protocol', 'STAFF_SUPPORT_RESOURCE_MISMATCH'));
 };
+function freezeData<T>(value: T): T {
+  if (value !== null && typeof value === 'object') {
+    for (const child of Object.values(value)) freezeData(child);
+    Object.freeze(value);
+  }
+  return value;
+}
 export function createStaffSupportClient(access: StaffAccess) {
   const scope = access.getSnapshot().scope;
   const receipts = new WeakSet<StaffAttempt>();
+  const recoveryReads = new WeakSet<RecoveryRead>();
+  const recoveryNow = (read: RecoveryRead) =>
+    Date.parse(read.serverTime) + Math.max(0, performance.now() - read.receivedAt);
   let busy = false,
     retryAt = 0;
   const active = () => {
@@ -93,6 +121,8 @@ export function createStaffSupportClient(access: StaffAccess) {
     active();
     if (id !== null) path(id);
     const copied = structuredClone(body);
+    if (typeof copied.confirmation === 'object' && copied.confirmation)
+      Object.freeze(copied.confirmation);
     const attempt = Object.freeze({
       kind,
       id,
@@ -110,11 +140,129 @@ export function createStaffSupportClient(access: StaffAccess) {
     note: 'tickets.note',
     read: 'tickets.assigned.read',
     status: 'tickets.status.write',
+    extension: 'tickets.context.write',
+    continuation: 'tickets.context.write',
   } as const;
   return {
     scope,
     access,
     retryDelay: () => Math.max(0, retryAt - Date.now()),
+    recoveryNow,
+    async recovery(
+      ticket: StaffTicket,
+      challengeId: string,
+      signal: AbortSignal,
+    ): Promise<RecoveryRead> {
+      permit('tickets.context.write');
+      if (access.getSnapshot().role !== 'OWNER_ADMIN') invalid();
+      if (
+        !ticket.contexts.some(
+          (context) => context.kind === 'challenge' && context.id === challengeId,
+        )
+      )
+        invalid();
+      const value = await request({
+        path: path(ticket.id) + '/recovery/' + challengeId,
+        schema: SupportRecoveryContextResponseSchema,
+        success: [200],
+        signal,
+      });
+      if (value.data.ticketId !== ticket.id || value.data.challengeId !== challengeId) mismatch();
+      const context = value.data;
+      if (context.state === 'ready') {
+        if (
+          context.ticketRevision !== ticket.staffRevision ||
+          context.contextRevision !== ticket.contextRevision ||
+          context.authorityRevision !== ticket.authorityRevision
+        )
+          throw new StaffSupportError(failure('http', 'CONFLICT', 409));
+        if (
+          context.performanceRevision !== context.performanceAuthority.revision ||
+          new Set(context.replacements.map((row) => row.id)).size !== context.replacements.length ||
+          context.replacements.some(
+            (row) =>
+              row.provider !== context.provider ||
+              Date.parse(row.validUntil) <= Date.parse(row.observedAt),
+          )
+        )
+          mismatch();
+      }
+      const read = Object.freeze({
+        data: freezeData(context),
+        serverTime: value.serverTime,
+        receivedAt: performance.now(),
+      });
+      recoveryReads.add(read);
+      return read;
+    },
+    prepareRecovery(
+      read: RecoveryRead,
+      kind: 'extension' | 'continuation',
+      input: { reason: string; addedSeconds?: string; replacementId?: string },
+    ) {
+      permit(permission[kind]);
+      if (
+        access.getSnapshot().role !== 'OWNER_ADMIN' ||
+        !recoveryReads.has(read) ||
+        read.data.state !== 'ready'
+      )
+        return invalid();
+      const current = read.data,
+        now = recoveryNow(read);
+      const common = {
+        challengeId: current.challengeId,
+        expectedTicketRevision: current.ticketRevision,
+        expectedContextRevision: current.contextRevision,
+        expectedAuthorityRevision: current.authorityRevision,
+        expectedFundingRevision: current.fundingRevision,
+        expectedPerformanceRevision: current.performanceRevision,
+        reason: input.reason,
+      };
+      if (kind === 'extension') {
+        const window = current.fundingWindow,
+          seconds = input.addedSeconds ?? '';
+        if (
+          !current.extension.available ||
+          !window ||
+          !/^[1-9][0-9]{0,9}$/.test(seconds) ||
+          Date.parse(window.effectiveClosesAt) <= now ||
+          Number(seconds) >
+            Math.min(
+              current.policy.maximumExtensionSeconds,
+              current.policy.maximumCumulativeSeconds - window.cumulativeSeconds,
+            )
+        )
+          return invalid();
+        const parsed = SupportExtensionInputSchema.safeParse({
+          ...common,
+          expectedWindowRevision: window.revision,
+          addedSeconds: Number(seconds),
+          confirmation: {
+            challengeId: current.challengeId,
+            previousDeadline: window.effectiveClosesAt,
+            newDeadline: new Date(
+              Date.parse(window.effectiveClosesAt) + Number(seconds) * 1000,
+            ).toISOString(),
+          },
+        });
+        if (!parsed.success) return invalid();
+        return prepare(kind, current.ticketId, parsed.data);
+      }
+      const candidate = current.replacements.find((row) => row.id === input.replacementId);
+      if (!current.continuation.available || !candidate || now >= Date.parse(candidate.validUntil))
+        return invalid();
+      const parsed = SupportContinuationInputSchema.safeParse({
+        ...common,
+        replacementBroadcastId: candidate.id,
+        confirmation: {
+          challengeId: current.challengeId,
+          originalBroadcastId: current.performanceAuthority.originalBroadcastId,
+          replacementBroadcastId: candidate.id,
+        },
+      });
+      if (!parsed.success) return invalid();
+      return prepare(kind, current.ticketId, parsed.data);
+    },
     async availability(signal: AbortSignal) {
       permit('tickets.availability.write');
       return (
@@ -234,7 +382,7 @@ export function createStaffSupportClient(access: StaffAccess) {
       return prepare('claim', item.id, result.data);
     },
     prepareTicket(
-      kind: Exclude<StaffAttempt['kind'], 'availability' | 'claim'>,
+      kind: Exclude<StaffAttempt['kind'], 'availability' | 'claim' | 'extension' | 'continuation'>,
       ticket: StaffTicket,
       input: {
         body?: string;
@@ -301,6 +449,43 @@ export function createStaffSupportClient(access: StaffAccess) {
       if (busy) throw new StaffSupportError(failure('authority', 'COMMAND_IN_PROGRESS'));
       busy = true;
       try {
+        if (attempt.kind === 'extension' || attempt.kind === 'continuation') {
+          if (access.getSnapshot().role !== 'OWNER_ADMIN') return invalid();
+          const { data } = await request({
+            path:
+              path(attempt.id ?? '') +
+              (attempt.kind === 'extension' ? '/extensions' : '/continuations'),
+            method: 'POST',
+            body: attempt.body,
+            idempotencyKey: attempt.key,
+            schema: SupportRecoveryResponseSchema,
+            success: [200],
+          });
+          if (data.kind !== attempt.kind || data.challengeId !== attempt.body.challengeId)
+            mismatch();
+          if (attempt.kind === 'extension') {
+            const confirmation = SupportExtensionInputSchema.parse(attempt.body).confirmation,
+              window = data.authority.fundingWindow;
+            if (
+              !window ||
+              data.revision !== Number(attempt.body.expectedWindowRevision) + 1 ||
+              window.revision !== data.revision ||
+              window.effectiveClosesAt !== confirmation.newDeadline
+            )
+              mismatch();
+          } else {
+            const confirmation = SupportContinuationInputSchema.parse(attempt.body).confirmation,
+              authority = data.authority.performanceAuthority;
+            if (
+              data.revision !== Number(attempt.body.expectedPerformanceRevision) + 1 ||
+              authority.revision !== data.revision ||
+              authority.originalBroadcastId !== confirmation.originalBroadcastId ||
+              authority.broadcastId !== confirmation.replacementBroadcastId
+            )
+              mismatch();
+          }
+          return attempt.id;
+        }
         const suffix = {
           claim: '/claims',
           reassign: '/reassignments',

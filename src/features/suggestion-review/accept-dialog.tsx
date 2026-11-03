@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button } from '@/design-system/button';
 import { Dialog } from '@/design-system/dialog';
 import { consumerMoney } from '@/services/contracts/index';
@@ -11,6 +11,7 @@ import {
   type SuggestionClient,
   type AcceptanceAttempt,
   type AcceptedChallenge,
+  type AcceptancePolicy,
 } from '@/services/suggestions/index';
 export function AcceptDialog({
   client,
@@ -37,6 +38,18 @@ export function AcceptDialog({
   const [attempt, setAttempt] = useState<AcceptanceAttempt | null>(null);
   const [inputError, setInputError] = useState<unknown>(null);
   const [denied, setDenied] = useState(false);
+  const policyRead = useQuery({
+    queryKey: client.scope.key(['suggestion-acceptance-policy']),
+    gcTime: 0,
+    queryFn: ({ signal }) => client.acceptancePolicy(signal),
+  });
+  const policy = policyRead.data;
+  const [consentedPolicy, setConsentedPolicy] = useState<AcceptancePolicy | null>(null);
+  const currencies = Object.keys(policy?.currencies ?? {}).filter((value) =>
+    ['EUR', 'USD'].includes(value),
+  );
+  const chosenCurrency = currencies.includes(currency) ? currency : (currencies[0] ?? '');
+  const limits = policy?.currencies[chosenCurrency];
   const mutation = useMutation({
     mutationFn: (value: AcceptanceAttempt) => client.accept(value),
     retry: false,
@@ -88,7 +101,15 @@ export function AcceptDialog({
             event.preventDefault();
             setInputError(null);
             try {
-              setAttempt(client.prepare(page, item, { decimal, currency, seconds }));
+              setAttempt(
+                client.prepare(page, item, {
+                  decimal,
+                  currency: chosenCurrency,
+                  seconds,
+                  policy: policy ?? null,
+                  extensionAccepted: consentedPolicy === policy,
+                }),
+              );
             } catch (error) {
               setInputError(error);
             }
@@ -110,11 +131,14 @@ export function AcceptDialog({
             <span className="ds-field__label">Currency</span>
             <select
               className="ds-input"
-              value={currency}
+              value={chosenCurrency}
               onChange={(event) => setCurrency(event.target.value)}
             >
-              <option value="EUR">EUR</option>
-              <option value="USD">USD</option>
+              {currencies.map((value) => (
+                <option key={value} value={value}>
+                  {value}
+                </option>
+              ))}
             </select>
           </label>
           <label className="ds-field">
@@ -128,15 +152,57 @@ export function AcceptDialog({
               required
             />
           </label>
-          <p className="review-muted">
-            Use decimal text with up to two decimal places. Available currencies and commercial
-            limits are validated by the server.
-          </p>
+          {policyRead.isPending ? <p role="status">Checking current acceptance policy…</p> : null}
+          {policyRead.isError ? (
+            <>
+              <p role="alert">Current acceptance policy is unavailable.</p>
+              <Button tone="secondary" onClick={() => void policyRead.refetch()}>
+                Retry policy check
+              </Button>
+            </>
+          ) : null}
+          {policyRead.isSuccess && !policy ? <p>Challenge acceptance is not configured.</p> : null}
+          {policy && !currencies.length ? (
+            <p>The configured currencies are not supported by this form.</p>
+          ) : null}
+          {policy && limits ? (
+            <p className="review-muted">
+              Policy {policy.version}. Allowed goal:{' '}
+              {consumerMoney(limits.minimumMinor, chosenCurrency).decimal}–
+              {consumerMoney(limits.maximumMinor, chosenCurrency).decimal} {chosenCurrency}. Funding
+              duration: {policy.minimumFundingSeconds}–{policy.maximumFundingSeconds} seconds. Use
+              decimal text with up to two decimal places.
+            </p>
+          ) : null}
+          {policy?.extensionPolicy ? (
+            <>
+              <p>{policy.extensionPolicy.disclosure}</p>
+              <label className="review-policy-check">
+                <input
+                  type="checkbox"
+                  checked={consentedPolicy === policy}
+                  onChange={(event) => setConsentedPolicy(event.target.checked ? policy : null)}
+                />
+                <span>
+                  I understand and accept this funding extension policy (
+                  {policy.extensionPolicy.version}).
+                </span>
+              </label>
+            </>
+          ) : null}
           <div className="review-actions">
             <Button tone="secondary" onClick={onDismiss}>
               Cancel
             </Button>
-            <Button type="submit" disabled={changed}>
+            <Button
+              type="submit"
+              disabled={
+                changed ||
+                !limits ||
+                policyRead.isError ||
+                Boolean(policy?.extensionPolicy && consentedPolicy !== policy)
+              }
+            >
               Review exact terms
             </Button>
           </div>
@@ -151,6 +217,14 @@ export function AcceptDialog({
             </dd>
             <dt>Funding duration</dt>
             <dd>{attempt.input.fundingDurationSeconds} seconds</dd>
+            {attempt.input.extensionPolicyVersion ? (
+              <>
+                <dt>Accepted extension disclosure</dt>
+                <dd>
+                  {attempt.extensionDisclosure} ({attempt.input.extensionPolicyVersion})
+                </dd>
+              </>
+            ) : null}
             <dt>Source</dt>
             <dd>
               Published idea #{item.rank} · version {attempt.input.expectedVersion}

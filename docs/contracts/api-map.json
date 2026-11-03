@@ -1,6 +1,6 @@
 {
-  "sourceRevision": "1745f6362f3a25ee8ad3b52cc32ea2de3ff590de",
-  "status": "Mapped public contracts; F08-06 wires staff inspection, moderation, directory/invitation/membership and audit using the unchanged B14-05 browser pin. Staff support and authority have separate qualified adapters. Recovery and remaining context commands stay with their task owners.",
+  "sourceRevision": "442fc709c08d006bbc625de1751124f515344d07",
+  "status": "B14-06 handoff adds authoritative creator acceptance policy and owner-admin ticket-bound recovery preparation. F08-07 wires exact audited recovery commands; deployment and ordinary recovery activation remain separate.",
   "operations": [
     {
       "id": "public-api:GET /api/rounds/:id/suggestions",
@@ -114,9 +114,9 @@
       ],
       "source": {
         "file": "apps/api/src/modules/challenges/challenge-acceptance.routes.ts",
-        "line": 7,
+        "line": 8,
         "handler": "controller.accept",
-        "sha256": "ef229fcfb38c544a3d38f287a69a568e7d01c8479907b257d1cb795bfb438873"
+        "sha256": "a94c5c84724a9512992be87e64949b70479bc18745a5a787ada47add05da1ac4"
       },
       "frontend": "F04"
     },
@@ -2777,7 +2777,7 @@
         "file": "apps/admin-api/src/app.ts",
         "line": 66,
         "handler": "inline health handler",
-        "sha256": "2a31a30dd593cdbd0f7468dd216e60bf659c605d2adeafb685f20fa897462333"
+        "sha256": "07720e4dd9a4569a8be39f165dbca2cde5c4f1fabac24bfcda9689bd91978c0d"
       },
       "frontend": "excluded"
     },
@@ -2798,15 +2798,57 @@
         "file": "apps/admin-api/src/app.ts",
         "line": 69,
         "handler": "inline health handler",
-        "sha256": "2a31a30dd593cdbd0f7468dd216e60bf659c605d2adeafb685f20fa897462333"
+        "sha256": "07720e4dd9a4569a8be39f165dbca2cde5c4f1fabac24bfcda9689bd91978c0d"
       },
       "frontend": "excluded"
+    },
+    {
+      "id": "staff-api:GET /admin/v1/support/tickets/:id/recovery/:challengeId",
+      "origin": "staff-api",
+      "method": "GET",
+      "path": "/admin/v1/support/tickets/:id/recovery/:challengeId",
+      "authority": "staff",
+      "csrf": "no mutation CSRF; Origin policy still applies",
+      "idempotency": "none",
+      "request": "none",
+      "query": "empty",
+      "response": "SupportRecoveryContextResponseSchema",
+      "successStatuses": [200],
+      "publicExports": ["SupportRecoveryContextResponseSchema"],
+      "source": {
+        "file": "apps/admin-api/src/modules/support/recovery-context.routes.ts",
+        "line": 7,
+        "handler": "controller.read",
+        "sha256": "b7ee72ef1d58c91bb14417c17ad3384a475bafff395c4c82a56849b877f40790"
+      },
+      "frontend": "F08-07"
+    },
+    {
+      "id": "public-api:GET /api/rounds/acceptance-policy",
+      "origin": "public-api",
+      "method": "GET",
+      "path": "/api/rounds/acceptance-policy",
+      "authority": "creator",
+      "csrf": "no mutation CSRF; Origin policy still applies",
+      "idempotency": "none",
+      "request": "none",
+      "query": "empty",
+      "response": "ChallengeAcceptancePolicyResponseSchema",
+      "successStatuses": [200],
+      "publicExports": ["ChallengeAcceptancePolicyResponseSchema"],
+      "source": {
+        "file": "apps/api/src/modules/challenges/challenge-acceptance.routes.ts",
+        "line": 7,
+        "handler": "controller.policy",
+        "sha256": "a94c5c84724a9512992be87e64949b70479bc18745a5a787ada47add05da1ac4"
+      },
+      "frontend": "F04-G05 / F08-07"
     }
   ],
   "sourceFiles": {
-    "apps/admin-api/src/app.ts": "2a31a30dd593cdbd0f7468dd216e60bf659c605d2adeafb685f20fa897462333",
+    "apps/admin-api/src/app.ts": "07720e4dd9a4569a8be39f165dbca2cde5c4f1fabac24bfcda9689bd91978c0d",
     "apps/admin-api/src/composition/rate-limit-store.ts": "be565584ab12d8b71896e4828eef8f23aa73f3ab560239f476b9b9741627ea18",
-    "apps/admin-api/src/composition/runtime.ts": "fa617598ecb3de6e4999612384ee84ce6e7d596d00b11701bfb4507ace326a06",
+    "apps/admin-api/src/composition/runtime.ts": "d4ce3ff82da8e45b3efd357ae12998d7441eec12c63e43568a1050c990b5dd01",
     "apps/admin-api/src/config/environment.ts": "f45eb93466413fa69d5fec0a1a3ca144859131e9aee5fcd45fa960df016622eb",
     "apps/admin-api/src/index.ts": "510472253b2360d3525f7aff317a802cdded9c2f359f60ea7e70589b24ed1f8c",
     "apps/admin-api/src/modules/coins/coins.controller.ts": "04038e2733ec4347bc1c15b41875ca0fa5c01b44c9447039a5da6e0724ce15af",
@@ -2854,9 +2896,9 @@
     "apps/api/src/modules/auth/auth.http-validation.ts": "7126d84341d1e19ac75127629bb32a620e9dc50905fe623dd14728192a8f097a",
     "apps/api/src/modules/auth/auth.mapper.ts": "8871ba2086c2678a19e421e7b572bc8f451c6fb03aacc6e5d6fae19a0102649c",
     "apps/api/src/modules/auth/auth.routes.ts": "002e0be577045bf91b29ad3a1d859b1bdf39b9ce1b11c687552f611563c337fa",
-    "apps/api/src/modules/challenges/challenge-acceptance.controller.ts": "b7db930381fcb7904aa228d929401f8dba33308659fdb97f76861efac669882b",
+    "apps/api/src/modules/challenges/challenge-acceptance.controller.ts": "574d5f116fb104d66bb3cc1650e283f42ff72120eb19e42248e2d739aa7a3e86",
     "apps/api/src/modules/challenges/challenge-acceptance.mapper.ts": "23341be61a93d125dda3ccaf3fffe3e77e6e1ef4c5eb5170c29e5579ceb68c7d",
-    "apps/api/src/modules/challenges/challenge-acceptance.routes.ts": "ef229fcfb38c544a3d38f287a69a568e7d01c8479907b257d1cb795bfb438873",
+    "apps/api/src/modules/challenges/challenge-acceptance.routes.ts": "a94c5c84724a9512992be87e64949b70479bc18745a5a787ada47add05da1ac4",
     "apps/api/src/modules/challenges/challenge-completion.controller.ts": "a0842266dddfdeb57819543997086b619b12df780aff1be959142d7dca7fcc41",
     "apps/api/src/modules/challenges/challenge-completion.mapper.ts": "ff09918a4d3014d72f60183e761fc56289d31b5bd7661e6734b0781f510ee672",
     "apps/api/src/modules/challenges/challenge-completion.routes.ts": "59a651fe8155a790988289f3d027208f858870229c5c766443981ba1a03e29a0",
@@ -2920,7 +2962,9 @@
     "apps/api/src/security/overlay-grants.ts": "a521e8ac3ff1f092cfae7a9be8265c3aef324c4fd5b54dcd333ffb2a701bc017",
     "apps/api/src/security/payment-guests.ts": "c325da283e076ec3f0aece4c21e670772f781147d55e1a7f88c6347c7fafd171",
     "apps/api/src/security/proofs.ts": "1cd879e1e0b0a17a6b8df88630e720d32dd0d36f29e98a3a4c8896966b18f838",
-    "apps/api/src/security/session-cookies.ts": "d3b9f7347e5aaae95ef3d5fb1fec4d98b97cd0e6da1e3e3873f6aca5bc02ab0a"
+    "apps/api/src/security/session-cookies.ts": "d3b9f7347e5aaae95ef3d5fb1fec4d98b97cd0e6da1e3e3873f6aca5bc02ab0a",
+    "apps/admin-api/src/modules/support/recovery-context.routes.ts": "b7ee72ef1d58c91bb14417c17ad3384a475bafff395c4c82a56849b877f40790",
+    "apps/admin-api/src/modules/support/recovery-context.controller.ts": "0d215134f2e2f5a87c7e94ecbba50a5ac821382ff9b6ab417d6f5fd1f85ea204"
   },
   "gaps": [
     {
