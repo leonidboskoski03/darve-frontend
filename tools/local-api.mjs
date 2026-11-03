@@ -71,13 +71,14 @@ export async function startLocalApi({
       'f08-05',
       'f08-06',
       'f08-07',
+      'f08-08',
     ].includes(task)
   )
     throw new Error('Invalid local task identity.');
   if (
-    (support || ['f08-04', 'f08-05', 'f08-06', 'f08-07'].includes(task)) &&
+    (support || ['f08-04', 'f08-05', 'f08-06', 'f08-07', 'f08-08'].includes(task)) &&
     (!support ||
-      !['f08-04', 'f08-05', 'f08-06', 'f08-07'].includes(task) ||
+      !['f08-04', 'f08-05', 'f08-06', 'f08-07', 'f08-08'].includes(task) ||
       collection ||
       review ||
       reporting ||
@@ -469,18 +470,18 @@ export async function startLocalApi({
       sandboxFixture,
       supportFixture,
       createStaffWorkbench: async () => {
-        if (!['f08-05', 'f08-06', 'f08-07'].includes(task) || !supportFixture)
+        if (!['f08-05', 'f08-06', 'f08-07', 'f08-08'].includes(task) || !supportFixture)
           throw new Error('Staff workbench requires F08-05 disposable composition.');
         return supportFixture.workbench(deps.redis, {
-          administration: ['f08-06', 'f08-07'].includes(task),
-          recovery: task === 'f08-07',
+          administration: ['f08-06', 'f08-07', 'f08-08'].includes(task),
+          recovery: ['f08-07', 'f08-08'].includes(task),
         });
       },
       seedStaffInspection: async (creator, options = {}) => {
         if (
-          !['f08-06', 'f08-07'].includes(task) ||
+          !['f08-06', 'f08-07', 'f08-08'].includes(task) ||
           !supportFixture ||
-          (task !== 'f08-07' && Object.keys(options).length)
+          (!['f08-07', 'f08-08'].includes(task) && Object.keys(options).length)
         )
           throw new Error(
             'Staff inspection seed requires the exact F08-06 disposable composition.',

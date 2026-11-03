@@ -16,6 +16,7 @@ export async function seedStaffInspection({
   disclosed = false,
   reviewInBrowser,
   evidenceDirectory = 'artifacts.local/f08-06',
+  readProjection = false,
 }) {
   const load = (file) => import(pathToFileURL(join(backend, file)).href);
   const { readApiEnvironment } = await load('apps/api/dist/config/environment.js');
@@ -151,6 +152,7 @@ export async function seedStaffInspection({
             201,
           )
         ).data;
+    if (readProjection) await request('/api/challenges/' + accepted.id);
     return {
       id: accepted.id,
       roundId: started.id,
