@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { parseStaffEnvironment } from './staff-environment';
 
 const schema = z
   .object({
@@ -39,3 +40,4 @@ export function parsePublicEnvironment(input: Record<string, unknown>) {
 }
 
 export const environment = parsePublicEnvironment(import.meta.env);
+export const staffEnvironment = parseStaffEnvironment(import.meta.env);

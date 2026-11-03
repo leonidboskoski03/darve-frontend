@@ -1,5 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
-import { SessionResponseSchema } from '@/services/contracts/index';
+import {
+  SessionResponseSchema,
+  StaffAuthorizationStartResponseSchema,
+} from '@/services/contracts/index';
 import { createJsonClient } from './json-client';
 
 const body = { authenticated: false, user: null, expiresAt: null, csrfToken: null };
@@ -8,6 +11,46 @@ const json = (data: unknown, status = 200) =>
 const read = { path: '/api/session', schema: SessionResponseSchema, success: [200] as const };
 
 describe('credentialed JSON transport', () => {
+  it('permits only the exact validated initial staff start without CSRF', async () => {
+    for (const [path, body, csrf, allowed] of [
+      ['/admin/v1/auth/start', {}, null, true],
+      [
+        '/admin/v1/auth/start',
+        { returnPath: '/staff/enrol', invitationSecret: 'a'.repeat(43) },
+        null,
+        true,
+      ],
+      ['/admin/v1/auth/start?extra=1', {}, null, false],
+      ['/admin/v1/auth/start/', {}, null, false],
+      ['/admin/v1/auth/step-up', {}, null, false],
+      ['/admin/v1/auth/email-code/verify', { code: '12345678' }, null, false],
+      ['/admin/v1/auth/start', { password: 'private-marker' }, null, false],
+      ['/admin/v1/auth/start', {}, 'invalid', false],
+    ] as const) {
+      const send = vi.fn<typeof fetch>().mockResolvedValue(
+        json({
+          schemaVersion: 1,
+          serverTime: new Date().toISOString(),
+          data: { authorizationUrl: 'https://identity.example.test/authorize' },
+        }),
+      );
+      const staff = createJsonClient({
+        origin: 'https://staff.example.test',
+        audience: 'staff',
+        csrf: () => csrf,
+        fetcher: send,
+      });
+      const result = await staff({
+        path,
+        body,
+        method: 'POST',
+        schema: StaffAuthorizationStartResponseSchema,
+        success: [200],
+      });
+      expect(send.mock.calls.length).toBe(allowed ? 1 : 0);
+      expect(result.kind).toBe(allowed ? 'data' : 'error');
+    }
+  });
   it('permits existing-checkout continuation only for guest authority without creator CSRF', async () => {
     const path = '/api/checkouts/11223344-1234-4234-8234-112233445566/resume';
     for (const audience of ['guest', 'creator', 'public', 'overlay'] as const) {

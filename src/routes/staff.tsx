@@ -1,0 +1,31 @@
+import { createBrowserRouter } from 'react-router-dom';
+import type { StaffAccess } from '@/services/staff-access/index';
+
+export function createStaffRouter(access: StaffAccess) {
+  const lazy = async () => {
+    const { StaffAccessScreen } = await import('@/features/staff-access/index');
+    return {
+      Component: function StaffRoute() {
+        return <StaffAccessScreen access={access} />;
+      },
+    };
+  };
+  return createBrowserRouter(
+    ['/', '/staff/enrol', '/staff/verify-email', '/tickets', '/reviews'].map((path) => ({
+      path,
+      lazy,
+      hydrateFallbackElement: (
+        <main className="staff-shell">
+          <p role="status">Checking staff access…</p>
+        </main>
+      ),
+      errorElement: (
+        <main>
+          <h1>Staff access is unavailable</h1>
+          <p>The staff page could not be loaded.</p>
+          <a href="/">Reload staff access</a>
+        </main>
+      ),
+    })),
+  );
+}

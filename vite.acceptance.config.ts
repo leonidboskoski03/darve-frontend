@@ -10,7 +10,7 @@ export default defineConfig((environment) =>
       outDir: 'dist-acceptance',
       rolldownOptions: {
         input: Object.fromEntries(
-          ['primitives', 'session', 'realtime', 'creator', 'contribution', 'overlay'].map(
+          ['primitives', 'session', 'realtime', 'creator', 'contribution', 'overlay', 'staff'].map(
             (name) => [
               name,
               fileURLToPath(new URL(`./tests/fixtures/${name}.html`, import.meta.url)),

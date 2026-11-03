@@ -19,6 +19,11 @@ export default defineConfig({
   ],
   webServer: [
     {
+      command: 'npm run preview:staff',
+      url: 'http://localhost:4176/',
+      reuseExistingServer: false,
+    },
+    {
       command: 'npm run preview',
       url: 'http://127.0.0.1:4173',
       reuseExistingServer: false,

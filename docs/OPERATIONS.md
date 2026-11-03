@@ -10,6 +10,14 @@ F02-02 supplies a separate [disposable local API composition](LOCAL_API_COMPOSIT
 
 `services/config/environment.ts` accepts browser-public `VITE_APP_ENV` with local/staging/production values and optional `VITE_PUBLIC_API_ORIGIN`. The latter is an exact HTTPS origin without path/credentials/query/fragment; HTTP is allowed only on loopback in local mode. Omit it for an offline presentation preview. Unknown `VITE_*` keys fail validation without printing their contents. Vite still embeds variables referenced by code: the parser is a guardrail, not a secret scanner. Never put credentials in frontend env files at all. No provider key, Resend credential, staff encryption key, donor record, token or private grant is committed. Keep environment files, artifacts and test reports ignored.
 
+## Separate staff entry
+
+F08-03 adds `npm run dev:staff` at `http://localhost:5176` and `npm run preview:staff` at `http://localhost:4176`. `npm run build` typechecks once and produces the public/overlay `dist` plus independent `dist-staff`; the staff output contains no public/overlay HTML entry. Do not serve it as a public app `/admin` route. Actual hosting/ingress remains a deployment gate.
+
+Staff settings belong in ignored `env/staff/.env.local`, using [its example](../env/staff/.env.example): `STAFF_PUBLIC_APP_ENV`, paired `STAFF_PUBLIC_API_ORIGIN` and `STAFF_PUBLIC_AUTHORIZATION_ENDPOINT`. The prefix is browser-visible and strictly allowlisted. Omit both addresses for the unavailable/no-request state. Configure them only to match the actual reviewed backend `ADMIN_API_ORIGIN`, `ADMIN_FRONTEND_ORIGIN` and registered callback/authorization endpoint. No Auth0 secret, password, code, Resend key or encryption material belongs here. HTTPS is required outside local loopback configuration. Local creator hosts use `127.0.0.1` and staff frontend/API use `localhost`; different ports alone do not isolate cookies. Default commands do not start an admin API or configure a provider/sender.
+
+The [F08 owner](F08_STAFF_AND_SUPPORT_IMPLEMENTATION.md#f08-03-staff-entry-and-authority) reviews the content-free sign-out intent flag as the sole staff storage use. Proofs/codes/private records remain in memory. `npm run test:staff:local` composes only fresh labelled tmpfs SQL/Redis, constrained roles, local admin HTTP and loopback code delivery against the exact backend pin; it uses an explicit controlled identity port and cleans its own resources. It never reads an ordinary database/provider environment or sends managed email. Its local preview header proof is not actual hosted HTTPS acceptance.
+
 ## Feature flags and observability
 
 No flag vendor or external telemetry integration is installed. Planned UI flags are typed, documented, fail-closed and subordinate to backend availability/authorization. Build-time flags are public. Server feature activation, prices, permissions and receiving readiness cannot be overridden by a browser setting.

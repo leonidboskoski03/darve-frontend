@@ -1,4 +1,8 @@
-import { SessionResponseSchema, parseConsumerResponse } from '@/services/contracts/index';
+import {
+  SessionResponseSchema,
+  StaffLoginInputSchema,
+  parseConsumerResponse,
+} from '@/services/contracts/index';
 
 export type Audience = 'creator' | 'staff' | 'guest' | 'overlay' | 'public';
 export type WireSchema<T> = {
@@ -121,7 +125,15 @@ export function createJsonClient(config: {
       const csrf = config.csrf?.();
       if (csrf && /^[A-Za-z0-9_-]{43}$/.test(csrf))
         headers.set(config.audience === 'staff' ? 'x-staff-csrf' : 'X-CSRF-Token', csrf);
-      else if (!signIn) return failure('authority', 'CSRF_REQUIRED');
+      else if (!(
+        signIn ||
+        (!csrf &&
+          config.audience === 'staff' &&
+          method === 'POST' &&
+          path === '/admin/v1/auth/start' &&
+          StaffLoginInputSchema.safeParse(input.body).success)
+      ))
+        return failure('authority', 'CSRF_REQUIRED');
     }
     if (input.idempotencyKey !== undefined) {
       if (!/^[A-Za-z0-9._:-]{1,128}$/.test(input.idempotencyKey))
