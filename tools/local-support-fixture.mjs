@@ -43,6 +43,7 @@ export async function createLocalSupportFixture(backend, uri, owner, policy) {
   const staffPolicy = {
     ...(await import(pathToFileURL(join(backend, 'tests/fixtures/staff.ts')).href)).staffPolicy,
     epoch: randomUUID(),
+    assurancePolicy: 'auth0-password-darve-email-otp-v1',
   };
   const crypto = integrations.createStaffCrypto(
     randomBytes(32).toString('base64'),
@@ -87,6 +88,79 @@ export async function createLocalSupportFixture(backend, uri, owner, policy) {
   const command = (id, action, body) => service.execute(actor, id, action, randomUUID(), body);
   return {
     publicDatabase,
+    async workbench(redis) {
+      const { createAdminApp } = await import(
+        pathToFileURL(join(backend, 'apps/admin-api/dist/app.js')).href
+      );
+      const { createStaffRateLimitStore } = await import(
+        pathToFileURL(join(backend, 'apps/admin-api/dist/composition/rate-limit-store.js')).href
+      );
+      const frontendOrigin = 'http://localhost:4176';
+      const access = domain.createStaffAccessService(
+        db.createStaffRepository(admin, staffPolicy),
+        null,
+        crypto,
+        staffPolicy,
+        frontendOrigin,
+        null,
+        true,
+      );
+      const app = createAdminApp({
+        service: access,
+        support: { service, crypto },
+        config: { secure: false, frontendOrigin, loginSeconds: staffPolicy.loginSeconds },
+        store: createStaffRateLimitStore(redis),
+        ready: async () => db.staffRuntimeAuthorityReady(admin, true),
+        log: () => {},
+      });
+      return {
+        app,
+        async seed(role = 'SUPPORT') {
+          assert(['SUPPORT', 'OWNER_ADMIN'].includes(role));
+          const principal = await owner.staffPrincipal.create({
+            data: {
+              id: randomUUID(),
+              issuer: staffPolicy.issuer,
+              subject: randomUUID(),
+              epoch: staffPolicy.epoch,
+              role,
+            },
+          });
+          const value = crypto.secret(),
+            csrf = crypto.csrf(value),
+            at = new Date();
+          await owner.staffSession.create({
+            data: {
+              id: randomUUID(),
+              principalId: principal.id,
+              secretHash: crypto.hash(value),
+              csrfHash: crypto.hash(csrf),
+              revision: 1,
+              epoch: staffPolicy.epoch,
+              assurancePolicy: staffPolicy.assurancePolicy,
+              authenticatedAt: at,
+              expiresAt: new Date(at.getTime() + 600000),
+              idleUntil: new Date(at.getTime() + 600000),
+            },
+          });
+          return { id: principal.id, secret: value, csrf };
+        },
+        async reassign(id, assigneeId) {
+          const t = await ticket(id);
+          return command(id, 'reassign', {
+            assigneeId,
+            expectedAuthorityRevision: t.authorityRevision,
+            reason: 'Controlled staff-workbench reassignment',
+          });
+        },
+        async expire(id) {
+          await owner.staffSession.updateMany({
+            where: { principalId: id },
+            data: { idleUntil: new Date(Date.now() - 1000) },
+          });
+        },
+      };
+    },
     async ban(userId) {
       return domain
         .createModerationService(db.createModerationRepository(admin, staffPolicy, true), crypto)

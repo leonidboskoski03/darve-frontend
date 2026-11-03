@@ -1,6 +1,6 @@
 {
-  "sourceRevision": "92e5e86763a57b66346f6d0832d9ed4f9549b05b",
-  "status": "Mapped public contracts; F08-02 staff/support/moderation wire gaps and admin rate-limit error resolved at the pinned source. Staff login/UI/realtime adapters remain F08-03 onward.",
+  "sourceRevision": "1745f6362f3a25ee8ad3b52cc32ea2de3ff590de",
+  "status": "Mapped public contracts; F08-05 adopts B14-05 minimal queue assignment revision and qualifies separate staff support adapters. Inspection, moderation, administration and recovery remain with their F08 task owners.",
   "operations": [
     {
       "id": "public-api:GET /api/rounds/:id/suggestions",

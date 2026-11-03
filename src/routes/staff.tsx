@@ -10,22 +10,32 @@ export function createStaffRouter(access: StaffAccess) {
       },
     };
   };
+  const work = async () => {
+    const { StaffWorkRoute } = await import('./staff-support');
+    return {
+      Component: function StaffSupportRoute() {
+        return <StaffWorkRoute access={access} />;
+      },
+    };
+  };
   return createBrowserRouter(
-    ['/', '/staff/enrol', '/staff/verify-email', '/tickets', '/reviews'].map((path) => ({
-      path,
-      lazy,
-      hydrateFallbackElement: (
-        <main className="staff-shell">
-          <p role="status">Checking staff access…</p>
-        </main>
-      ),
-      errorElement: (
-        <main>
-          <h1>Staff access is unavailable</h1>
-          <p>The staff page could not be loaded.</p>
-          <a href="/">Reload staff access</a>
-        </main>
-      ),
-    })),
+    ['/', '/staff/enrol', '/staff/verify-email', '/tickets', '/tickets/:ticketId', '/reviews'].map(
+      (path) => ({
+        path,
+        lazy: path.startsWith('/tickets') ? work : lazy,
+        hydrateFallbackElement: (
+          <main className="staff-shell">
+            <p role="status">Checking staff access…</p>
+          </main>
+        ),
+        errorElement: (
+          <main>
+            <h1>Staff access is unavailable</h1>
+            <p>The staff page could not be loaded.</p>
+            <a href="/">Reload staff access</a>
+          </main>
+        ),
+      }),
+    ),
   );
 }

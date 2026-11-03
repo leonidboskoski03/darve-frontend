@@ -21,7 +21,7 @@ export function mountStaffAccess(configuration: {
     appEnv: configuration.appEnv,
     invitation: entry.invitation,
     invitationInvalid: entry.invitationInvalid,
-    returnPath: entry.path,
+    returnPath: entry.path.startsWith('/tickets/') ? '/tickets' : entry.path,
     navigateReturn: (path) => returnTo(path),
   });
   entry.invitation = null;

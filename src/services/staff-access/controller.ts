@@ -390,6 +390,20 @@ export function createStaffAccess({
     }
   }
   return {
+    origin: configured ? options.origin : undefined,
+    async request<T>(input: JsonRequest<T>) {
+      if (!running || snapshot.phase !== 'authenticated')
+        return failure('authority', 'STAFF_ACCESS_REQUIRED');
+      const scope = snapshot.scope;
+      const result = await client(scope, proof)(input);
+      if (!running || scope.signal.aborted) return failure('cancelled', 'AUTHORITY_CHANGED');
+      if (result.kind === 'error' && result.status === 401) {
+        clear('expired', result);
+      } else if (result.kind === 'error' && result.status === 403) {
+        await inspect(result);
+      }
+      return result;
+    },
     getSnapshot: () => snapshot,
     subscribe(this: void, listener: () => void) {
       listeners.add(listener);
