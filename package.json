@@ -10,7 +10,9 @@
   },
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "build": "npm run typecheck && vite build",
+    "build": "npm run typecheck && vite build && vite build --config vite.staff.config.ts",
+    "dev:staff": "vite --config vite.staff.config.ts",
+    "preview:staff": "vite preview --config vite.staff.config.ts",
     "preview": "vite preview --host 127.0.0.1",
     "typecheck": "tsc -b",
     "lint": "eslint . --max-warnings 0",
@@ -44,6 +46,7 @@
     "test:contribution:local": "node tools/local-contribution-acceptance.mjs",
     "test:checkout:local": "node tools/local-checkout-acceptance.mjs",
     "test:obs:local": "node tools/local-obs-acceptance.mjs",
+    "test:staff:local": "node tools/local-staff-acceptance.mjs ../tmp/backend-f06-checkout",
     "test:obs:phone": "node --use-system-ca tools/local-obs-acceptance.mjs ../tmp/backend-f06-readiness --observe --phone"
   },
   "dependencies": {

@@ -40,6 +40,31 @@ test('acceptance output ignore is confined to generated root files and preserves
   );
 });
 
+test('staff build ignore applies only to generated output and keeps staff source/config enforcement', async () => {
+  const eslint = new ESLint();
+  assert.equal(await eslint.isPathIgnored('dist-staff/assets/staff.js'), true);
+  for (const path of [
+    'src/features/staff-access/staff-access.tsx',
+    'src/services/staff-access/controller.ts',
+    'src/features/dist-staff/ui.tsx',
+    'vite.staff.config.ts',
+  ])
+    assert.equal(await eslint.isPathIgnored(path), false);
+  assert.ok(
+    inspect(
+      "import { x } from '@/features/creator-access/index';",
+      'features/staff-access/probe.tsx',
+    ).some((message) => message.ruleId === 'architecture/boundaries'),
+  );
+  assert.ok(
+    inspect(
+      'const x = import.meta.env.STAFF_PUBLIC_SECRET;',
+      'services/config/staff-environment.ts',
+    ).some((message) => message.ruleId === 'architecture/infrastructure'),
+  );
+  assert.equal(inspect('export const safe = true;', 'services/staff-access/probe.ts').length, 0);
+});
+
 const rejected = [
   ['upward alias', "import { x } from '@/app/providers';"],
   ['upward relative', "import { x } from '../../app/providers';"],
