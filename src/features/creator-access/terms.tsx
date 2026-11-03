@@ -115,6 +115,9 @@ export function Terms({
       <p className="creator-description">
         Acceptance applies to this exact document and version. Signing in alone does not accept it.
       </p>
+      <ActionLink href="/support" tone="quiet">
+        Ask support about your account
+      </ActionLink>
       {terms.isPending ? (
         <LoadingState label="Loading account terms" />
       ) : terms.isError ? (

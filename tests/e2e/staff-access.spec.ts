@@ -252,6 +252,8 @@ test('supports the complete code/enrollment flow from the keyboard with reduced 
   await expect(page.getByRole('button', { name: 'Verify code', exact: true })).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(page.getByRole('heading', { name: 'Review your invitation' })).toBeFocused();
+  // The heading changes with the canonical phase; the verify command releases its busy fence next.
+  await expect(page.getByRole('checkbox')).toBeEnabled();
   await page.keyboard.press('Tab');
   await expect(page.getByRole('checkbox')).toBeFocused();
   await page.keyboard.press('Space');

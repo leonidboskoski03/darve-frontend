@@ -47,6 +47,7 @@
     "test:checkout:local": "node tools/local-checkout-acceptance.mjs",
     "test:obs:local": "node tools/local-obs-acceptance.mjs",
     "test:staff:local": "node tools/local-staff-acceptance.mjs ../tmp/backend-f06-checkout",
+    "test:support:local": "node tools/local-support-acceptance.mjs ../tmp/backend-f06-checkout",
     "test:obs:phone": "node --use-system-ca tools/local-obs-acceptance.mjs ../tmp/backend-f06-readiness --observe --phone"
   },
   "dependencies": {

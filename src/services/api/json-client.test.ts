@@ -11,6 +11,49 @@ const json = (data: unknown, status = 200) =>
 const read = { path: '/api/session', schema: SessionResponseSchema, success: [200] as const };
 
 describe('credentialed JSON transport', () => {
+  it.each([
+    [null, '7', false, 7],
+    [12, '7', false, 12],
+    [2, '9', false, 9],
+    [null, 'invalid', false, null],
+    [null, '7', true, null],
+  ] as const)(
+    'uses bounded Retry-After only with a valid error envelope (%s/%s/%s)',
+    async (bodyDelay, header, malformed, expected) => {
+      const response = new Response(
+        JSON.stringify(
+          malformed
+            ? { error: { code: 'RATE_LIMITED' } }
+            : {
+                schemaVersion: 1,
+                serverTime: '2026-11-03T12:00:00.000Z',
+                error: {
+                  code: 'RATE_LIMITED',
+                  message: 'private-marker',
+                  requestId: 'safe-request',
+                  retryable: true,
+                  retryAfterSeconds: bodyDelay,
+                  issues: [],
+                  refetch: null,
+                },
+              },
+        ),
+        { status: 429, headers: { 'Content-Type': 'application/json', 'Retry-After': header } },
+      );
+      const send = vi.fn<typeof fetch>().mockResolvedValue(response);
+      const result = await createJsonClient({
+        origin: 'https://api.example.test',
+        audience: 'creator',
+        fetcher: send,
+      })(read);
+      expect(result).toMatchObject({
+        kind: 'error',
+        retryAfterSeconds: expected,
+        category: malformed ? 'protocol' : 'http',
+      });
+      expect(send).toHaveBeenCalledOnce();
+    },
+  );
   it('permits only the exact validated initial staff start without CSRF', async () => {
     for (const [path, body, csrf, allowed] of [
       ['/admin/v1/auth/start', {}, null, true],
