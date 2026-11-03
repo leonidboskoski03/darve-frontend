@@ -1,6 +1,6 @@
 # Current frontend state
 
-Checkpoint: 2026-11-02, Europe/Warsaw. F06 and original F07 are integrated through PR16/17. F07-05 now also qualifies physical OBS QR scanning that opens the contribution page on a phone through a bounded public HTTPS test; [its owner](F07_OBS_IMPLEMENTATION.md#f07-05-final-scan-to-page-qualification-and-integration) records final Git/evidence custody. Temporary exposure is cleaned; stable deployment and ordinary/live payments remain disabled.
+Checkpoint: 2026-11-03, Europe/Warsaw. F06/F07 are integrated through PR16–18, including physical OBS QR scanning that opens the contribution page on a phone through a bounded public HTTPS test. [F07 custody](F07_OBS_IMPLEMENTATION.md#f07-05-final-scan-to-page-qualification-and-integration) records the proof and cleaned temporary exposure. F08-01 maps staff/support source, authority, contracts and implementation tasks; it adds no staff UI. Stable deployment and ordinary/live payments remain disabled.
 
 ## Implemented
 
@@ -32,6 +32,8 @@ The [F01-01 reference audit](F01_REFERENCE_AND_COMPONENT_AUDIT.md) now inventori
 
 ## Not implemented or verified
 
+[F08-01](F08_STAFF_AND_SUPPORT_IMPLEMENTATION.md) inspects all 49 registered staff/support operations and the pinned backend against current dev. The existing staff-envelope, support-page/SSE and moderation-input gaps remain open; the map additionally identifies the admin rate limiter's incompatible minimal 429 body. F08-02 owns the focused contract handoff before UI wiring. Staff entry/build/authority, tickets, moderation and recovery are planned in separate review units; genuine Auth0/Resend delivery acceptance remains separate.
+
 - Remaining staff/coin/template designs and broader device/connected visual acceptance, with their owning feature batches. F04 has local responsive/accessibility evidence; F07 has selected M/R rendering and actual OBS lifecycle proof.
 - Mapped staff/support/moderation public-contract gaps, staff authority journeys and broader joint lifecycle acceptance. F06 guest and F07 reader scopes have their separate qualified evidence.
 - Joint connected collection/analysis/OBS, staff/support and coins/templates journeys. Actual creator OAuth and F06 sandbox receiving/guest checkout/private receipts have their separate recorded acceptance; full live-system acceptance remains open.
@@ -45,4 +47,4 @@ Use task branches/PRs into dev with light hosted validation; main is reserved fo
 
 ## Next action
 
-Finish F07-05 protected PR integration/cleanup from its owner if still pending. F08 staff/support is the next planned batch when authorized. Broader connected F04/F10 and stable hosting/Resend/live activation remain with their owners. Preserve original backend files/data and retained evidence worktrees. No task runtime is required.
+Finish F08-01 protected PR integration/cleanup from [its owner](F08_STAFF_AND_SUPPORT_IMPLEMENTATION.md#verification-and-restart-custody) if pending. Next implementation is F08-02: repair/review backend-owned public wire contracts and the staff rate-limit error, then refresh the browser package/facade with provenance before staff/support UI wiring. Broader connected F04/F10 and stable hosting/Resend/live activation remain with their owners. Preserve original backend files/data and retained evidence worktrees. No task runtime is required.
