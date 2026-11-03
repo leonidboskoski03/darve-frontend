@@ -1,17 +1,27 @@
 import { createServer } from 'node:http';
 import { randomUUID, randomBytes, createHash } from 'node:crypto';
-import { writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 import { createLocalCollectionFixture } from './local-collection-fixture.mjs';
 import { createLocalReviewFixture } from './local-review-fixture.mjs';
 /** Privileged Node-only setup for the disposable admin test. No seed endpoint enters the product/runtime API. */
-export async function seedStaffInspection({ backend, deps, logger, runtimeInput, creator }) {
+export async function seedStaffInspection({
+  backend,
+  deps,
+  logger,
+  runtimeInput,
+  creator,
+  disclosed = false,
+  reviewInBrowser,
+  evidenceDirectory = 'artifacts.local/f08-06',
+}) {
   const load = (file) => import(pathToFileURL(join(backend, file)).href);
   const { readApiEnvironment } = await load('apps/api/dist/config/environment.js');
   const { createApp } = await load('apps/api/dist/app.js');
-  const termsFile = resolve('artifacts.local/f08-06/inspection-terms.json'),
+  mkdirSync(evidenceDirectory, { recursive: true });
+  const termsFile = resolve(evidenceDirectory, 'inspection-terms.json'),
     content = 'Synthetic local staff inspection setup terms. Not a commercial policy.';
   writeFileSync(
     termsFile,
@@ -40,6 +50,15 @@ export async function seedStaffInspection({ backend, deps, logger, runtimeInput,
       currencies: { EUR: { minimumMinor: '1', maximumMinor: '9223372036854775807' } },
       minimumFundingSeconds: 1,
       maximumFundingSeconds: 3600,
+      ...(disclosed
+        ? {
+            extensionPolicy: {
+              version: 'support-extension-v1',
+              disclosure:
+                'An authorized deadline extension committed before funding closes changes the cutoff for all contributions, including payments already started. Payment eligibility uses verified provider timing against the effective deadline.',
+            },
+          }
+        : {}),
     }),
   });
   const collection = await createLocalCollectionFixture(backend, deps.database, config),
@@ -114,21 +133,24 @@ export async function seedStaffInspection({ backend, deps, logger, runtimeInput,
     await review.publish(creator.userId, started.id);
     const suggestions = (await request('/api/rounds/' + started.id + '/suggestions')).data,
       item = suggestions.items[0];
-    const accepted = (
-      await request(
-        '/api/rounds/' + started.id + '/suggestions/' + item.id + '/accept',
-        'POST',
-        {
-          expectedVersion: item.version,
-          analysisRunId: item.analysisRunId,
-          resultVersion: suggestions.resultVersion,
-          snapshotVersion: item.snapshotVersion,
-          goal: { amountMinor: '9007199254740993', currency: 'EUR' },
-          fundingDurationSeconds: 600,
-        },
-        201,
-      )
-    ).data;
+    const accepted = reviewInBrowser
+      ? await reviewInBrowser({ base, roundId: started.id, item })
+      : (
+          await request(
+            '/api/rounds/' + started.id + '/suggestions/' + item.id + '/accept',
+            'POST',
+            {
+              expectedVersion: item.version,
+              analysisRunId: item.analysisRunId,
+              resultVersion: suggestions.resultVersion,
+              snapshotVersion: item.snapshotVersion,
+              goal: { amountMinor: '9007199254740993', currency: 'EUR' },
+              fundingDurationSeconds: 600,
+              ...(disclosed ? { extensionPolicyVersion: 'support-extension-v1' } : {}),
+            },
+            201,
+          )
+        ).data;
     return {
       id: accepted.id,
       roundId: started.id,

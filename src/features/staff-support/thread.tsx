@@ -11,6 +11,7 @@ import { useStaffCommand } from './use-command';
 import { CommandResult } from './command';
 import { staffError } from './error';
 import { TicketActions } from './ticket-actions';
+import { TicketRecovery } from './recovery';
 
 export function StaffThread({
   client,
@@ -32,6 +33,9 @@ export function StaffThread({
     const key = client.scope.key(['staff-support', 'thread', id]);
     void client.scope.queryClient.cancelQueries({ queryKey: key });
     client.scope.queryClient.removeQueries({ queryKey: key });
+    const recoveryKey = client.scope.key(['staff-support', 'recovery', id]);
+    void client.scope.queryClient.cancelQueries({ queryKey: recoveryKey });
+    client.scope.queryClient.removeQueries({ queryKey: recoveryKey });
     setBody('');
     setCursor(null);
     setPrevious([]);
@@ -267,6 +271,16 @@ export function StaffThread({
               </section>
             </aside>
           </div>
+          {client.access.getSnapshot().role === 'OWNER_ADMIN' &&
+          client.access.getSnapshot().permissions.includes('tickets.context.write') ? (
+            <TicketRecovery
+              key={'recovery:' + epoch}
+              client={client}
+              ticket={data.ticket}
+              command={command}
+              epoch={epoch}
+            />
+          ) : null}
         </>
       ) : null}
       <CommandResult command={command} />

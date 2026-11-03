@@ -88,7 +88,26 @@ export async function createLocalSupportFixture(backend, uri, owner, policy) {
   const command = (id, action, body) => service.execute(actor, id, action, randomUUID(), body);
   return {
     publicDatabase,
-    async workbench(redis, { administration = false } = {}) {
+    async workbench(redis, { administration = false, recovery = false } = {}) {
+      assert(!recovery || administration);
+      const recoveryPolicy = {
+        version: 'synthetic-recovery-v1',
+        maximumExtensionSeconds: 120,
+        maximumCumulativeSeconds: 180,
+        maximumCommandsPerMinute: 100,
+      };
+      if (recovery) {
+        const setup = new Client({ connectionString: uri });
+        await setup.connect();
+        try {
+          await setup.query(
+            readFileSync(join(backend, 'infra/sql/b14-recovery-runtime-grants.sql'), 'utf8'),
+          );
+        } finally {
+          await setup.end();
+        }
+        await owner.$executeRaw`INSERT INTO support_recovery_settings(id,policy,"staffPolicy","consumersReady") VALUES(1,${JSON.stringify(recoveryPolicy)}::jsonb,${JSON.stringify(staffPolicy)}::jsonb,true)`;
+      }
       const { createAdminApp } = await import(
         pathToFileURL(join(backend, 'apps/admin-api/dist/app.js')).href
       );
@@ -155,6 +174,22 @@ export async function createLocalSupportFixture(backend, uri, owner, policy) {
       const app = createAdminApp({
         service: access,
         support: { service, crypto },
+        recoveryContext: domain.createSupportRecoveryContextService(
+          db.createSupportRecoveryContextRepository(
+            admin,
+            staffPolicy,
+            recovery ? recoveryPolicy : null,
+          ),
+          crypto,
+        ),
+        ...(recovery
+          ? {
+              recovery: domain.createSupportRecoveryService(
+                db.createSupportRecoveryRepository(admin),
+                crypto,
+              ),
+            }
+          : {}),
         ...(administration
           ? {
               moderation: domain.createModerationService(
@@ -165,12 +200,104 @@ export async function createLocalSupportFixture(backend, uri, owner, policy) {
           : {}),
         config: { secure: false, frontendOrigin, loginSeconds: staffPolicy.loginSeconds },
         store: createStaffRateLimitStore(redis),
-        ready: async () => db.staffRuntimeAuthorityReady(admin, true),
+        ready: async () => db.staffRuntimeAuthorityReady(admin, true, recovery),
         log: () => {},
       });
       return {
         app,
         inbox,
+        async recoveryReady(value) {
+          assert(recovery);
+          await owner.$executeRaw`UPDATE support_recovery_settings SET "consumersReady"=${value} WHERE id=1`;
+        },
+        async recoveryEvidence(challengeId) {
+          assert(recovery);
+          const funding = await owner.challengeFunding.findUniqueOrThrow({
+            where: { challengeId },
+          });
+          const moneyKeys = [
+            'state',
+            'confirmedGross',
+            'eligibleGross',
+            'lateGross',
+            'unclassifiedGross',
+            'surplusGross',
+            'refundedGross',
+            'reversedGross',
+            'adjustedGross',
+            'goalReachedAt',
+            'pendingCheckoutCount',
+          ];
+          return {
+            challenge: await owner.acceptedChallenge.findUniqueOrThrow({
+              where: { id: challengeId },
+            }),
+            funding: Object.fromEntries(moneyKeys.map((key) => [key, funding.snapshot[key]])),
+            actions: await owner.supportRecoveryAction.findMany({
+              where: { challengeId },
+              orderBy: { createdAt: 'asc' },
+            }),
+            audits: await owner.staffAudit.count({ where: { resourceId: challengeId } }),
+          };
+        },
+        async replacement(challengeId, creator, ageMs = 0) {
+          assert(recovery);
+          const challenge = await owner.acceptedChallenge.findUniqueOrThrow({
+            where: { id: challengeId },
+          });
+          const round = await owner.collectionRound.findUniqueOrThrow({
+            where: { id: challenge.roundId },
+          });
+          const original = await owner.broadcast.findUniqueOrThrow({
+              where: { id: round.broadcastId },
+            }),
+            pc = await owner.providerConnection.findUniqueOrThrow({
+              where: { id: original.connectionId },
+              include: { channels: true },
+            });
+          const [clock] =
+            await owner.$queryRaw`SELECT date_trunc('milliseconds',clock_timestamp()) AS now`;
+          const observedAt = new Date(clock.now.getTime() - ageMs);
+          const result = await db.publishDiscoverySnapshot(
+            owner,
+            {
+              userId: creator.userId,
+              connectionId: pc.id,
+              secretHash: createHash('sha256').update(creator.secret).digest('hex'),
+            },
+            {
+              state: 'LIVE',
+              reasonCode: null,
+              complete: true,
+              observedAt,
+              freshnessMs: 30000,
+              snapshotTtlMs: 60000,
+              binding: {
+                identityId: pc.identityId,
+                credentialVersion: pc.credentialVersion,
+                channels: pc.channels.map((ch) => ({
+                  id: ch.id,
+                  providerChannelId: ch.providerChannelId,
+                })),
+              },
+              candidates: [
+                {
+                  channelId: original.channelId,
+                  providerChannelId: original.providerChannelId,
+                  providerBroadcastId: 'replacement_' + randomUUID(),
+                  providerChatId: null,
+                  startedAt: observedAt,
+                  observedAt,
+                  metricsAvailable: false,
+                },
+              ],
+              chatContextAvailable: false,
+            },
+            10,
+            (b) => ({ id: b.id, connectionId: b.connectionId, channelId: b.channelId }),
+          );
+          return result.items[0].id;
+        },
         identityHandler(request, response) {
           assert(administration);
           const url = new URL(request.url, 'http://localhost:3321');

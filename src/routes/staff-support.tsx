@@ -21,7 +21,8 @@ export function StaffWorkRoute({ access }: { access: StaffAccess }) {
     document.title = ticketId ? 'Support ticket — Darve staff' : 'Support desk — Darve staff';
     wrapper.current?.querySelector<HTMLElement>('main')?.focus();
   }, [ticketId]);
-  if (snapshot.phase !== 'authenticated') return <StaffAccessScreen access={access} />;
+  if (snapshot.phase !== 'authenticated' || snapshot.error?.code === 'REAUTHENTICATION_REQUIRED')
+    return <StaffAccessScreen access={access} />;
   if (!snapshot.permissions.includes('tickets.assigned.read'))
     return <StaffAccessScreen access={access} />;
   return (

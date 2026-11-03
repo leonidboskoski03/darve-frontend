@@ -1,4 +1,13 @@
 // Synthetic contract data for unit/browser tests only. No product import.
+export const acceptancePolicyFixture = () => ({
+  version: 'synthetic-acceptance-v1',
+  currencies: {
+    EUR: { minimumMinor: '1', maximumMinor: '9223372036854775807' },
+    USD: { minimumMinor: '1', maximumMinor: '9223372036854775807' },
+  },
+  minimumFundingSeconds: 1,
+  maximumFundingSeconds: 3600,
+});
 export const reviewIds = {
   round: '44556677-1234-4234-8234-112233445566',
   snapshot: '55667788-1234-4234-8234-112233445566',

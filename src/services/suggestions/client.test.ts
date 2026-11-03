@@ -5,6 +5,7 @@ import { createSuggestionClient, ReviewError, uncertainReview } from './client';
 import { failure } from '@/services/api/index';
 import {
   reviewFixture,
+  acceptancePolicyFixture,
   acceptedFixture,
   challengeFixture,
   reviewIds as ids,
@@ -35,7 +36,12 @@ const syntheticSession = {
   expiresAt: '2030-01-01T00:00:00.000Z',
   csrfToken: 'a'.repeat(43),
 };
-const terms = { decimal: '25.50', currency: 'EUR', seconds: '600' };
+const terms = {
+  decimal: '25.50',
+  currency: 'EUR',
+  seconds: '600',
+  policy: acceptancePolicyFixture(),
+};
 async function setup() {
   const send = vi.fn<typeof fetch>().mockResolvedValueOnce(json(syntheticSession));
   const session = createCreatorSession({ origin: 'https://api.example.test', fetcher: send });
@@ -193,6 +199,32 @@ it('rejects another source challenge projection', async () => {
   await expect(
     client.challenge(ids.challenge, ids.round, ids.result + '.g1', new AbortController().signal),
   ).rejects.toBeInstanceOf(ReviewError);
+});
+it('requires commercial limits and explicit optional extension disclosure before freezing acceptance', async () => {
+  const { client } = await setup(),
+    page = reviewFixture(),
+    item = page.items[0]!;
+  expect(() => client.prepare(page, item, { ...terms, policy: null })).toThrow();
+  expect(() => client.prepare(page, item, { ...terms, seconds: '3601' })).toThrow();
+  expect(() =>
+    client.prepare(page, item, {
+      ...terms,
+      policy: { ...terms.policy, currencies: { EUR: { minimumMinor: '1', maximumMinor: '2000' } } },
+    }),
+  ).toThrow();
+  const policy = {
+    ...terms.policy,
+    extensionPolicy: {
+      version: 'support-extension-v1' as const,
+      disclosure:
+        'An authorized deadline extension committed before funding closes changes the cutoff for all contributions, including payments already started. Payment eligibility uses verified provider timing against the effective deadline.' as const,
+    },
+  };
+  expect(() => client.prepare(page, item, { ...terms, policy })).toThrow();
+  const attempt = client.prepare(page, item, { ...terms, policy, extensionAccepted: true });
+  expect(attempt.input.extensionPolicyVersion).toBe('support-extension-v1');
+  expect(attempt.extensionDisclosure).toBe(policy.extensionPolicy.disclosure);
+  expect(Object.isFrozen(attempt.input)).toBe(true);
 });
 it('distinguishes a definitive unconfigured policy from uncertain service failure', () => {
   expect(uncertainReview(new ReviewError(failure('http', 'POLICY_UNAVAILABLE', 503)))).toBe(false);

@@ -8,6 +8,7 @@ import {
   AcceptSuggestionInputSchema,
   AcceptSuggestionResponseSchema,
   ChallengeResponseSchema,
+  ChallengeAcceptancePolicyResponseSchema,
   contributionAmountMinor,
   type SuggestionDto,
   type AcceptSuggestionInput,
@@ -18,10 +19,14 @@ import type { CreatorSession } from '@/services/creator-session/index';
 export type Suggestion = SuggestionDto;
 export type ReviewPage = ReturnType<typeof SuggestionPageResponseSchema.parse>['data'];
 export type AcceptedChallenge = ReturnType<typeof AcceptSuggestionResponseSchema.parse>['data'];
+export type AcceptancePolicy = NonNullable<
+  ReturnType<typeof ChallengeAcceptancePolicyResponseSchema.parse>['data']['policy']
+>;
 export type AcceptanceAttempt = Readonly<{
   roundId: string;
   suggestionId: string;
   text: string;
+  extensionDisclosure: string | null;
   key: string;
   input: Readonly<AcceptSuggestionInput>;
 }>;
@@ -79,6 +84,17 @@ export function createSuggestionClient(session: CreatorSession) {
     }
   };
   return {
+    scope,
+    async acceptancePolicy(signal: AbortSignal) {
+      return (
+        await request({
+          path: '/api/rounds/acceptance-policy',
+          schema: ChallengeAcceptancePolicyResponseSchema,
+          signal,
+          success: [200],
+        })
+      ).data.policy;
+    },
     async page(roundId: string, cursor: string | null, signal: AbortSignal): Promise<ReviewPage> {
       const path = roundPath(roundId);
       if (
@@ -141,7 +157,13 @@ export function createSuggestionClient(session: CreatorSession) {
     prepare(
       page: ReviewPage,
       item: Suggestion,
-      terms: { decimal: string; currency: string; seconds: string },
+      terms: {
+        decimal: string;
+        currency: string;
+        seconds: string;
+        policy: AcceptancePolicy | null;
+        extensionAccepted?: boolean;
+      },
     ): AcceptanceAttempt {
       active();
       itemPath(item);
@@ -164,6 +186,21 @@ export function createSuggestionClient(session: CreatorSession) {
       } catch {
         return invalid();
       }
+      const policyResult =
+        ChallengeAcceptancePolicyResponseSchema.shape.data.shape.policy.safeParse(terms.policy);
+      if (!policyResult.success || !policyResult.data) return invalid('POLICY_UNAVAILABLE');
+      const policy = policyResult.data,
+        limits = policy.currencies[terms.currency];
+      if (
+        !limits ||
+        BigInt(amountMinor) < BigInt(limits.minimumMinor) ||
+        BigInt(amountMinor) > BigInt(limits.maximumMinor) ||
+        Number(terms.seconds) < policy.minimumFundingSeconds ||
+        Number(terms.seconds) > policy.maximumFundingSeconds
+      )
+        return invalid();
+      if (policy.extensionPolicy && terms.extensionAccepted !== true)
+        return invalid('EXTENSION_DISCLOSURE_REQUIRED');
       const parsed = AcceptSuggestionInputSchema.safeParse({
         expectedVersion: item.version,
         analysisRunId: item.analysisRunId,
@@ -171,12 +208,16 @@ export function createSuggestionClient(session: CreatorSession) {
         snapshotVersion: item.snapshotVersion,
         goal: { amountMinor, currency: terms.currency },
         fundingDurationSeconds: Number(terms.seconds),
+        ...(policy.extensionPolicy
+          ? { extensionPolicyVersion: policy.extensionPolicy.version }
+          : {}),
       });
       if (!parsed.success) invalid();
       const attempt = Object.freeze({
         roundId: item.roundId,
         suggestionId: item.id,
         text: item.text,
+        extensionDisclosure: policy.extensionPolicy?.disclosure ?? null,
         key: crypto.randomUUID(),
         input: Object.freeze({ ...parsed.data, goal: Object.freeze(parsed.data.goal) }),
       });

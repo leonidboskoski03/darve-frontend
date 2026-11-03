@@ -4,6 +4,8 @@ export function reviewMessage(error: unknown) {
   const { code, status, category } = error.problem;
   const messages: Record<string, string> = {
     INVALID_REVIEW_INPUT: 'Enter an exact positive amount and a whole funding duration in seconds.',
+    EXTENSION_DISCLOSURE_REQUIRED:
+      'Review and accept the current funding extension disclosure before continuing.',
     INVALID_TERMS:
       'The server does not allow these terms. Review the goal, currency and duration before trying again.',
     POLICY_UNAVAILABLE:
