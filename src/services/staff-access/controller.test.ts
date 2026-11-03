@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createStaffAccess, type StaffAccess } from './controller';
-import { readStaffEntry, isStaffAuthorizationUrl } from './location';
+import { readStaffEntry, isStaffAuthorizationUrl, staffReviewSearch } from './location';
 import { parseStaffEnvironment } from '@/services/config/index';
 
 const origin = 'https://staff.example.test';
@@ -182,6 +182,21 @@ describe('independent staff authority lifecycle', () => {
     expect(readStaffEntry(origin + '/staff/verify-email?code=untrusted').path).toBe(
       '/staff/verify-email',
     );
+  });
+  it('preserves only reviewed staff-tool filters while stripping proofs, duplicates and invalid targets', () => {
+    const id = '12345678-1234-4234-8234-123456789012';
+    expect(
+      staffReviewSearch('?view=challenge&id=' + id + '&token=private&invitation=private'),
+    ).toBe('?view=challenge&id=' + id);
+    expect(
+      staffReviewSearch(
+        '?view=staff&view=audit&id=invalid&owner=invalid&state=untrusted&csrf=private',
+      ),
+    ).toBe('');
+    expect(staffReviewSearch('?view=reviews&owner=' + id + '&state=in_review')).toBe(
+      '?view=reviews&owner=' + id + '&state=in_review',
+    );
+    expect(staffReviewSearch('?view=reviews&extra=' + 'x'.repeat(2100))).toBe('');
   });
   it('requires a matched hostname and complete public configuration, without leaking values', () => {
     expect(

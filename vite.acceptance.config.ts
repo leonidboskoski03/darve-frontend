@@ -19,6 +19,7 @@ export default defineConfig((environment) =>
             'overlay',
             'staff',
             'staff-work',
+            'staff-admin',
           ].map((name) => [
             name,
             fileURLToPath(new URL(`./tests/fixtures/${name}.html`, import.meta.url)),

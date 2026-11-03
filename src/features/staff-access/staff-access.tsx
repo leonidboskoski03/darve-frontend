@@ -15,6 +15,8 @@ const time = (value: string | null) =>
     : '';
 function problem(snapshot: StaffSnapshot) {
   if (!snapshot.error) return null;
+  if (snapshot.error.code === 'REAUTHENTICATION_REQUIRED')
+    return 'This action needs fresh identity verification. Verify identity again, then reload current facts and review the action. Nothing is replayed automatically.';
   if (snapshot.error.code === 'INVALID_STAFF_CODE') return 'Enter the complete eight-digit code.';
   if (snapshot.error.status === 429) return 'Too many attempts. Wait before trying again.';
   if (snapshot.error.status === 503)
@@ -274,11 +276,14 @@ function StaffScreen({ access, snapshot }: { access: StaffAccess; snapshot: Staf
                 </div>
               </dl>
               <p className="staff-secondary">
-                Review tools are not available in this workspace yet. Signing in does not mark you
-                available for tickets.
+                Signing in does not mark you available for tickets. Staff tools depend on current
+                permissions and assigned context.
               </p>
               {snapshot.permissions.includes('tickets.assigned.read') ? (
                 <ActionLink href="/tickets">Open support workspace</ActionLink>
+              ) : null}
+              {snapshot.permissions.includes('review.read') ? (
+                <ActionLink href="/reviews">Open inspection and review tools</ActionLink>
               ) : null}
               <div className="staff-actions">
                 <Button

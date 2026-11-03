@@ -49,7 +49,8 @@
     "test:staff:local": "node tools/local-staff-acceptance.mjs ../tmp/backend-f06-checkout",
     "test:support:local": "node tools/local-support-acceptance.mjs ../tmp/backend-f06-checkout",
     "test:staff-support:local": "node tools/local-staff-support-acceptance.mjs ../tmp/backend-f06-checkout",
-    "test:obs:phone": "node --use-system-ca tools/local-obs-acceptance.mjs ../tmp/backend-f06-readiness --observe --phone"
+    "test:obs:phone": "node --use-system-ca tools/local-obs-acceptance.mjs ../tmp/backend-f06-readiness --observe --phone",
+    "test:staff-admin:local": "node tools/local-staff-admin-acceptance.mjs ../tmp/backend-f06-checkout"
   },
   "dependencies": {
     "@darve/contracts": "file:vendor/contracts/darve-contracts-1745f6362f3a25ee8ad3b52cc32ea2de3ff590de.tgz",
