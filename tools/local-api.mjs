@@ -50,9 +50,9 @@ export async function startLocalApi({
   coins = false,
 }) {
   if (
-    (coins || task === 'f09-02') &&
+    (coins || ['f09-02', 'f09-g01'].includes(task)) &&
     (!coins ||
-      task !== 'f09-02' ||
+      !['f09-02', 'f09-g01'].includes(task) ||
       support ||
       collection ||
       review ||
@@ -67,7 +67,7 @@ export async function startLocalApi({
       origins.length !== 1 ||
       origins[0] !== 'http://127.0.0.1:4175')
   )
-    throw new Error('Coins require their exact disposable F09-02 read composition.');
+    throw new Error('Coins require their exact disposable read/journal composition.');
   if (
     qrPublicOrigin !== undefined &&
     (task !== 'f07' ||
@@ -93,6 +93,7 @@ export async function startLocalApi({
       'f08-07',
       'f08-08',
       'f09-02',
+      'f09-g01',
     ].includes(task)
   )
     throw new Error('Invalid local task identity.');
@@ -428,7 +429,10 @@ export async function startLocalApi({
     coinFixture = coins
       ? await (
           await import('./local-coin-fixture.mjs')
-        ).createLocalCoinFixture(backend, databaseUrl, deps.database)
+        ).createLocalCoinFixture(backend, databaseUrl, deps.database, {
+          linuxJournal: task === 'f09-g01',
+          runId,
+        })
       : null;
     if (coinFixture) config = readApiEnvironment({ ...runtimeInput, ...coinFixture.environment });
     const reviewFixture = review
@@ -552,14 +556,20 @@ export async function startLocalApi({
         server = await listen();
       },
       // Node-only acceptance fixture. This is never an HTTP login endpoint or product shortcut.
-      async seedSession({ expiresInMs = 60_000 } = {}) {
+      async seedSession({ expiresInMs = 60_000, coinOwner = false } = {}) {
+        if (coinOwner && (task !== 'f09-g01' || !coinFixture?.durability))
+          throw new Error('Existing coin owner requires the exact journal acceptance fixture.');
         const secret = randomBytes(32).toString('base64url');
-        const user = await deps.database.darveUser.create({
-          data: {
-            ...(sandboxConfiguration ? { id: sandboxConfiguration.ownerId } : {}),
-            displayName: 'Synthetic local creator',
-          },
-        });
+        const user = coinOwner
+          ? await deps.database.darveUser.findUniqueOrThrow({
+              where: { id: coinFixture.durability.ownerId },
+            })
+          : await deps.database.darveUser.create({
+              data: {
+                ...(sandboxConfiguration ? { id: sandboxConfiguration.ownerId } : {}),
+                displayName: 'Synthetic local creator',
+              },
+            });
         await deps.database.externalIdentity.create({
           data: {
             userId: user.id,

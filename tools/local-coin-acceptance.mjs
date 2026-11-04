@@ -27,6 +27,7 @@ try {
   });
   const fixture = api.coinFixture;
   assert(fixture);
+  await assert.rejects(api.seedSession({ coinOwner: true }), /Existing coin owner requires/);
   await build({ configFile: 'vite.acceptance.config.ts', logLevel: 'error' });
   site = await preview({ configFile: 'vite.acceptance.config.ts', logLevel: 'error' });
   browser = await chromium.launch();

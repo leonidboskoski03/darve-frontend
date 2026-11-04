@@ -53,7 +53,8 @@
     "test:staff-admin:local": "node tools/local-staff-admin-acceptance.mjs ../tmp/backend-f06-checkout",
     "test:staff-recovery:local": "node tools/local-staff-recovery-acceptance.mjs ../tmp/backend-f06-checkout",
     "test:staff-combined:local": "node tools/local-staff-combined-acceptance.mjs ../tmp/backend-f06-checkout",
-    "test:coins:local": "node tools/local-coin-acceptance.mjs ../tmp/backend-f06-checkout"
+    "test:coins:local": "node tools/local-coin-acceptance.mjs ../tmp/backend-f06-checkout",
+    "test:coins:journal": "node tools/local-coin-journal-acceptance.mjs ../tmp/backend-f06-checkout"
   },
   "dependencies": {
     "@darve/contracts": "file:vendor/contracts/darve-contracts-8103c8607e475e711c8b8fc5f5e3eceb1d0e65fc.tgz",

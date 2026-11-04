@@ -7,21 +7,31 @@ import { tmpdir } from 'node:os';
 import { randomBytes } from 'node:crypto';
 
 // Only called with this run's freshly migrated URI. No environment DB or credentials accepted.
-export async function createLocalCoinFixture(backend, uri, owner) {
+export async function createLocalCoinFixture(
+  backend,
+  uri,
+  owner,
+  { linuxJournal = false, runId } = {},
+) {
   const load = (file) => import(pathToFileURL(join(backend, file)).href);
   const requireBackend = createRequire(join(backend, 'package.json'));
   const { Client } = requireBackend('pg');
   const { tsImport } = await import(pathToFileURL(requireBackend.resolve('tsx/esm/api')).href);
   const db = await load('packages/database/dist/index.js');
   const integrations = await load('packages/integrations/dist/index.js');
+  const domain = await load('packages/domain/dist/index.js');
   const sql = new Client({ connectionString: uri });
   const connections = [];
-  const root = resolve(mkdtempSync(join(tmpdir(), 'darve-f09-journal-')));
+  const root = linuxJournal ? null : resolve(mkdtempSync(join(tmpdir(), 'darve-f09-journal-')));
   const parent = resolve(tmpdir()) + sep;
+  let durableJournal;
   const close = async () => {
+    await durableJournal?.close();
     await Promise.all(connections.map((connection) => connection.$disconnect()));
-    assert(root.startsWith(parent) && root !== resolve(tmpdir()));
-    rmSync(root, { recursive: true, force: true });
+    if (root) {
+      assert(root.startsWith(parent) && root !== resolve(tmpdir()));
+      rmSync(root, { recursive: true, force: true });
+    }
   };
   try {
     await sql.connect();
@@ -61,13 +71,25 @@ export async function createLocalCoinFixture(backend, uri, owner) {
       pageSize: 1,
       cursorSeconds: 60,
     };
-    const journal = integrations.createCoinJournal(
-      root,
-      randomBytes(32),
-      fixture.program,
-      fixture.binding,
-      16384,
-    );
+    durableJournal = linuxJournal
+      ? await (
+          await import('./linux-coin-journal.mjs')
+        ).createLinuxCoinJournal({
+          backend,
+          program: fixture.program,
+          binding: fixture.binding,
+          runId,
+        })
+      : null;
+    const journal =
+      durableJournal ??
+      integrations.createCoinJournal(
+        root,
+        randomBytes(32),
+        fixture.program,
+        fixture.binding,
+        16384,
+      );
     const workerAuthorityReady = await db
       .createCoinRecoveryRepository(worker)
       .ready(fixture.program, fixture.binding);
@@ -75,11 +97,34 @@ export async function createLocalCoinFixture(backend, uri, owner) {
     const journalReady = await journal.ready();
     // Windows cannot fsync directories. Keep this real readiness failure visible;
     // no worker tick, earning, adjustment or redemption is exposed by this fixture.
-    if (process.platform !== 'win32') assert.equal(journalReady, true);
+    if (linuxJournal || process.platform !== 'win32') assert.equal(journalReady, true);
     assert.deepEqual(await journal.read(), []);
     return {
       publicDatabase,
       custody: { workerAuthorityReady, journalReady, durableWritesQualified: false },
+      durability: durableJournal
+        ? {
+            ownerId: fixture.accountOwner.id,
+            journal: durableJournal,
+            adjust: fixture.adjust,
+            worker: (port = durableJournal) =>
+              domain.createCoinRecoveryService(db.createCoinRecoveryRepository(worker), port, {
+                programId: fixture.program,
+                journalBinding: fixture.binding,
+                batchSize: 10,
+                pollMs: 1000,
+                maxRecordBytes: 16384,
+              }),
+            async inspect() {
+              return {
+                seals: await owner.coinSeal.count(),
+                ledger: await owner.coinLedger.count(),
+                transactions: await owner.coinTransaction.count(),
+                account: await fixture.service.read(fixture.owner.secret, fixture.accountOwner.id),
+              };
+            },
+          }
+        : null,
       environment: {
         COIN_CONSUMER_POLICY_JSON: JSON.stringify(policy),
         COIN_CREATOR_CURSOR_KEY_BASE64: cursorKey,
