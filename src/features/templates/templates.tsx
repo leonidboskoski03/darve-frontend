@@ -7,11 +7,14 @@ import { LoadingState } from '@/design-system/loading-state';
 import { coinAmount, coinTime } from '@/services/coins/index';
 import {
   createTemplateClient,
+  createTemplateSelectionClient,
   redemptionBlock,
   type TemplateClient,
   type RedemptionState,
 } from '@/services/templates/index';
 import type { CreatorSession } from '@/services/creator-session/index';
+import { catalogueTemplate } from '@/entities/overlay-template/index';
+import { TemplateSelection } from './selection';
 import './templates.css';
 
 const displayNotice =
@@ -47,7 +50,13 @@ function Review({ client, state }: { client: TemplateClient; state: RedemptionSt
       <p>
         <strong>{attempt.name}</strong> · {coinAmount(attempt.input.amount)} coins
       </p>
-      {attempt.templateId !== 'standalone' && <p className="templates-warning">{displayNotice}</p>}
+      {attempt.templateId !== 'standalone' && (
+        <p className="templates-warning">
+          {catalogueTemplate(attempt.templateId, attempt.assetVersion)
+            ? 'This build includes the card design. Availability and its verified descriptor are rechecked when selected.'
+            : displayNotice}
+        </p>
+      )}
       {pending ? (
         <p role="status">
           The request was recorded. Refresh ownership to check verification. Do not start a
@@ -149,6 +158,25 @@ export function Templates({
   coinHistory: ReactNode;
 }) {
   const client = useMemo(() => createTemplateClient(session), [session]);
+  const selector = useMemo(
+    () =>
+      createTemplateSelectionClient(session, (id, version) =>
+        Boolean(catalogueTemplate(id, version)),
+      ),
+    [session],
+  );
+  const selectionState = useSyncExternalStore(selector.subscribe, selector.getSnapshot);
+  const selection = useQuery({
+    queryKey: client.scope.key(['templates', 'selection']),
+    queryFn: ({ signal }) => selector.read(signal),
+    retry: false,
+    staleTime: 0,
+    refetchOnMount: 'always',
+  });
+  const refreshSelection = selection.refetch;
+  useEffect(() => {
+    if (selectionState.phase === 'unconfirmed') void refreshSelection();
+  }, [selectionState.phase, refreshSelection]);
   const state = useSyncExternalStore(client.subscribe, client.getSnapshot);
   const [reviewError, setReviewError] = useState(false);
   const query = useQuery({
@@ -208,6 +236,19 @@ export function Templates({
           </p>
         )}
       </Panel>
+      <TemplateSelection
+        client={selector}
+        state={selectionState}
+        value={selection.data}
+        resources={data}
+        fetching={selection.isFetching || query.isFetching}
+        error={selection.isError}
+        refresh={() => {
+          void refreshSelection();
+          void refetch();
+        }}
+        redemptionHeld={Boolean(state.attempt)}
+      />
       {state.attempt && (
         <Review key={state.attempt.key + state.phase} client={client} state={state} />
       )}
@@ -257,7 +298,11 @@ export function Templates({
                         : coinAmount(item.amount) + ' coins'}
                     </p>
                     {item.id !== 'standalone' ? (
-                      <p className="templates-warning">{displayNotice}</p>
+                      <p className="templates-warning">
+                        {catalogueTemplate(item.id, item.assetVersion)
+                          ? 'This build includes the card design. Availability and its verified descriptor are rechecked when selected.'
+                          : displayNotice}
+                      </p>
                     ) : (
                       <p className="templates-muted">
                         Included with Darve. Available in the current OBS display.

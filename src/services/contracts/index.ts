@@ -2,6 +2,7 @@
 export {
   CoinCreatorAccountDataSchema,
   TemplateRedemptionInputSchema,
+  TemplateSelectionInputSchema,
   CoinRedemptionDataSchema,
   CoinMissionSchema,
   CoinMissionsDataSchema,

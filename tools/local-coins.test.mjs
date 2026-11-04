@@ -78,3 +78,36 @@ test('creator coin acceptance requires its exact collection/review/terms composi
   assert.doesNotThrow(() => assertJournalOwnership({ Labels: labels }, run, 'f09-03'));
   assert.throws(() => assertJournalOwnership({ Labels: labels }, run, 'f09-g01'));
 });
+test('template OBS acceptance requires exact isolated overlay/coins/review/terms composition and journal custody', async () => {
+  const input = {
+    ...selected,
+    task: 'f09-05',
+    collection: true,
+    review: true,
+    terms: true,
+    overlay: true,
+  };
+  for (const override of [
+    { coins: false },
+    { collection: false },
+    { review: false },
+    { terms: false },
+    { overlay: false },
+    { support: true },
+    { checkout: true },
+    { reporting: true },
+    { contributionReads: true },
+    { operatorOAuth: {} },
+    { sandboxPayment: {} },
+    { port: 3000 },
+    { origins: ['https://other.example.test'] },
+  ])
+    await assert.rejects(
+      startLocalApi({ ...input, ...override }),
+      /Coins require their exact disposable/,
+    );
+  const run = randomUUID(),
+    labels = { 'darve.frontend.task': 'f09-05', 'darve.frontend.run': run };
+  assert.doesNotThrow(() => assertJournalOwnership({ Labels: labels }, run, 'f09-05'));
+  assert.throws(() => assertJournalOwnership({ Labels: labels }, run, 'f09-04'));
+});

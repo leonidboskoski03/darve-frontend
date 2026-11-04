@@ -27,7 +27,7 @@
     "preview:acceptance": "vite preview --config vite.acceptance.config.ts --mode acceptance",
     "docs:check": "node tools/check-docs.mjs",
     "check:docs": "npm run format:check && npm run docs:check",
-    "check:dev": "npm run format:check && npm run lint && npm run docs:check && npm run contracts:check && npm run build",
+    "check:dev": "npm run format:check && npm run lint && npm run docs:check && npm run contracts:check && npm run templates:check && npm run build",
     "check": "npm run check:dev && npm run test:architecture && npm run test:contracts && npm run test:ci && npm run test:operator && npm run test",
     "prepare": "node .husky/install.mjs",
     "contracts:pack": "node tools/contract-artifact.mjs pack",
@@ -56,10 +56,12 @@
     "test:coins:local": "node tools/local-coin-acceptance.mjs ../tmp/backend-f06-checkout",
     "test:coins:journal": "node tools/local-coin-journal-acceptance.mjs ../tmp/backend-f06-checkout",
     "test:coins:creator": "node tools/local-creator-coins-acceptance.mjs ../tmp/backend-f06-checkout",
-    "test:templates:local": "node tools/local-template-acceptance.mjs ../tmp/backend-f06-checkout"
+    "test:templates:local": "node tools/local-template-acceptance.mjs ../tmp/backend-f06-checkout",
+    "templates:check": "node tools/template-assets.mjs && node --test tools/template-assets.test.mjs",
+    "test:templates:obs": "node tools/local-template-obs-acceptance.mjs ../tmp/backend-f06-checkout"
   },
   "dependencies": {
-    "@darve/contracts": "file:vendor/contracts/darve-contracts-8103c8607e475e711c8b8fc5f5e3eceb1d0e65fc.tgz",
+    "@darve/contracts": "file:vendor/contracts/darve-contracts-aeb3e813e4117ae914e9ab3daeeb6e39714c3e5d.tgz",
     "@gsap/react": "2.1.2",
     "@tanstack/react-query": "5.104.5",
     "framer-motion": "14.6.0",

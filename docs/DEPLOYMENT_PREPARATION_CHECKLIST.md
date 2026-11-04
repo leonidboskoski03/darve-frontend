@@ -18,6 +18,7 @@ Deferral never authorizes external exposure, live payments, persistent migration
 ## Frontend-specific activation checks
 
 - Pin the exact frontend source/build/contract revisions and compatible backend source/schema/configuration; define immutable asset and HTML/config caching.
+- Resolve backend `B15-03-G01` before claiming complete staging/release qualification: migration-replay and reviewed provisioning fixtures must match the current migration chain. The F09-05 v2 bootstrap correction does not waive these existing gates; see [B15 handoff](F09_COINS_AND_TEMPLATES_IMPLEMENTATION.md#fresh-source-diagnosis-resumed-2026-11-05).
 - Verify actual HTTPS origins, deep-link fallback, API proxy, credentials/CSRF, safe redirects, separate staff/guest/OBS authority and route-specific CSP/referrer/cache policies.
 - Confirm all enabled screens have real loading/error/expired/unavailable states, revoked authority clears private caches/streams, and no unfinished capability is falsely enabled.
 - Verify chosen designs on actual devices and OBS, physical QR destination, fresh-browser sandbox payment journeys, accessibility and agreed workload/performance limits.

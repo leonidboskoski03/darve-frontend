@@ -8,3 +8,8 @@ export {
   type RedemptionAttempt,
   type RedemptionState,
 } from './client';
+export {
+  createTemplateSelectionClient,
+  type TemplateSelectionClient,
+  type TemplateSelectionState,
+} from './selection';

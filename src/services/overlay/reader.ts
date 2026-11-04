@@ -71,20 +71,20 @@ export function createOverlayReader(options: {
     let grantId = entry.grantId;
     if (entry.secret) {
       const secret = entry.secret;
-      entry.secret = null;
       const result = await createJsonClient({
         origin: options.origin,
         audience: 'overlay',
         lifetime: scope.signal,
         fetcher: options.fetcher,
       })({
-        path: '/api/overlays/' + entry.displayId + '/session',
+        path: '/api/overlays/' + entry.displayId + '/session?protocolVersion=2',
         method: 'POST',
         body: { secret },
         schema: OverlayBootstrapResponseSchema,
         success: [200],
       });
       if (disposed || generation !== id) return;
+      entry.secret = null;
       if (result.kind !== 'data' || result.data.data.displayId !== entry.displayId) {
         scope.dispose();
         publish(empty('denied'));

@@ -1,0 +1,46 @@
+/* Original Darve Compact v1. Reuses the safe card DOM and independently encoded QR. */
+.obs-stage[data-template='compact'] .obs-card {
+  width: 840px;
+  min-height: 210px;
+  border: 1px solid #5b2b50;
+  border-left: 6px solid #bd178b;
+  border-radius: 12px;
+  background: #0a0b10;
+}
+.obs-stage[data-template='compact'] .obs-main {
+  padding: 18px 22px;
+  gap: 12px;
+}
+.obs-stage[data-template='compact'] .obs-status {
+  color: #f28bce;
+}
+.obs-stage[data-template='compact'] .obs-main h1 {
+  font-size: 23px;
+  -webkit-line-clamp: 2;
+}
+.obs-stage[data-template='compact'] .obs-bottom {
+  gap: 18px;
+}
+.obs-stage[data-template='compact'] .obs-credits {
+  flex: 0.8;
+}
+.obs-stage[data-template='compact'] .obs-funding {
+  width: 56%;
+}
+.obs-stage[data-template='compact'] .obs-progress {
+  height: 7px;
+  border-radius: 2px;
+}
+.obs-stage[data-template='compact'] .obs-progress > span {
+  background: #f28bce;
+}
+.obs-stage[data-template='compact'] .obs-qr {
+  width: 180px;
+  border-left-color: #45303f;
+  padding: 12px;
+  gap: 6px;
+}
+.obs-stage[data-template='compact'] .obs-qr > strong {
+  color: #f28bce;
+  font-size: 16px;
+}

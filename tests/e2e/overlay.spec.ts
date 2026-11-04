@@ -1,6 +1,7 @@
 import { test, expect, type Page, type Route } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import jsQR from 'jsqr';
+import { catalogueTemplate } from '../../src/entities/overlay-template/index';
 import {
   acceptedFrame,
   displayId,
@@ -19,10 +20,20 @@ declare global {
     syntheticOverlay: { emit(frame: Frame): void; calls: string[]; bootstrap: number };
   }
 }
-async function display(page: Page) {
+async function display(page: Page, compact = false) {
   await page.setViewportSize({ width: 1920, height: 1080 });
   await page.clock.install();
   const frame = OverlaySnapshotV2ResponseSchema.parse(acceptedFrame(2));
+  if (compact) {
+    const asset = catalogueTemplate('darve_compact', 1)!;
+    frame.data.preferences.template = {
+      revision: 2,
+      templateId: asset.id,
+      assetVersion: asset.version,
+      available: true,
+      renderer: { key: asset.key, hash: asset.hash },
+    };
+  }
   await page.addInitScript(
     ({ frame, displayId, grantId }) => {
       const original = window.fetch.bind(window),
@@ -105,6 +116,68 @@ async function display(page: Page) {
   await expect(page.getByRole('heading', { name: 'Synthetic challenge' })).toBeVisible();
   return frame;
 }
+test('compact approved renderer preserves transparency and QR pixels at broadcast sizes', async ({
+  page,
+}) => {
+  const frame = await display(page, true);
+  await expect(page.locator('.obs-stage')).toHaveAttribute('data-template', 'compact');
+  await expect(page.locator('.obs-card')).toHaveCSS('width', '840px');
+  for (const size of [150, 100]) {
+    const pixels = await page
+      .getByRole('img', { name: 'Scan to view this challenge' })
+      .evaluate(async (node, size) => {
+        const image = new Image();
+        image.src =
+          'data:image/svg+xml;charset=utf-8,' +
+          encodeURIComponent(new XMLSerializer().serializeToString(node));
+        await image.decode();
+        const canvas = document.createElement('canvas');
+        canvas.width = canvas.height = size;
+        const ctx = canvas.getContext('2d')!;
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(image, 0, 0, size, size);
+        return Array.from(ctx.getImageData(0, 0, size, size).data);
+      }, size);
+    expect(jsQR(new Uint8ClampedArray(pixels), size, size)?.data).toBe(frame.data.qrPayload);
+  }
+  if (test.info().project.name === 'desktop-chromium') {
+    await page.locator('.obs-card').screenshot({
+      path: 'artifacts.local/f09-05/compact-synthetic-1080.png',
+      omitBackground: true,
+    });
+    await page.setViewportSize({ width: 1280, height: 720 });
+    frame.data.version++;
+    frame.data.preferences.styles.scale = 2 / 3;
+    await page.evaluate((frame) => window.syntheticOverlay.emit(frame), frame);
+    await page.locator('.obs-card').screenshot({
+      path: 'artifacts.local/f09-05/compact-synthetic-720.png',
+      omitBackground: true,
+    });
+  }
+  expect(await page.evaluate(() => getComputedStyle(document.body).backgroundColor)).toBe(
+    'rgba(0, 0, 0, 0)',
+  );
+});
+test('compact descriptor changes hide unsupported updates, wrong hashes and withdrawals immediately', async ({
+  page,
+}) => {
+  const frame = await display(page, true),
+    good = structuredClone(frame.data.preferences.template);
+  for (const change of [
+    { assetVersion: 2 },
+    { renderer: { key: 'darve_compact', hash: 'a'.repeat(64) } },
+    { available: false },
+  ]) {
+    frame.data.version++;
+    frame.data.preferences.template = { ...good, ...change };
+    await page.evaluate((frame) => window.syntheticOverlay.emit(frame), frame);
+    await expect(page.locator('.obs-card')).toHaveCount(0);
+    frame.data.version++;
+    frame.data.preferences.template = good;
+    await page.evaluate((frame) => window.syntheticOverlay.emit(frame), frame);
+    await expect(page.locator('.obs-card')).toBeVisible();
+  }
+});
 test('synthetic OBS bootstrap sanitizes before reads, isolates assets and preserves exact money', async ({
   page,
 }) => {
