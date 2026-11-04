@@ -37,7 +37,7 @@
     "test:api:local": "node tools/local-api-acceptance.mjs",
     "test:realtime:local": "node tools/local-realtime-acceptance.mjs",
     "test:creator:local": "node tools/local-creator-acceptance.mjs",
-    "test:operator": "node --test tools/provider-login-config.test.mjs tools/local-collection.test.mjs tools/mobile-qr-relay.test.mjs",
+    "test:operator": "node --test tools/provider-login-config.test.mjs tools/local-collection.test.mjs tools/mobile-qr-relay.test.mjs tools/local-coins.test.mjs",
     "provider:local": "node --use-system-ca tools/local-provider-login.mjs",
     "provider:audit": "node tools/provider-login-audit.mjs",
     "test:collection:local": "node tools/local-collection-acceptance.mjs",
@@ -52,10 +52,11 @@
     "test:obs:phone": "node --use-system-ca tools/local-obs-acceptance.mjs ../tmp/backend-f06-readiness --observe --phone",
     "test:staff-admin:local": "node tools/local-staff-admin-acceptance.mjs ../tmp/backend-f06-checkout",
     "test:staff-recovery:local": "node tools/local-staff-recovery-acceptance.mjs ../tmp/backend-f06-checkout",
-    "test:staff-combined:local": "node tools/local-staff-combined-acceptance.mjs ../tmp/backend-f06-checkout"
+    "test:staff-combined:local": "node tools/local-staff-combined-acceptance.mjs ../tmp/backend-f06-checkout",
+    "test:coins:local": "node tools/local-coin-acceptance.mjs ../tmp/backend-f06-checkout"
   },
   "dependencies": {
-    "@darve/contracts": "file:vendor/contracts/darve-contracts-442fc709c08d006bbc625de1751124f515344d07.tgz",
+    "@darve/contracts": "file:vendor/contracts/darve-contracts-8103c8607e475e711c8b8fc5f5e3eceb1d0e65fc.tgz",
     "@gsap/react": "2.1.2",
     "@tanstack/react-query": "5.104.5",
     "framer-motion": "14.6.0",

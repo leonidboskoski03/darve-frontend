@@ -1,5 +1,14 @@
 // Reviewed browser-only artifact. Add further public exports with their first concrete caller.
 export {
+  CoinCreatorAccountDataSchema,
+  CoinMissionSchema,
+  CoinMissionsDataSchema,
+  CoinLedgerItemSchema,
+  CoinHistoryQuerySchema,
+  CoinCatalogueDataSchema,
+  TemplateSelectionSchema,
+  coinEnvelope,
+  coinPage,
   ErrorResponseSchema,
   SessionResponseSchema,
   ProfileResponseSchema,

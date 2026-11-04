@@ -13,6 +13,7 @@ export default defineConfig((environment) =>
           [
             'primitives',
             'session',
+            'coins',
             'realtime',
             'creator',
             'contribution',
