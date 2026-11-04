@@ -24,6 +24,7 @@ export function RootLayout() {
     pathname === '/dashboard' ||
     pathname === '/obs' ||
     pathname === '/coins' ||
+    pathname === '/templates' ||
     pathname === '/support' ||
     pathname.startsWith('/support/') ||
     pathname === '/challenges' ||

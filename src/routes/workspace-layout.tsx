@@ -11,6 +11,7 @@ import {
   Monitor,
   MessageSquare,
   Coins,
+  LayoutTemplate,
 } from 'lucide-react';
 import { Brand } from '@/design-system/brand';
 import { Button } from '@/design-system/button';
@@ -23,6 +24,7 @@ const navigation = [
   { href: '/collection', label: 'Collection', Icon: Radio },
   { href: '/obs', label: 'OBS display', Icon: Monitor },
   { href: '/coins', label: 'Coins', Icon: Coins },
+  { href: '/templates', label: 'Templates', Icon: LayoutTemplate },
   { href: '/integrations', label: 'Connections', Icon: Cable },
   { href: '/support', label: 'Support', Icon: MessageSquare },
   { href: '/terms', label: 'Account terms', Icon: FileText },

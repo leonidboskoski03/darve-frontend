@@ -50,9 +50,9 @@ export async function startLocalApi({
   coins = false,
 }) {
   if (
-    (coins || ['f09-02', 'f09-g01', 'f09-03'].includes(task)) &&
+    (coins || ['f09-02', 'f09-g01', 'f09-03', 'f09-04'].includes(task)) &&
     (!coins ||
-      !['f09-02', 'f09-g01', 'f09-03'].includes(task) ||
+      !['f09-02', 'f09-g01', 'f09-03', 'f09-04'].includes(task) ||
       support ||
       (task === 'f09-03' ? !collection || !review || !terms : collection || review || terms) ||
       reporting ||
@@ -93,6 +93,7 @@ export async function startLocalApi({
       'f09-02',
       'f09-g01',
       'f09-03',
+      'f09-04',
     ].includes(task)
   )
     throw new Error('Invalid local task identity.');
@@ -434,7 +435,7 @@ export async function startLocalApi({
       ? await (
           await import('./local-coin-fixture.mjs')
         ).createLocalCoinFixture(backend, databaseUrl, deps.database, {
-          linuxJournal: ['f09-g01', 'f09-03'].includes(task),
+          linuxJournal: ['f09-g01', 'f09-03', 'f09-04'].includes(task),
           task,
           runId,
         })
@@ -562,7 +563,10 @@ export async function startLocalApi({
       },
       // Node-only acceptance fixture. This is never an HTTP login endpoint or product shortcut.
       async seedSession({ expiresInMs = 60_000, coinOwner = false } = {}) {
-        if (coinOwner && (!['f09-g01', 'f09-03'].includes(task) || !coinFixture?.durability))
+        if (
+          coinOwner &&
+          (!['f09-g01', 'f09-03', 'f09-04'].includes(task) || !coinFixture?.durability)
+        )
           throw new Error('Existing coin owner requires the exact journal acceptance fixture.');
         const secret = randomBytes(32).toString('base64url');
         const user = coinOwner

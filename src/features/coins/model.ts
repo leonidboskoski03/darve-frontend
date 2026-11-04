@@ -37,20 +37,7 @@ export const missionDetails: Record<
     target: 1000,
   },
 };
-const numberFormat = new Intl.NumberFormat('en');
-const timeFormat = new Intl.DateTimeFormat('en', {
-  dateStyle: 'medium',
-  timeStyle: 'short',
-  timeZone: 'UTC',
-});
-export function coinAmount(value: string | null, signed = false) {
-  if (value === null) return 'Unconfirmed';
-  if (!/^-?(0|[1-9][0-9]*)$/.test(value)) throw Error('Invalid coin amount');
-  const amount = BigInt(value);
-  const formatted = numberFormat.format(amount).replace(/^-/, '−');
-  return signed && amount > 0n ? '+' + formatted : formatted;
-}
-export const coinTime = (value: string) => timeFormat.format(new Date(value));
+export { coinAmount, coinTime } from '@/services/coins/index';
 export function coinProblem(error: unknown) {
   if (error instanceof CoinReadError) {
     if (error.failure.status === 404) return 'Coin information is unavailable on this server.';

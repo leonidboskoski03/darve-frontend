@@ -26,7 +26,12 @@ const missionsSchema = coinEnvelope(
 const catalogueSchema = coinEnvelope(
   CoinCatalogueDataSchema.refine(
     (value) =>
-      new Set(value.templates.map((template) => template.id)).size === value.templates.length,
+      new Set(value.templates.map((template) => template.id)).size === value.templates.length &&
+      value.templates.every(
+        (template) =>
+          template.owned === (template.ownershipState !== 'not_owned') &&
+          (template.amount === null) === (template.priceRevision === null),
+      ),
   ),
 );
 const ledgerSchema = coinPage(CoinLedgerItemSchema).refine(

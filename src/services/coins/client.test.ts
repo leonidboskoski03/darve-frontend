@@ -139,6 +139,16 @@ it('rejects duplicate mission IDs and catalogue IDs', async () => {
   await expect(client.missions(signal)).rejects.toBeInstanceOf(CoinReadError);
   await expect(client.catalogue(signal)).rejects.toBeInstanceOf(CoinReadError);
 });
+it.each([
+  { owned: false },
+  { ownershipState: 'not_owned' },
+  { amount: null },
+  { priceRevision: null },
+])('rejects contradictory catalogue ownership or price: %j', async (change) => {
+  const { send, client, signal } = await setup();
+  send.mockResolvedValueOnce(json(envelope({ templates: [{ ...template, ...change }] })));
+  await expect(client.catalogue(signal)).rejects.toBeInstanceOf(CoinReadError);
+});
 it('keeps cursor bytes opaque, encodes them once and rejects caller pagination overrides', async () => {
   const { send, client, signal } = await setup();
   const cursor = 'opaque+/=&?';

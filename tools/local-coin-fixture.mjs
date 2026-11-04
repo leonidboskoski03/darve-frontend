@@ -4,7 +4,7 @@ import { pathToFileURL } from 'node:url';
 import { join, resolve, sep } from 'node:path';
 import { readFileSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { randomBytes } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
 
 // Only called with this run's freshly migrated URI. No environment DB or credentials accepted.
 export async function createLocalCoinFixture(
@@ -100,6 +100,17 @@ export async function createLocalCoinFixture(
       .ready(fixture.program, fixture.binding);
     assert.equal(workerAuthorityReady, true);
     const journalReady = await journal.ready();
+    // Node-only, task-bound controls install synthetic manifests into this disposable database.
+    // No product asset, serving route, real renderer or commercial price is invented here.
+    const assets = task === 'f09-04' ? db.createTemplateAssetRepository(owner) : null;
+    const templates = assets
+      ? domain.createTemplateAdminService(
+          db.createTemplateRepository(admin),
+          fixture.crypto,
+          integrations.createCoinCursorCrypto(randomBytes(32).toString('base64'), 'staff'),
+          policy,
+        )
+      : null;
     // Windows cannot fsync directories. Keep this real readiness failure visible;
     // no worker tick, earning, adjustment or redemption is exposed by this fixture.
     if (linuxJournal || process.platform !== 'win32') assert.equal(journalReady, true);
@@ -145,6 +156,41 @@ export async function createLocalCoinFixture(
         COIN_CREATOR_CURSOR_KEY_BASE64: cursorKey,
       },
       configure: () => fixture.configure(),
+      templates:
+        assets && templates
+          ? {
+              install: (id = 'fixture_premium', version = 1) =>
+                assets.install({
+                  id,
+                  displayName: 'Synthetic ' + id,
+                  version,
+                  rendererKey: 'fixture_renderer',
+                  assetHash: 'a'.repeat(64),
+                  approvalHash: 'b'.repeat(64),
+                }),
+              price: (id, amount, expectedRevision) =>
+                templates.price(
+                  fixture.owner.secret,
+                  fixture.crypto.csrf(fixture.owner.secret),
+                  id,
+                  randomUUID(),
+                  {
+                    expectedRevision,
+                    amount,
+                    reason: 'Synthetic disposable F09-04 price',
+                    confirmation: { templateId: id },
+                  },
+                ),
+              withdraw: (id, version) => assets.withdraw(id, version, 'unavailable'),
+              async inspect() {
+                return {
+                  redemptions: await owner.coinRedemption.count(),
+                  entitlements: await owner.coinEntitlement.count(),
+                  debits: await owner.coinLedger.count({ where: { redemptionId: { not: null } } }),
+                };
+              },
+            }
+          : null,
       async unavailable(value) {
         await owner.coinProgram.update({ where: { id: 1 }, data: { consumersReady: !value } });
       },
