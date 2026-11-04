@@ -11,7 +11,7 @@ export async function createLocalCoinFixture(
   backend,
   uri,
   owner,
-  { linuxJournal = false, runId } = {},
+  { linuxJournal = false, runId, task = 'f09-02' } = {},
 ) {
   const load = (file) => import(pathToFileURL(join(backend, file)).href);
   const requireBackend = createRequire(join(backend, 'package.json'));
@@ -44,6 +44,10 @@ export async function createLocalCoinFixture(
         GRANT SELECT ON darve_users,external_identities,darve_sessions TO darve_public_runtime;
         GRANT UPDATE(id) ON darve_users TO darve_public_runtime;
         GRANT UPDATE ON darve_sessions TO darve_public_runtime;`);
+      if (task === 'f09-03')
+        await sql.query(
+          'GRANT SELECT,INSERT ON terms_documents,terms_acceptances TO darve_public_runtime',
+        );
     } finally {
       await sql.end();
     }
@@ -69,7 +73,7 @@ export async function createLocalCoinFixture(
       programId: fixture.program,
       journalBinding: fixture.binding,
       pageSize: 1,
-      cursorSeconds: 60,
+      cursorSeconds: task === 'f09-03' ? 30 : 60,
     };
     durableJournal = linuxJournal
       ? await (
@@ -79,6 +83,7 @@ export async function createLocalCoinFixture(
           program: fixture.program,
           binding: fixture.binding,
           runId,
+          task,
         })
       : null;
     const journal =
@@ -120,6 +125,16 @@ export async function createLocalCoinFixture(
                 seals: await owner.coinSeal.count(),
                 ledger: await owner.coinLedger.count(),
                 transactions: await owner.coinTransaction.count(),
+                capturedFacts: await owner.coinFact.count({
+                  where: { ownerId: fixture.accountOwner.id },
+                }),
+                qualifyingUnits:
+                  (
+                    await owner.coinFact.aggregate({
+                      where: { ownerId: fixture.accountOwner.id },
+                      _sum: { units: true },
+                    })
+                  )._sum.units ?? 0,
                 account: await fixture.service.read(fixture.owner.secret, fixture.accountOwner.id),
               };
             },

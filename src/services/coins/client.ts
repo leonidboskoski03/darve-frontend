@@ -14,7 +14,13 @@ import type { CreatorSession } from '@/services/creator-session/index';
 const accountSchema = coinEnvelope(CoinCreatorAccountDataSchema);
 const missionsSchema = coinEnvelope(
   CoinMissionsDataSchema.refine(
-    (value) => new Set(value.missions.map((mission) => mission.id)).size === 6,
+    (value) =>
+      new Set(value.missions.map((mission) => mission.id)).size === 6 &&
+      value.missions.every((mission) =>
+        mission.completed
+          ? mission.earned !== null && mission.completedAt !== null
+          : mission.earned === null && mission.completedAt === null,
+      ),
   ),
 );
 const catalogueSchema = coinEnvelope(
@@ -72,6 +78,10 @@ export function createCoinReadClient(session: CreatorSession) {
         schema: ledgerSchema,
         success: [200],
         signal,
+      }).then((value) => {
+        if (cursor && value.data.nextCursor === cursor)
+          throw new CoinReadError(failure('protocol', 'REPEATED_COIN_CURSOR'));
+        return value;
       });
     },
     catalogue: (signal: AbortSignal) =>
@@ -83,3 +93,6 @@ export function createCoinReadClient(session: CreatorSession) {
   };
 }
 export type CoinReadClient = ReturnType<typeof createCoinReadClient>;
+export type CoinAccountResponse = Awaited<ReturnType<CoinReadClient['account']>>;
+export type CoinMissionsResponse = Awaited<ReturnType<CoinReadClient['missions']>>;
+export type CoinLedgerResponse = Awaited<ReturnType<CoinReadClient['ledger']>>;

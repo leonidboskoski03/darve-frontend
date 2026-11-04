@@ -52,3 +52,26 @@ test('Linux journal names reject arbitrary paths and operations stay bound to ow
   );
   assert.throws(() => assertJournalOwnership({}, run));
 });
+test('creator coin acceptance requires its exact collection/review/terms composition', async () => {
+  const input = { ...selected, task: 'f09-03', collection: true, review: true, terms: true };
+  for (const override of [
+    { coins: false },
+    { collection: false },
+    { review: false },
+    { terms: false },
+    { support: true },
+    { reporting: true },
+    { overlay: true },
+    { checkout: true },
+    { operatorOAuth: {} },
+    { sandboxPayment: {} },
+  ])
+    await assert.rejects(
+      startLocalApi({ ...input, ...override }),
+      /Coins require their exact disposable/,
+    );
+  const run = randomUUID(),
+    labels = { 'darve.frontend.task': 'f09-03', 'darve.frontend.run': run };
+  assert.doesNotThrow(() => assertJournalOwnership({ Labels: labels }, run, 'f09-03'));
+  assert.throws(() => assertJournalOwnership({ Labels: labels }, run, 'f09-g01'));
+});

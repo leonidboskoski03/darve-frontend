@@ -42,6 +42,7 @@ export const createAppRouter = ({
         { path: '/collection/:roundId/suggestions', lazy: () => import('./suggestions') },
         { path: '/dashboard', lazy: () => import('./reporting') },
         { path: '/obs', lazy: () => import('./overlay-settings') },
+        { path: '/coins', lazy: () => import('./coins') },
         { path: '/support', lazy: () => import('./support') },
         { path: '/support/:ticketId', lazy: () => import('./support') },
         { path: '/challenges', lazy: () => import('./reporting') },

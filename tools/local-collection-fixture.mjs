@@ -3,7 +3,12 @@ import { pathToFileURL } from 'node:url';
 import path from 'node:path';
 
 /** Node-only controlled ports around the real API/domain/SQL. No live provider or receiving claim. */
-export async function createLocalCollectionFixture(backend, database, config) {
+export async function createLocalCollectionFixture(
+  backend,
+  database,
+  config,
+  { coinActivity = false } = {},
+) {
   const db = await import(
     pathToFileURL(path.join(backend, 'packages/database/dist/index.js')).href
   );
@@ -90,7 +95,7 @@ export async function createLocalCollectionFixture(backend, database, config) {
     capacityPort,
     fundingPort,
   );
-  return {
+  const fixture = {
     dependencies: {
       oauthProviders: Object.fromEntries(
         ['TWITCH', 'YOUTUBE', 'KICK'].map((provider) => [
@@ -103,6 +108,39 @@ export async function createLocalCollectionFixture(backend, database, config) {
       fundingReadiness: fundingPort,
     },
     recover: () => lifecycle.recoverPage(),
+    async collectForCoins(secret, texts, authors) {
+      if (!coinActivity || config.termsPolicy?.classification !== 'development')
+        throw new Error(
+          'Canonical coin activity requires its explicit synthetic development fixture',
+        );
+      const { createIdentityAccessServices } = await import(
+        pathToFileURL(path.join(backend, 'apps/api/dist/composition/identity-access.js')).href
+      );
+      const { sessionCsrfProof } = await import(
+        pathToFileURL(path.join(backend, 'apps/api/dist/security/proofs.js')).href
+      );
+      const identity = createIdentityAccessServices(
+        config,
+        database,
+        fixture.dependencies.oauthProviders,
+      );
+      const actor = await identity.session.access(secret, true, sessionCsrfProof(secret));
+      await db.acceptTerms(database, actor.secretHash, actor.csrfHash, config.termsPolicy);
+      const stream = await fixture.seed(actor.userId);
+      fixture.capacity('available');
+      const started = await lifecycle.start(actor, randomUUID(), {
+        ...stream,
+        collectionDurationSeconds: 60,
+      });
+      const id = started.facts.round.id;
+      await lifecycle.recoverPage();
+      const current = await lifecycle.status(actor.userId, id);
+      if (current.facts.round.state !== 'collecting')
+        throw new Error('Controlled coin collection did not start');
+      await fixture.admitIdeas(actor.userId, id, texts, authors);
+      await lifecycle.stop(actor, id, current.facts.round.version);
+      return id;
+    },
     streamChanged(value) {
       if (typeof value !== 'boolean') throw new Error('Invalid controlled stream state');
       streamChanged = value;
@@ -204,7 +242,18 @@ export async function createLocalCollectionFixture(backend, database, config) {
       readers.set(context.broadcastId, { context, claim, subscription });
       return { connectionId: connection.id, broadcastId: context.broadcastId };
     },
-    async admitIdeas(userId, roundId, texts = ['Draw a cat', 'Draw a cat', 'Sing a short song']) {
+    async admitIdeas(
+      userId,
+      roundId,
+      texts = ['Draw a cat', 'Draw a cat', 'Sing a short song'],
+      authors,
+    ) {
+      if (
+        authors &&
+        (authors.length !== texts.length ||
+          authors.some((value) => typeof value !== 'string' || !value || value.length > 256))
+      )
+        throw new Error('Invalid controlled viewer identities');
       const round = await database.collectionRound.findFirstOrThrow({
         where: { id: roundId, userId, state: 'collecting' },
       });
@@ -226,7 +275,10 @@ export async function createLocalCollectionFixture(backend, database, config) {
             providerChatId: null,
             sourceChannelId: reader.claim.providerChannelId,
             sourceMessageId: null,
-            author: { providerAuthorId: 'review-viewer-' + index, displayName: 'Same viewer' },
+            author: {
+              providerAuthorId: authors?.[index] ?? 'review-viewer-' + index,
+              displayName: 'Same viewer',
+            },
             textOriginal: '#darve ' + text,
             kind: 'text',
             publishedAt: null,
@@ -269,4 +321,5 @@ export async function createLocalCollectionFixture(backend, database, config) {
       return database.collectionRound.count({ where: { userId } });
     },
   };
+  return fixture;
 }
