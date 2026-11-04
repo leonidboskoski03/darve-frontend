@@ -134,3 +134,38 @@ The separate production-compiled `tests/fixtures/coins.html` entry exercises the
 Focused decoding/transport tests pass 20 cases; the operator guard has its own rejection test. Seven actual production-compiled browser/API/SQL read checks pass against the exact merged backend pin, with final cleanup verified and no ledger/entitlement/journal entries. The settled full frontend pre-push gate and current-head hosted CI remain mandatory before protected dev integration. The owning local logs and PR/integration records hold their observed results and exact candidate identity. Initial setup attempts exposed a Node TypeScript fixture import issue and Windows directory-sync limitation; the read run then exposed the independent unconfigured/spendable/permission projections above. Failed attempts are not acceptance evidence. No application or authority check is disabled.
 
 Restart from the tracker, actual branch/dirty files and `artifacts.local/f09-02/`; verify the exact backend/package pin before a runtime run. Successful `finally` cleanup closes browser/preview/API, disconnects all restricted clients, removes only run-labelled storage and the verified temporary journal path. No runtime is left for manual testing by this command. Next UI work is F09-03's bounded creator screen proposal and balance/mission/history implementation, including resolution of F09-G01 before earning/worker acceptance. F09-04–07, premium renderer support, F08-EXT01 and deployment/activation remain separate.
+
+## F09-G01 Linux durable journal acceptance
+
+Authorized 2026-11-04 after the founder reviewed the Windows directory-sync failure. Frontend base is `966e59bcd3d93e7a83fc9b9b825cb8e221091f9c`, task branch `test/f09-linux-journal`. The backend and contract artifact remain pinned to `8103c8607e475e711c8b8fc5f5e3eceb1d0e65fc`; backend source, ordinary data and program settings are unchanged. This task supplies local durability infrastructure before F09-03/04 earning/spending acceptance.
+
+### Composition and authority
+
+Run `npm.cmd run test:coins:journal` with Docker running and API 3310 free. It requires the backend's Node baseline image `node:24.16.0-bookworm-slim` to be locally available (`docker pull node:24.16.0-bookworm-slim` on a cold machine). The harness resolves that image to its immutable content ID and records it; the qualified image ID is `sha256:2c87ef9bd3c6a3bd4b472b4bec2ce9d16354b0c574f736c476489d09f560a203`. Node version, Linux platform and UID 1000 are checked in the actual container.
+
+`tools/linux-coin-journal.mjs` bundles the exact built backend journal module and its domain policies through the backend's installed, locked esbuild. The generated bundle/hash stays in ignored run custody, outside product builds. The helper uses an independent run-labelled Linux named volume, a read-only root filesystem, no network, no published ports, all capabilities dropped and bounded CPU/memory/PIDs. A short initializer changes ownership only on that newly created volume. The journal container receives no SQL credentials. Its encryption key stays in the owning Node process and is passed through bounded stdin for each operation, never through container arguments, environment, mounts or logs.
+
+The real `createCoinJournal` performs encryption/authentication, exclusive append, file fsync and directory fsync on the Linux volume. A bounded stdin/stdout adapter transports `ready`, `append`, `verify` and `read`; it does not replace persistence with memory or acknowledge success itself. Negative tampering is restricted to a separate test directory. The real `createCoinRecoveryService` continues to use the restricted SQL worker repository, then appends/verifies through that journal before sealing SQL. The creator API still runs against its restricted public role in a fresh disposable database.
+
+Only explicit `f09-g01` composition exposes the synthetic owner adjustment/worker controls. The existing `f09-02` read composition preserves its real Windows readiness result and rejects the new existing-coin-owner session option. No such controls are registered as HTTP endpoints or product routes. Consumer readiness and reward configuration in both harnesses are synthetic test setup, not ordinary activation.
+
+### Verified behavior and limits
+
+Six actual Linux journal/worker/SQL/HTTP checks pass:
+
+1. Actual directory fsync succeeds on the independent Linux volume, with the expected platform, Node version, UID, network and root filesystem settings.
+2. A synthetic Owner/Admin credit of 20 coins creates one actual SQL ledger transaction. The creator API keeps it pending and unspendable before journal acknowledgement.
+3. A controlled worker interruption occurs after the real durable append but before SQL sealing. The journal container is actually restarted. A fresh worker retries that same record and seals once; three further ticks preserve exactly 20 coins and one ledger entry.
+4. The same-key 5-coin debit is submitted twice and creates one debit. Stopping the journal container makes readiness fail and prevents sealing or spending the pending result.
+5. Actual wrong-key verification fails without SQL acknowledgement. Correct-key retry then seals the existing transaction. Replaying the same debit after sealing leaves exactly 15 coins.
+6. Wrong journal binding and encrypted-byte tampering are rejected. The independent primary chain survives another actual restart with exactly two records, two transactions, two seals and two ledger entries.
+
+The existing seven production-compiled browser/API/SQL read scenarios also pass after the composition change, including denial of the G01-only owner-session option in read mode. Operator tests reject mixed feature/provider scopes and malformed run identities, and protect cleanup against another task/run's labels. The required full frontend pre-push gate and current-head hosted checks apply before protected dev integration.
+
+This qualifies actual append/verify/seal, replay and container-restart recovery infrastructure using **synthetic audited adjustments**. It does not qualify canonical collection/funding/completion mission earning, template redemption, creator screens or full database/host-loss restore. Those remain F09-03/04/07 and existing backend/deployment owners. Restart testing retains the run's ephemeral key; long-term key/backup custody and production storage remain separate operational gates. Windows native directory-sync readiness remains false; the qualified worker path uses Linux.
+
+### Custody and restart
+
+`artifacts.local/f09-g01/acceptance.json` retains safe check names, source fingerprints, backend pin, immutable image and bundle identities, aggregate counts and cleanup proof. Initial bundling exposed the backend package's import-only export boundary; resolution now selects its exact pinned built module, and the failed attempt is not acceptance. Runtime commands must recheck backend HEAD/build input cleanliness against the contract pin. There is no backend code, migration, contract-package or frontend dependency change.
+
+`finally` closes the API and restricted clients, verifies both task/run labels before deleting the owned journal container/volume, and lets the existing local-API cleanup remove only its labelled PostgreSQL/Redis containers. Shared images, ordinary services and historical folders are retained. Generated non-secret bundles and PR/check/integration evidence remain ignored for review. The task PR record supplies the exact checked head/merge and clean dev synchronization; no runtime remains for manual use. Next authorized product work to request is F09-03; its earning checks can reuse this Linux journal fixture instead of weakening Windows durability checks.
