@@ -1,7 +1,9 @@
 import { useMemo, useSyncExternalStore } from 'react';
 import { consumerMoney } from '@/services/contracts/index';
 import { qrMatrix, type OverlayReader } from '@/services/overlay/index';
+import { resolveOverlayTemplate } from '@/entities/overlay-template/index';
 import './display.css';
+import './compact.css';
 
 const phases: Record<string, string> = {
   preparing: 'Preparing collection',
@@ -42,15 +44,8 @@ export function OverlayDisplay({ reader }: { reader: OverlayReader }) {
     presentation = value.presentation;
   if (!frame || !presentation?.fresh || !('template' in frame.preferences))
     return <div data-obs-phase={value.phase} />;
-  const template = frame.preferences.template;
-  if (
-    !template.available ||
-    template.templateId !== 'standalone' ||
-    template.assetVersion !== 1 ||
-    template.renderer?.key !== 'standalone' ||
-    template.renderer.hash !== null
-  )
-    return <div data-obs-phase="unsupported-template" />;
+  const template = resolveOverlayTemplate(frame.preferences.template);
+  if (!template) return <div data-obs-phase="unsupported-template" />;
   const challenge = frame.challenge,
     state = frame.presentationState;
   if (
@@ -92,6 +87,7 @@ export function OverlayDisplay({ reader }: { reader: OverlayReader }) {
     <div
       className="obs-stage"
       data-obs-phase={state}
+      data-template={template.variant}
       data-position={styles.position}
       style={
         {

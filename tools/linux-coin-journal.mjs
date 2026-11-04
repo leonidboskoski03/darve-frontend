@@ -13,7 +13,8 @@ export function journalResourceNames(runId) {
   return { container: 'darve-f09-journal-' + runId, volume: 'darve-f09-journal-' + runId };
 }
 export function assertJournalOwnership(resource, runId, task = 'f09-g01') {
-  if (!['f09-g01', 'f09-03', 'f09-04'].includes(task)) throw Error('Invalid journal task');
+  if (!['f09-g01', 'f09-03', 'f09-04', 'f09-05'].includes(task))
+    throw Error('Invalid journal task');
   const labels = resource.Config?.Labels ?? resource.Labels;
   if (labels?.['darve.frontend.task'] !== task || labels?.['darve.frontend.run'] !== runId)
     throw Error('Linux journal resource ownership differs');
@@ -40,7 +41,8 @@ export async function createLinuxCoinJournal({
   runId,
   task = 'f09-g01',
 }) {
-  if (!['f09-g01', 'f09-03', 'f09-04'].includes(task)) throw Error('Invalid journal task');
+  if (!['f09-g01', 'f09-03', 'f09-04', 'f09-05'].includes(task))
+    throw Error('Invalid journal task');
   const names = journalResourceNames(runId);
   const key = randomBytes(32);
   const scratch = resolve('artifacts.local', task, runId);

@@ -1,5 +1,5 @@
 {
-  "sourceRevision": "8103c8607e475e711c8b8fc5f5e3eceb1d0e65fc",
+  "sourceRevision": "aeb3e813e4117ae914e9ab3daeeb6e39714c3e5d",
   "status": "B15/F09-02 aligns coin/template request revision limits and exports the strict existing history query; existing F08 recovery and authority handoffs retained. Ordinary activation remains separate.",
   "operations": [
     {
@@ -2933,7 +2933,7 @@
     "apps/api/src/modules/health/health.routes.ts": "a50ae03dab44ff8d9662c3203938ae3bfec375b4ed25d33e7c75f84d16965bb5",
     "apps/api/src/modules/kick-webhooks/kick-webhook.controller.ts": "7876db8253878a62977c7125179ff8e07eca57e41aecfdb8d757883f835f3084",
     "apps/api/src/modules/kick-webhooks/kick-webhook.routes.ts": "2871374a4e251a2e565074f2582f2c667be4e687b114e53c2acc9762f8a6b353",
-    "apps/api/src/modules/overlays/overlay.controller.ts": "b1436a8175412b9d383576a5a8f5c997133194786504c49764781c5e82d546e5",
+    "apps/api/src/modules/overlays/overlay.controller.ts": "80ba0a2ff0159603c18ca15b983e2179b2d36b9a51e7e0b79ab9e7ecdbba0025",
     "apps/api/src/modules/overlays/overlay.mapper.ts": "eece3a791cdb00f4f9d06ad4b93e7618462db4900a80d410d018951bae3dde53",
     "apps/api/src/modules/overlays/overlay.routes.ts": "3b4cb007b687e199feca52854594e64f63434c0b3fe759a1f4e67df1e8b5ffff",
     "apps/api/src/modules/payment-accounts/paypal-receiving.controller.ts": "8f91c976d88c4bce70820817b385810335301f97fbaac107b56fd3fb0c767182",

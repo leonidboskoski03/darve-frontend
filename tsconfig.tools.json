@@ -28,6 +28,9 @@
     "src/services/support/fixture.test-helper.ts",
     "src/services/staff-support/fixture.test-helper.ts",
     "src/services/staff-admin/fixture.test-helper.ts",
-    "src/services/templates/fixture.test-helper.ts"
+    "src/services/templates/fixture.test-helper.ts",
+    "src/entities/overlay-template/index.ts",
+    "src/entities/overlay-template/registry.ts",
+    "src/entities/overlay-template/verified-asset.ts"
   ]
 }

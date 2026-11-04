@@ -1,7 +1,7 @@
 {
   "package": "@darve/contracts",
   "version": "0.0.0",
-  "sourceRevision": "8103c8607e475e711c8b8fc5f5e3eceb1d0e65fc",
+  "sourceRevision": "aeb3e813e4117ae914e9ab3daeeb6e39714c3e5d",
   "sourcePaths": ["packages/contracts", "tsconfig.base.json", "package-lock.json"],
   "sourceFiles": {
     "package-lock.json": "59083686090763494821add1bb0d02cd52e8e9fbc97e754440089ae8f3f5fd79",
@@ -55,7 +55,7 @@
     }
   },
   "artifact": {
-    "filename": "darve-contracts-8103c8607e475e711c8b8fc5f5e3eceb1d0e65fc.tgz",
+    "filename": "darve-contracts-aeb3e813e4117ae914e9ab3daeeb6e39714c3e5d.tgz",
     "sha256": "5e469934de4198b81d0e54f0d0be5efa5f6f16b1abeb98caa4d50864106aaec2",
     "integrity": "sha512-6hI2yEZ4FZtqTCTkdfzTQZEeRlsH8YUskJrSimmIwsWwuZ8KP8t/7Awz6KmmlENhIriXdcNL79jCCvF+nE9eag==",
     "files": {

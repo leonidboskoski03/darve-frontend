@@ -50,13 +50,15 @@ export async function startLocalApi({
   coins = false,
 }) {
   if (
-    (coins || ['f09-02', 'f09-g01', 'f09-03', 'f09-04'].includes(task)) &&
+    (coins || ['f09-02', 'f09-g01', 'f09-03', 'f09-04', 'f09-05'].includes(task)) &&
     (!coins ||
-      !['f09-02', 'f09-g01', 'f09-03', 'f09-04'].includes(task) ||
+      !['f09-02', 'f09-g01', 'f09-03', 'f09-04', 'f09-05'].includes(task) ||
       support ||
-      (task === 'f09-03' ? !collection || !review || !terms : collection || review || terms) ||
+      (['f09-03', 'f09-05'].includes(task)
+        ? !collection || !review || !terms
+        : collection || review || terms) ||
       reporting ||
-      overlay ||
+      (task === 'f09-05' ? !overlay : overlay) ||
       checkout ||
       contributionReads ||
       sandboxPayment ||
@@ -94,6 +96,7 @@ export async function startLocalApi({
       'f09-g01',
       'f09-03',
       'f09-04',
+      'f09-05',
     ].includes(task)
   )
     throw new Error('Invalid local task identity.');
@@ -132,12 +135,15 @@ export async function startLocalApi({
   const providerEnvironment = assertProviderLoginRuntime({ task, port, origins, operatorOAuth });
   if (
     collection &&
-    !['f04-02', 'f04-03', 'f05', 'f06', 'f06-03', 'f06-04', 'f07', 'f09-03'].includes(task)
+    !['f04-02', 'f04-03', 'f05', 'f06', 'f06-03', 'f06-04', 'f07', 'f09-03', 'f09-05'].includes(
+      task,
+    )
   )
     throw new Error('Controlled collection ports require their explicit disposable task.');
   if (
     review &&
-    (!['f04-03', 'f05', 'f06', 'f06-03', 'f06-04', 'f07', 'f09-03'].includes(task) || !collection)
+    (!['f04-03', 'f05', 'f06', 'f06-03', 'f06-04', 'f07', 'f09-03', 'f09-05'].includes(task) ||
+      !collection)
   )
     throw new Error('Controlled review requires its explicit disposable collection task.');
   if (reporting && (task !== 'f05' || !collection || !review))
@@ -375,7 +381,7 @@ export async function startLocalApi({
             SUPPORT_PUBLIC_CURSOR_KEY_BASE64: randomBytes(32).toString('base64'),
           }
         : {}),
-      ...(contributionReads || checkout || sandboxPayment || task === 'f07'
+      ...(contributionReads || checkout || sandboxPayment || ['f07', 'f09-05'].includes(task)
         ? { PUBLIC_CHALLENGE_BASE_URL: (qrPublicOrigin ?? origins[0]) + '/contribute/' }
         : {}),
       ...(review
@@ -408,7 +414,8 @@ export async function startLocalApi({
       ...(overlay
         ? {
             OVERLAY_PRESENTATION_BASE_URL:
-              origins[0] + (task === 'f07' ? '/overlay/' : '/tests/fixtures/realtime.html/'),
+              origins[0] +
+              (['f07', 'f09-05'].includes(task) ? '/overlay/' : '/tests/fixtures/realtime.html/'),
             OVERLAY_GRANT_EPOCH: randomUUID(),
             OVERLAY_SSE_POLL_MS: 250,
           }
@@ -428,14 +435,14 @@ export async function startLocalApi({
       ? await (
           await import('./local-collection-fixture.mjs')
         ).createLocalCollectionFixture(backend, deps.database, config, {
-          coinActivity: task === 'f09-03',
+          coinActivity: ['f09-03', 'f09-05'].includes(task),
         })
       : null;
     coinFixture = coins
       ? await (
           await import('./local-coin-fixture.mjs')
         ).createLocalCoinFixture(backend, databaseUrl, deps.database, {
-          linuxJournal: ['f09-g01', 'f09-03', 'f09-04'].includes(task),
+          linuxJournal: ['f09-g01', 'f09-03', 'f09-04', 'f09-05'].includes(task),
           task,
           runId,
         })
@@ -503,6 +510,90 @@ export async function startLocalApi({
     return {
       ...state,
       collectionFixture,
+      async prepareTemplateOverlay(secret) {
+        if (task !== 'f09-05' || !collectionFixture || !reviewFixture)
+          throw Error('Template observation requires its exact isolated composition.');
+        const load = (file) => import(pathToFileURL(path.join(backend, file)).href);
+        const db = await load('packages/database/dist/index.js'),
+          domain = await load('packages/domain/dist/index.js');
+        const { createIdentityAccessServices } = await load(
+          'apps/api/dist/composition/identity-access.js',
+        );
+        const identity = createIdentityAccessServices(
+          config,
+          deps.database,
+          collectionFixture.dependencies.oauthProviders,
+        );
+        const actor = await identity.session.access(secret, true, sessionCsrfProof(secret));
+        const roundId = await collectionFixture.collectForCoins(
+          secret,
+          ['Draw a cat'],
+          ['synthetic-template-viewer'],
+        );
+        const published = await reviewFixture.publish(actor.userId, roundId),
+          item = published.items[0];
+        const acceptance = domain.createChallengeAcceptanceService({
+          repository: db.createChallengeAcceptanceRepository(deps.database),
+          discovery: collectionFixture.dependencies.streamDiscovery,
+          funding: collectionFixture.dependencies.fundingReadiness,
+          policy: config.challengeTermsPolicy,
+          terms: config.termsPolicy,
+        });
+        const result = await acceptance.accept(
+          actor,
+          roundId,
+          item.resultId + '.' + item.group.id,
+          randomUUID(),
+          {
+            expectedVersion: item.version,
+            analysisRunId: item.runId,
+            resultVersion: item.resultId,
+            snapshotVersion: item.snapshotVersion,
+            goal: { amountMinor: '100000', currency: 'EUR' },
+            fundingDurationSeconds: 1800,
+          },
+        );
+        const link = await deps.database.challengePublicLink.findUniqueOrThrow({
+          where: { challengeId: result.challenge.id },
+        });
+        return {
+          roundId,
+          challengeId: result.challenge.id,
+          publicUrl: config.PUBLIC_CHALLENGE_BASE_URL + link.publicId,
+        };
+      },
+      async diagnoseTemplateBinding(secret, id, command) {
+        if (task !== 'f09-05') throw Error('Wrong diagnostic scope');
+        const db = await import(
+          pathToFileURL(path.join(backend, 'packages/database/dist/index.js')).href
+        );
+        const identity = await import(
+          pathToFileURL(path.join(backend, 'apps/api/dist/composition/identity-access.js')).href
+        );
+        const actor = await identity
+          .createIdentityAccessServices(
+            config,
+            deps.database,
+            collectionFixture.dependencies.oauthProviders,
+          )
+          .session.access(secret, true, sessionCsrfProof(secret));
+        return db
+          .createOverlayRepository(coinFixture.publicDatabase)
+          .select(
+            actor.userId,
+            { secretHash: actor.secretHash, csrfHash: actor.csrfHash },
+            id,
+            command,
+          )
+          .catch((error) => {
+            const missing = String(error.meta?.message ?? error.message).match(
+              /permission denied for table ([a-z_]+)/,
+            );
+            if (missing)
+              throw Error('Fixture missing table privilege: ' + missing[1].replaceAll('_', ' '));
+            throw error;
+          });
+      },
       reviewFixture,
       reportingFixture,
       contributionFixture,
@@ -565,7 +656,7 @@ export async function startLocalApi({
       async seedSession({ expiresInMs = 60_000, coinOwner = false } = {}) {
         if (
           coinOwner &&
-          (!['f09-g01', 'f09-03', 'f09-04'].includes(task) || !coinFixture?.durability)
+          (!['f09-g01', 'f09-03', 'f09-04', 'f09-05'].includes(task) || !coinFixture?.durability)
         )
           throw new Error('Existing coin owner requires the exact journal acceptance fixture.');
         const secret = randomBytes(32).toString('base64url');

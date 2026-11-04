@@ -2,6 +2,7 @@ import { test, expect, type Page, type Route } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { syntheticTemplateSession } from '../../src/services/templates/fixture.test-helper';
 import { CoinMissionSchema } from '../../src/services/contracts/index';
+import { catalogueTemplate } from '../../src/entities/overlay-template/index';
 const stamp = '2026-11-04T12:00:00.000Z',
   base = 'http://127.0.0.1:4175/tests/fixtures/creator.html?view=templates';
 const cors = {
@@ -39,6 +40,11 @@ async function scenario(page: Page) {
     mode: 'pending' as 'pending' | 'network' | 'price' | 'insufficient' | 'malformed',
     posts: [] as { key: string | undefined; body: string | null }[],
     name: 'Synthetic premium',
+    compactOwned: false,
+    selected: 'standalone',
+    selectionRevision: 1,
+    selectionFailure: false,
+    selectionLost: false,
   };
   const json = (route: Route, value: unknown, status = 200) =>
     route.fulfill({
@@ -65,6 +71,31 @@ async function scenario(page: Page) {
     }
     if (request.method() === 'POST') {
       state.posts.push({ key: request.headers()['idempotency-key'], body: request.postData() });
+      if (path === '/api/template-preferences') {
+        if (state.selectionFailure) {
+          await json(route, problem('STALE_VERSION'), 409);
+          return;
+        }
+        const input = request.postDataJSON() as { templateId: string; expectedRevision: number };
+        state.selected = input.templateId;
+        state.selectionRevision++;
+        if (state.selectionLost) {
+          await route.abort('failed');
+          return;
+        }
+        const asset = catalogueTemplate(state.selected, 1)!;
+        await json(
+          route,
+          envelope({
+            revision: state.selectionRevision,
+            templateId: asset.id,
+            assetVersion: 1,
+            available: true,
+            renderer: { key: asset.key, hash: asset.hash },
+          }),
+        );
+        return;
+      }
       if (state.mode === 'network') {
         await route.abort('failed');
         return;
@@ -143,11 +174,62 @@ async function scenario(page: Page) {
       return;
     }
     if (path === '/api/templates') {
-      await json(route, envelope({ templates: [free, premium] }));
+      await json(
+        route,
+        envelope({
+          templates: [
+            free,
+            premium,
+            ...(state.compactOwned
+              ? [
+                  {
+                    ...premium,
+                    id: 'darve_compact',
+                    displayName: 'Darve Compact',
+                    owned: true,
+                    ownershipState: 'owned',
+                  },
+                ]
+              : []),
+          ],
+        }),
+      );
       return;
     }
     if (path === '/api/template-entitlements') {
-      await json(route, envelope({ templates: state.owned ? [free, premium] : [free] }));
+      await json(
+        route,
+        envelope({
+          templates: [
+            ...(state.owned ? [free, premium] : [free]),
+            ...(state.compactOwned
+              ? [
+                  {
+                    ...premium,
+                    id: 'darve_compact',
+                    displayName: 'Darve Compact',
+                    owned: true,
+                    ownershipState: 'owned',
+                  },
+                ]
+              : []),
+          ],
+        }),
+      );
+      return;
+    }
+    if (path === '/api/template-preferences') {
+      const asset = catalogueTemplate(state.selected, 1)!;
+      await json(
+        route,
+        envelope({
+          revision: state.selectionRevision,
+          templateId: asset.id,
+          assetVersion: 1,
+          available: true,
+          renderer: { key: asset.key, hash: asset.hash },
+        }),
+      );
       return;
     }
     if (path === '/api/coins/missions') {
@@ -365,4 +447,59 @@ test('logout removes held private intent', async ({ page }) => {
     0,
   );
   expect(state.posts).toEqual([]);
+});
+test('owned compact selection uses unchecked confirmation and its independent revision', async ({
+  page,
+}) => {
+  const state = await scenario(page);
+  state.compactOwned = true;
+  await page.goto(base);
+  await page.getByRole('button', { name: 'Select Darve Compact', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Review OBS template' })).toBeFocused();
+  const check = page.getByRole('checkbox', {
+    name: 'I want to use this owned template for my OBS displays.',
+  });
+  await expect(check).not.toBeChecked();
+  await expect(page.getByRole('button', { name: 'Use this template' })).toBeDisabled();
+  await check.check();
+  await page.getByRole('button', { name: 'Use this template' }).click();
+  await expect(page.getByText('Template selection verified.', { exact: true })).toBeVisible();
+  expect(state.posts).toHaveLength(1);
+  expect(state.posts[0].key).toBeUndefined();
+  expect(JSON.parse(state.posts[0].body!)).toEqual({
+    expectedRevision: 1,
+    templateId: 'darve_compact',
+  });
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+});
+test('lost selection response reads canonical state without replay', async ({ page }) => {
+  const state = await scenario(page);
+  state.compactOwned = true;
+  state.selectionLost = true;
+  await page.goto(base);
+  await page.getByRole('button', { name: 'Select Darve Compact', exact: true }).click();
+  await page
+    .getByRole('checkbox', { name: 'I want to use this owned template for my OBS displays.' })
+    .check();
+  await page.getByRole('button', { name: 'Use this template' }).click();
+  await expect(page.getByText('Template selection verified.', { exact: true })).toBeVisible();
+  expect(state.posts).toHaveLength(1);
+  await expect(page.getByRole('button', { name: 'Select Standalone', exact: true })).toBeEnabled();
+});
+test('stale selection requires a new review and never silently retries', async ({ page }) => {
+  const state = await scenario(page);
+  state.compactOwned = true;
+  state.selectionFailure = true;
+  await page.goto(base);
+  await page.getByRole('button', { name: 'Select Darve Compact', exact: true }).click();
+  await page
+    .getByRole('checkbox', { name: 'I want to use this owned template for my OBS displays.' })
+    .check();
+  await page.getByRole('button', { name: 'Use this template' }).click();
+  await expect(page.getByText(/Current selection checked/)).toBeVisible();
+  await page.getByRole('button', { name: 'Select Darve Compact', exact: true }).click();
+  await expect(
+    page.getByRole('checkbox', { name: 'I want to use this owned template for my OBS displays.' }),
+  ).not.toBeChecked();
+  expect(state.posts).toHaveLength(1);
 });

@@ -44,10 +44,20 @@ export async function createLocalCoinFixture(
         GRANT SELECT ON darve_users,external_identities,darve_sessions TO darve_public_runtime;
         GRANT UPDATE(id) ON darve_users TO darve_public_runtime;
         GRANT UPDATE ON darve_sessions TO darve_public_runtime;`);
-      if (task === 'f09-03')
+      if (['f09-03', 'f09-05'].includes(task))
         await sql.query(
           'GRANT SELECT,INSERT ON terms_documents,terms_acceptances TO darve_public_runtime',
         );
+      if (task === 'f09-05')
+        await sql.query(`
+        GRANT SELECT ON overlay_displays,overlay_grants,overlay_preferences,collection_rounds,provider_connections,collection_snapshot_access,analysis_runs,analysis_snapshots,analysis_profiles,analysis_processing_jobs,analysis_processing_results,accepted_challenges,challenge_public_links,challenge_completion_declarations,challenge_funding,challenge_funding_events,payment_checkout_attempts,financial_payments,financial_adjustment_evidence,funding_reviews TO darve_public_runtime;
+        GRANT UPDATE("snapshotId") ON collection_snapshot_access TO darve_public_runtime;
+        GRANT SELECT ON analysis_run_members,collection_submissions,analysis_processing_result_sources,payment_recipients,payment_guest_access TO darve_public_runtime;
+        GRANT UPDATE(id) ON analysis_runs TO darve_public_runtime;
+        GRANT INSERT,UPDATE ON overlay_displays,overlay_grants,overlay_preferences,challenge_funding,funding_reviews TO darve_public_runtime;
+        GRANT INSERT ON outbox_events,challenge_funding_events TO darve_public_runtime;
+        GRANT SELECT ON outbox_events TO darve_public_runtime;
+        GRANT EXECUTE ON FUNCTION challenge_recovery_projection(uuid),challenge_effective_deadline(uuid) TO darve_public_runtime;`);
     } finally {
       await sql.end();
     }
@@ -102,7 +112,9 @@ export async function createLocalCoinFixture(
     const journalReady = await journal.ready();
     // Node-only, task-bound controls install synthetic manifests into this disposable database.
     // No product asset, serving route, real renderer or commercial price is invented here.
-    const assets = task === 'f09-04' ? db.createTemplateAssetRepository(owner) : null;
+    const assets = ['f09-04', 'f09-05'].includes(task)
+      ? db.createTemplateAssetRepository(owner)
+      : null;
     const templates = assets
       ? domain.createTemplateAdminService(
           db.createTemplateRepository(admin),
@@ -159,6 +171,7 @@ export async function createLocalCoinFixture(
       templates:
         assets && templates
           ? {
+              installManifest: (manifest) => assets.install(manifest),
               install: (id = 'fixture_premium', version = 1) =>
                 assets.install({
                   id,

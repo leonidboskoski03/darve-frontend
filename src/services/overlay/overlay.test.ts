@@ -73,8 +73,8 @@ it('bootstrap is separate from creator authority and denies a foreign display re
     replace,
   });
   reader.start();
-  expect(entry.secret).toBeNull();
   await vi.waitFor(() => expect(reader.getSnapshot().phase).toBe('denied'));
+  expect(entry.secret).toBeNull();
   expect(fetcher).toHaveBeenCalledTimes(1);
   expect(replace).not.toHaveBeenCalled();
   const init = fetcher.mock.calls[0]![1]!;
@@ -105,6 +105,44 @@ it('disposed bootstrap cannot install a cookie identity or start a stream from a
   expect(fetcher).toHaveBeenCalledTimes(1);
   expect(replace).not.toHaveBeenCalled();
   expect(reader.getSnapshot().snapshot).toBeNull();
+});
+it('OBS visibility returning during bootstrap can recover the same read-only grant', async () => {
+  let settle!: (response: Response) => void;
+  const fetcher = vi
+    .fn<typeof fetch>()
+    .mockResolvedValue(new Response(null, { status: 503 }))
+    .mockImplementationOnce(
+      () =>
+        new Promise<Response>((resolve) => {
+          settle = resolve;
+        }),
+    )
+    .mockResolvedValueOnce(json(envelope({ displayId, grantId })));
+  const replace = vi.fn(),
+    reader = createOverlayReader({
+      origin,
+      entry: { displayId, secret, grantId: null },
+      fetcher,
+      replace,
+    });
+  try {
+    reader.start();
+    window.dispatchEvent(
+      new CustomEvent('obsSourceVisibleChanged', { detail: { visible: false } }),
+    );
+    window.dispatchEvent(new CustomEvent('obsSourceVisibleChanged', { detail: { visible: true } }));
+    await vi.waitFor(() => expect(replace).toHaveBeenCalledWith('#grantId=' + grantId), {
+      timeout: 250,
+    });
+    expect(
+      fetcher.mock.calls.filter(
+        (call) => typeof call[0] === 'string' && call[0].endsWith('/session?protocolVersion=2'),
+      ),
+    ).toHaveLength(2);
+  } finally {
+    reader.dispose();
+    settle(json(envelope({ displayId, grantId })));
+  }
 });
 it('invalid entry makes no request and does not try creator authentication or grant issuance', () => {
   const fetcher = vi.fn<typeof fetch>(),
