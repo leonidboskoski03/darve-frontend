@@ -12,7 +12,7 @@ const selected = {
   origins: ['http://127.0.0.1:4175'],
 };
 test('coin acceptance rejects mixed scopes before backend, Docker or secret access', async () => {
-  for (const task of ['f09-02', 'f09-g01']) {
+  for (const task of ['f09-02', 'f09-g01', 'f09-04']) {
     for (const override of [
       { coins: false },
       { task: 'f08-08' },
@@ -51,6 +51,9 @@ test('Linux journal names reject arbitrary paths and operations stay bound to ow
     assertJournalOwnership({ Labels: { ...labels, 'darve.frontend.task': 'f09-02' } }, run),
   );
   assert.throws(() => assertJournalOwnership({}, run));
+  const templates = { ...labels, 'darve.frontend.task': 'f09-04' };
+  assert.doesNotThrow(() => assertJournalOwnership({ Labels: templates }, run, 'f09-04'));
+  assert.throws(() => assertJournalOwnership({ Labels: templates }, run, 'f09-g01'));
 });
 test('creator coin acceptance requires its exact collection/review/terms composition', async () => {
   const input = { ...selected, task: 'f09-03', collection: true, review: true, terms: true };

@@ -27,6 +27,7 @@
     "src/services/contributions/fixture.test-helper.ts",
     "src/services/support/fixture.test-helper.ts",
     "src/services/staff-support/fixture.test-helper.ts",
-    "src/services/staff-admin/fixture.test-helper.ts"
+    "src/services/staff-admin/fixture.test-helper.ts",
+    "src/services/templates/fixture.test-helper.ts"
   ]
 }
