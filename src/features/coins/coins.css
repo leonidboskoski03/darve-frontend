@@ -1,0 +1,177 @@
+.coins-page {
+  display: grid;
+  gap: var(--space-6);
+  max-width: var(--content-width);
+  margin-inline: auto;
+}
+.coins-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-4);
+}
+.coins-heading h1 {
+  font-size: var(--font-size-page);
+  margin: 0 0 var(--space-2);
+}
+.coins-heading p,
+.coins-muted,
+.coins-checked {
+  color: var(--color-muted);
+}
+.coins-heading p {
+  margin: 0;
+}
+.coins-account-state {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+.coins-account-state p {
+  margin: 0;
+  max-width: 65ch;
+}
+.coins-balances {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin-block: var(--space-6);
+  gap: var(--space-6);
+}
+.coins-balances dt {
+  color: var(--color-muted);
+  margin-bottom: var(--space-2);
+}
+.coins-balances dd {
+  margin: 0;
+  font-size: var(--font-size-page);
+  font-weight: var(--font-weight-strong);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.coins-balances dd span {
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-body);
+  color: var(--color-muted);
+}
+.coins-checked {
+  font-size: var(--font-size-small);
+  margin-bottom: 0;
+}
+.coins-missions {
+  padding: 0;
+  margin: var(--space-4) 0 0;
+  list-style: none;
+}
+.coins-mission {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(12rem, auto);
+  gap: var(--space-5);
+  padding-block: var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+}
+.coins-mission:last-child {
+  border-bottom: 0;
+}
+.coins-mission h3 {
+  margin: 0;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-strong);
+}
+.coins-mission p {
+  margin: var(--space-2) 0 0;
+  max-width: 65ch;
+}
+.coins-mission-result {
+  text-align: right;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+.coins-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+  font-size: var(--font-size-small);
+  font-variant-numeric: tabular-nums;
+}
+.coins-progress progress {
+  accent-color: var(--color-brand-readable);
+  width: 12rem;
+  max-width: 60%;
+  height: 0.5rem;
+  appearance: none;
+  border: 0;
+  background: var(--color-border);
+}
+.coins-progress progress::-webkit-progress-bar {
+  background: var(--color-border);
+}
+.coins-progress progress::-webkit-progress-value {
+  background: var(--color-brand-readable);
+}
+.coins-progress progress::-moz-progress-bar {
+  background: var(--color-brand-readable);
+}
+.coins-problem {
+  color: var(--color-warning);
+  max-width: 65ch;
+}
+.coins-table-scroll {
+  overflow-x: auto;
+}
+.coins-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-small);
+}
+.coins-table caption {
+  text-align: left;
+  color: var(--color-muted);
+  margin-bottom: var(--space-3);
+}
+.coins-table th,
+.coins-table td {
+  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-3);
+  text-align: left;
+  vertical-align: top;
+}
+.coins-table th {
+  color: var(--color-muted);
+  font-weight: var(--font-weight-medium);
+}
+.coins-table .coins-number {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.coins-history-actions {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-top: var(--space-5);
+}
+@media (max-width: 42rem) {
+  .coins-heading {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .coins-balances {
+    grid-template-columns: 1fr;
+  }
+  .coins-balances dd {
+    font-size: var(--font-size-title);
+  }
+  .coins-mission {
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+  }
+  .coins-mission-result {
+    text-align: left;
+  }
+  .coins-table th,
+  .coins-table td {
+    padding: var(--space-3) var(--space-2);
+  }
+}

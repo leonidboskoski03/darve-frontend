@@ -142,8 +142,8 @@ it('rejects duplicate mission IDs and catalogue IDs', async () => {
 it('keeps cursor bytes opaque, encodes them once and rejects caller pagination overrides', async () => {
   const { send, client, signal } = await setup();
   const cursor = 'opaque+/=&?';
-  send.mockResolvedValueOnce(json(envelope({ items: [], nextCursor: cursor })));
-  expect((await client.ledger({ cursor }, signal)).data.nextCursor).toBe(cursor);
+  send.mockResolvedValueOnce(json(envelope({ items: [], nextCursor: 'next-opaque' })));
+  expect((await client.ledger({ cursor }, signal)).data.nextCursor).toBe('next-opaque');
   expect(requestUrl(send.mock.calls[1]?.[0])).toBe(
     'https://api.example.test/api/coins/ledger?cursor=' + encodeURIComponent(cursor),
   );
@@ -155,6 +155,25 @@ it('keeps cursor bytes opaque, encodes them once and rejects caller pagination o
   ])
     expect(() => client.ledger(query, signal)).toThrow(CoinReadError);
   expect(send).toHaveBeenCalledTimes(2);
+});
+it('rejects a repeated ledger cursor and contradictory mission completion', async () => {
+  const { send, client, signal } = await setup();
+  send.mockResolvedValueOnce(json(envelope({ items: [], nextCursor: 'same-cursor' })));
+  await expect(client.ledger({ cursor: 'same-cursor' }, signal)).rejects.toBeInstanceOf(
+    CoinReadError,
+  );
+  const value = missions();
+  send.mockResolvedValueOnce(
+    json(
+      envelope({
+        ...value,
+        missions: value.missions.map((row, index) =>
+          index === 0 ? { ...row, completed: true } : row,
+        ),
+      }),
+    ),
+  );
+  await expect(client.missions(signal)).rejects.toBeInstanceOf(CoinReadError);
 });
 it('rejects unordered or duplicate ledger rows', async () => {
   const { send, client, signal } = await setup();

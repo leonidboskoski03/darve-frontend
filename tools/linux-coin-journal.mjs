@@ -12,9 +12,10 @@ export function journalResourceNames(runId) {
     throw Error('Invalid journal run identity');
   return { container: 'darve-f09-journal-' + runId, volume: 'darve-f09-journal-' + runId };
 }
-export function assertJournalOwnership(resource, runId) {
+export function assertJournalOwnership(resource, runId, task = 'f09-g01') {
+  if (!['f09-g01', 'f09-03'].includes(task)) throw Error('Invalid journal task');
   const labels = resource.Config?.Labels ?? resource.Labels;
-  if (labels?.['darve.frontend.task'] !== 'f09-g01' || labels?.['darve.frontend.run'] !== runId)
+  if (labels?.['darve.frontend.task'] !== task || labels?.['darve.frontend.run'] !== runId)
     throw Error('Linux journal resource ownership differs');
 }
 const docker = (args, input) => {
@@ -32,10 +33,17 @@ const docker = (args, input) => {
   }
 };
 
-export async function createLinuxCoinJournal({ backend, program, binding, runId }) {
+export async function createLinuxCoinJournal({
+  backend,
+  program,
+  binding,
+  runId,
+  task = 'f09-g01',
+}) {
+  if (!['f09-g01', 'f09-03'].includes(task)) throw Error('Invalid journal task');
   const names = journalResourceNames(runId);
   const key = randomBytes(32);
-  const scratch = resolve('artifacts.local/f09-g01', runId);
+  const scratch = resolve('artifacts.local', task, runId);
   mkdirSync(scratch, { recursive: true });
   const requireBackend = createRequire(join(backend, 'package.json'));
   const { build } = await import(pathToFileURL(requireBackend.resolve('esbuild')).href);
@@ -69,7 +77,7 @@ export async function createLinuxCoinJournal({ backend, program, binding, runId 
   assert.equal(base.Os, 'linux');
   const labels = [
     '--label',
-    'darve.frontend.task=f09-g01',
+    'darve.frontend.task=' + task,
     '--label',
     'darve.frontend.run=' + runId,
   ];
@@ -79,12 +87,16 @@ export async function createLinuxCoinJournal({ backend, program, binding, runId 
   const close = async () => {
     if (closed) return;
     if (container) {
-      assertJournalOwnership(JSON.parse(docker(['inspect', container]))[0], runId);
+      assertJournalOwnership(JSON.parse(docker(['inspect', container]))[0], runId, task);
       docker(['rm', '-f', container]);
       container = undefined;
     }
     if (volumeCreated) {
-      assertJournalOwnership(JSON.parse(docker(['volume', 'inspect', names.volume]))[0], runId);
+      assertJournalOwnership(
+        JSON.parse(docker(['volume', 'inspect', names.volume]))[0],
+        runId,
+        task,
+      );
       docker(['volume', 'rm', names.volume]);
       volumeCreated = false;
     }
@@ -165,7 +177,7 @@ export async function createLinuxCoinJournal({ backend, program, binding, runId 
       'setInterval(()=>{},2147483647)',
     ]);
     const inspected = JSON.parse(docker(['inspect', container]))[0];
-    assertJournalOwnership(inspected, runId);
+    assertJournalOwnership(inspected, runId, task);
     const metadata = invoke('ready');
     assert.deepEqual(metadata, { ready: true, platform: 'linux', uid: 1000, node: '24.16.0' });
     return {

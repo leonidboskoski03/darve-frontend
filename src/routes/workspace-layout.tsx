@@ -10,6 +10,7 @@ import {
   History,
   Monitor,
   MessageSquare,
+  Coins,
 } from 'lucide-react';
 import { Brand } from '@/design-system/brand';
 import { Button } from '@/design-system/button';
@@ -21,6 +22,7 @@ const navigation = [
   { href: '/challenges', label: 'Challenge history', Icon: History },
   { href: '/collection', label: 'Collection', Icon: Radio },
   { href: '/obs', label: 'OBS display', Icon: Monitor },
+  { href: '/coins', label: 'Coins', Icon: Coins },
   { href: '/integrations', label: 'Connections', Icon: Cable },
   { href: '/support', label: 'Support', Icon: MessageSquare },
   { href: '/terms', label: 'Account terms', Icon: FileText },
