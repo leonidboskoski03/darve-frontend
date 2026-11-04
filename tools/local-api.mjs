@@ -47,7 +47,27 @@ export async function startLocalApi({
   sandboxPayment,
   qrPublicOrigin,
   support = false,
+  coins = false,
 }) {
+  if (
+    (coins || task === 'f09-02') &&
+    (!coins ||
+      task !== 'f09-02' ||
+      support ||
+      collection ||
+      review ||
+      reporting ||
+      overlay ||
+      terms ||
+      checkout ||
+      contributionReads ||
+      sandboxPayment ||
+      operatorOAuth ||
+      port !== 3310 ||
+      origins.length !== 1 ||
+      origins[0] !== 'http://127.0.0.1:4175')
+  )
+    throw new Error('Coins require their exact disposable F09-02 read composition.');
   if (
     qrPublicOrigin !== undefined &&
     (task !== 'f07' ||
@@ -72,6 +92,7 @@ export async function startLocalApi({
       'f08-06',
       'f08-07',
       'f08-08',
+      'f09-02',
     ].includes(task)
   )
     throw new Error('Invalid local task identity.');
@@ -195,6 +216,7 @@ export async function startLocalApi({
   let server;
   let closing;
   let supportFixture;
+  let coinFixture;
   const owned = (id) =>
     run('docker', ['inspect', '--format', '{{index .Config.Labels "darve.frontend.run"}}', id]) ===
     runId;
@@ -210,6 +232,7 @@ export async function startLocalApi({
       if (deps) {
         try {
           await supportFixture?.close();
+          await coinFixture?.close();
           await deps.close();
         } catch {
           errors.push('API dependency cleanup failed.');
@@ -402,6 +425,12 @@ export async function startLocalApi({
           await import('./local-collection-fixture.mjs')
         ).createLocalCollectionFixture(backend, deps.database, config)
       : null;
+    coinFixture = coins
+      ? await (
+          await import('./local-coin-fixture.mjs')
+        ).createLocalCoinFixture(backend, databaseUrl, deps.database)
+      : null;
+    if (coinFixture) config = readApiEnvironment({ ...runtimeInput, ...coinFixture.environment });
     const reviewFixture = review
       ? await (
           await import('./local-review-fixture.mjs')
@@ -436,6 +465,7 @@ export async function startLocalApi({
           ...checkoutFixture?.dependencies,
           ...sandboxFixture?.dependencies,
           ...(supportFixture ? { database: supportFixture.publicDatabase } : {}),
+          ...(coinFixture ? { database: coinFixture.publicDatabase } : {}),
         }).listen(port, '127.0.0.1', () => resolve(listener));
         listener.once('error', reject);
       });
@@ -469,6 +499,7 @@ export async function startLocalApi({
       checkoutFixture,
       sandboxFixture,
       supportFixture,
+      coinFixture,
       createStaffWorkbench: async () => {
         if (!['f08-05', 'f08-06', 'f08-07', 'f08-08'].includes(task) || !supportFixture)
           throw new Error('Staff workbench requires F08-05 disposable composition.');

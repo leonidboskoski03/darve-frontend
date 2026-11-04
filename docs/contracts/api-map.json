@@ -1,6 +1,6 @@
 {
-  "sourceRevision": "442fc709c08d006bbc625de1751124f515344d07",
-  "status": "B14-06 handoff adds authoritative creator acceptance policy and owner-admin ticket-bound recovery preparation. F08-07 wires exact audited recovery commands; deployment and ordinary recovery activation remain separate.",
+  "sourceRevision": "8103c8607e475e711c8b8fc5f5e3eceb1d0e65fc",
+  "status": "B15/F09-02 aligns coin/template request revision limits and exports the strict existing history query; existing F08 recovery and authority handoffs retained. Ordinary activation remains separate.",
   "operations": [
     {
       "id": "public-api:GET /api/rounds/:id/suggestions",
@@ -281,10 +281,10 @@
       "csrf": "no mutation CSRF; Origin policy still applies",
       "idempotency": "none",
       "request": "none",
-      "query": "service bounded cursor page (source inline)",
+      "query": "CoinHistoryQuerySchema",
       "response": "coinPage(CoinLedgerItemSchema)",
       "successStatuses": [200],
-      "publicExports": ["coinPage", "CoinLedgerItemSchema"],
+      "publicExports": ["coinPage", "CoinLedgerItemSchema", "CoinHistoryQuerySchema"],
       "source": {
         "file": "apps/api/src/modules/coins/templates.routes.ts",
         "line": 7,
@@ -1732,10 +1732,15 @@
       "csrf": "no mutation CSRF; Origin policy still applies",
       "idempotency": "none",
       "request": "none; TemplateIdSchema",
-      "query": "service bounded cursor page (source inline)",
+      "query": "CoinHistoryQuerySchema",
       "response": "coinPage(CoinPriceItemSchema)",
       "successStatuses": [200],
-      "publicExports": ["TemplateIdSchema", "coinPage", "CoinPriceItemSchema"],
+      "publicExports": [
+        "TemplateIdSchema",
+        "coinPage",
+        "CoinPriceItemSchema",
+        "CoinHistoryQuerySchema"
+      ],
       "source": {
         "file": "apps/admin-api/src/modules/coins/templates.routes.ts",
         "line": 10,
@@ -1753,10 +1758,10 @@
       "csrf": "no mutation CSRF; Origin policy still applies",
       "idempotency": "none",
       "request": "none; UUID id",
-      "query": "service bounded cursor page (source inline)",
+      "query": "CoinHistoryQuerySchema",
       "response": "coinPage(CoinLedgerItemSchema)",
       "successStatuses": [200],
-      "publicExports": ["coinPage", "CoinLedgerItemSchema"],
+      "publicExports": ["coinPage", "CoinLedgerItemSchema", "CoinHistoryQuerySchema"],
       "source": {
         "file": "apps/admin-api/src/modules/coins/templates.routes.ts",
         "line": 11,
@@ -1774,10 +1779,10 @@
       "csrf": "no mutation CSRF; Origin policy still applies",
       "idempotency": "none",
       "request": "none",
-      "query": "service bounded cursor page (source inline)",
+      "query": "CoinHistoryQuerySchema",
       "response": "coinPage(CoinConfigurationItemSchema)",
       "successStatuses": [200],
-      "publicExports": ["coinPage", "CoinConfigurationItemSchema"],
+      "publicExports": ["coinPage", "CoinConfigurationItemSchema", "CoinHistoryQuerySchema"],
       "source": {
         "file": "apps/admin-api/src/modules/coins/templates.routes.ts",
         "line": 12,

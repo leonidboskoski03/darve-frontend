@@ -1,7 +1,7 @@
 {
   "package": "@darve/contracts",
   "version": "0.0.0",
-  "sourceRevision": "442fc709c08d006bbc625de1751124f515344d07",
+  "sourceRevision": "8103c8607e475e711c8b8fc5f5e3eceb1d0e65fc",
   "sourcePaths": ["packages/contracts", "tsconfig.base.json", "package-lock.json"],
   "sourceFiles": {
     "package-lock.json": "59083686090763494821add1bb0d02cd52e8e9fbc97e754440089ae8f3f5fd79",
@@ -9,7 +9,7 @@
     "packages/contracts/package.json": "21dcf7d61d4fc5a30eb1198034465891c33c6624b781ad56ef67027fef241030",
     "packages/contracts/src/analysis.ts": "c67dbdcc134c3db9c238a588b0d5da691f1b22a98092a849fa01715eb5b398a7",
     "packages/contracts/src/challenge.ts": "71d7a0181b4141063a96e2c77bf86f161b688bdb77b55622d30a4ba627a9e2c2",
-    "packages/contracts/src/coins.ts": "e805dbacd8c98dcb580eef8cae283cfe0927ef95afd26050382d363be3df8ae9",
+    "packages/contracts/src/coins.ts": "834262acaf49c13e5b6da4fcfbce59438733566670ecebc98b54e6b7b36da01a",
     "packages/contracts/src/collection.ts": "19fcfd7df045a76693fe7b2e11a37f7cab4b82f0596789c43f44c783606c986b",
     "packages/contracts/src/completion.ts": "773b859c64a9b70eeed6ed91aca290d29ce0f0277253029d541d998b8723660a",
     "packages/contracts/src/consumer-http.ts": "aa741f97b83f5d910825b153ec8a07dc6de7f17fa1e289adf64daf1ee5d64a34",
@@ -55,17 +55,17 @@
     }
   },
   "artifact": {
-    "filename": "darve-contracts-442fc709c08d006bbc625de1751124f515344d07.tgz",
-    "sha256": "c166fea2b44d37076ded9f5cb88f6617e6dd8a6bb173cb4cba468528902adda8",
-    "integrity": "sha512-W14229CH9wlGSr931u8oxsuuXjnUGx3v4Z5vf2/grt+tQ5aaOMFJz/jfY1IXVOpfiKZurTLpWYVc/LpkKJpRpQ==",
+    "filename": "darve-contracts-8103c8607e475e711c8b8fc5f5e3eceb1d0e65fc.tgz",
+    "sha256": "5e469934de4198b81d0e54f0d0be5efa5f6f16b1abeb98caa4d50864106aaec2",
+    "integrity": "sha512-6hI2yEZ4FZtqTCTkdfzTQZEeRlsH8YUskJrSimmIwsWwuZ8KP8t/7Awz6KmmlENhIriXdcNL79jCCvF+nE9eag==",
     "files": {
       "README.md": "3c38051c93820e6e48e2d7e77491305ed024044614219bf80e9498a675bef693",
       "dist/analysis.d.ts": "e7d3fa32d929f652b19af6bc41cff16f93612c5a0dc1f6bd55dfcbdbe85eb1a2",
       "dist/analysis.js": "99af8c50a9690044e943b42ce9f273a722aca11a3bd769ce6bd80e781be63980",
       "dist/challenge.d.ts": "53eab19f4cece835a87e8e799626fa86194dc93abb19702607e661821f886818",
       "dist/challenge.js": "6b561e0a8c710cd1cb40ba5bf28f6bfce2b409b8ba8039dad7922a13c009a679",
-      "dist/coins.d.ts": "5b8c1f22cf1ec40e59f9b0a190f989eae02e29d819823d5acc92c166457b309b",
-      "dist/coins.js": "3049fab1a793f79ca215dd394d733663f8af08a106e314f26f058c19a691c857",
+      "dist/coins.d.ts": "d98808775e81f9c8bfcc34a9eb08c85bd3c02ac9f0e71f234a23ec55e928e9f8",
+      "dist/coins.js": "3e9289b2729bd86257ab79956ec14215694377ddddbf05eea4b8d75d95d00451",
       "dist/collection.d.ts": "6f36aee6516d005a764eb1a89fae60252290082ad4fd113463ac183ef96382bd",
       "dist/collection.js": "386ba8c9a9687b791ab7e19edac41c6014c7c217f75f8946e2fcfdf831b3d882",
       "dist/completion.d.ts": "4d96b1e724d8b29b93f21090da2a3bd63bd3c595677271d076550a072bbe4c40",
@@ -161,6 +161,7 @@
     "CoinConfigurationItemSchema",
     "CoinConfigurationViewSchema",
     "CoinCreatorAccountDataSchema",
+    "CoinHistoryQuerySchema",
     "CoinLedgerItemSchema",
     "CoinMissionSchema",
     "CoinMissionsDataSchema",
