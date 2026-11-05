@@ -1,5 +1,4 @@
 import { useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/design-system/button';
 import { LoadingState } from '@/design-system/loading-state';
 import { ContentState } from '@/design-system/content-state';
@@ -8,6 +7,7 @@ import { createCollectionClient } from '@/services/collection/index';
 import type { CreatorSession, CreatorSnapshot } from '@/services/creator-session/index';
 import { CollectionSetup } from './setup';
 import { CollectionRound } from './round';
+import { useCurrentCollection } from './current-query';
 import './collection.css';
 
 function CollectionEntry({
@@ -19,15 +19,7 @@ function CollectionEntry({
   snapshot: CreatorSnapshot;
   onStarted: (id: string) => void;
 }) {
-  const current = useQuery({
-    queryKey: snapshot.scope.key(['collection-current']),
-    queryFn: ({ signal }) => client.currentRound(signal),
-    retry: false,
-    networkMode: 'always',
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-  });
+  const current = useCurrentCollection(client, snapshot.scope);
   const confirmed = current.isSuccess && !current.isFetching;
   const active = confirmed ? current.data : null;
   return (

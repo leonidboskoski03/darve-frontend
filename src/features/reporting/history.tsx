@@ -1,5 +1,4 @@
 import { useMemo } from 'react';
-import { useInfiniteQuery } from '@tanstack/react-query';
 import { Button } from '@/design-system/button';
 import {
   createReportingClient,
@@ -10,6 +9,7 @@ import {
 } from '@/services/reporting/index';
 import type { CreatorSession, CreatorSnapshot } from '@/services/creator-session/index';
 import { ReportProblem } from './common';
+import { useChallengePages } from './challenge-pages';
 import './reporting.css';
 export type HistoryFilter = 'all' | 'funding' | 'funded' | 'declared' | 'unsuccessful';
 export function History({
@@ -26,13 +26,7 @@ export function History({
   onFilters: (current: boolean, filter: HistoryFilter) => void;
 }) {
   const client = useMemo(() => createReportingClient(session), [session]);
-  const query = useInfiniteQuery({
-    queryKey: snapshot.scope.key(['challenge-history', current]),
-    initialPageParam: null as string | null,
-    queryFn: ({ pageParam, signal }) => client.history(current, pageParam, signal),
-    getNextPageParam: (page) => page.data.nextCursor,
-    retry: false,
-  });
+  const query = useChallengePages(client, snapshot.scope, current);
   const items = [
     ...new Map(
       (query.data?.pages ?? []).flatMap((page) => page.data.items).map((item) => [item.id, item]),

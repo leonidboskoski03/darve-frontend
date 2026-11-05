@@ -242,7 +242,16 @@ export function OverlaySettings({
             </p>
           </div>
         )}
-        {selection.data && !selection.isFetching && <SelectionRead selection={selection.data} />}
+        {selection.data && !selection.isFetching && !selection.isError && (
+          <>
+            <SelectionRead selection={selection.data} />
+            <p>
+              <a href={'/dashboard?displayId=' + selection.data.displayId}>
+                View this display on the dashboard
+              </a>
+            </p>
+          </>
+        )}
         <Button
           tone="secondary"
           disabled={busy || selection.isFetching || preferences.isFetching || history.isFetching}

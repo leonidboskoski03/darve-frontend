@@ -29,7 +29,7 @@ function connectionLabel(connection: Connection) {
   return grantCopy.usable;
 }
 
-function ConnectionSummary({
+export function ConnectionSummary({
   session,
   scope,
 }: {
