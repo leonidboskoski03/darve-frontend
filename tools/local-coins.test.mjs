@@ -11,6 +11,33 @@ const selected = {
   port: 3310,
   origins: ['http://127.0.0.1:4175'],
 };
+
+test('staff coin acceptance permits only exact coins/support composition and matching journal labels', async () => {
+  const input = { ...selected, task: 'f09-06', support: true };
+  for (const override of [
+    { coins: false },
+    { support: false },
+    { collection: true },
+    { review: true },
+    { terms: true },
+    { overlay: true },
+    { reporting: true },
+    { checkout: true },
+    { contributionReads: true },
+    { operatorOAuth: {} },
+    { sandboxPayment: {} },
+    { port: 3000 },
+    { origins: ['https://other.example.test'] },
+  ])
+    await assert.rejects(
+      startLocalApi({ ...input, ...override }),
+      /Coins require|Creator support acceptance requires/,
+    );
+  const run = randomUUID(),
+    labels = { 'darve.frontend.task': 'f09-06', 'darve.frontend.run': run };
+  assert.doesNotThrow(() => assertJournalOwnership({ Labels: labels }, run, 'f09-06'));
+  assert.throws(() => assertJournalOwnership({ Labels: labels }, run, 'f09-05'));
+});
 test('coin acceptance rejects mixed scopes before backend, Docker or secret access', async () => {
   for (const task of ['f09-02', 'f09-g01', 'f09-04']) {
     for (const override of [

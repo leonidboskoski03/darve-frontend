@@ -32,6 +32,9 @@ export function StaffWorkspace({
             {access.getSnapshot().role === 'OWNER_ADMIN' ? 'Owner administrator' : 'Support'}
           </span>
           <nav aria-label="Staff workspace">
+            {access.getSnapshot().permissions.includes('coins.read') ? (
+              <a href="/coins">Coin tools</a>
+            ) : null}
             {access.getSnapshot().permissions.includes('review.read') ? (
               <a href="/reviews">Inspection and reviews</a>
             ) : null}

@@ -6,6 +6,7 @@ import {
   createStaffAccess,
   readStaffEntry,
   staffReviewSearch,
+  staffCoinSearch,
 } from '@/services/staff-access/index';
 import '@/design-system/styles.css';
 
@@ -16,7 +17,12 @@ export function mountStaffAccess(configuration: {
 }) {
   const entry = readStaffEntry(window.location.href);
   // Strip proofs and arbitrary queries before mounting; retain only reviewed navigation filters.
-  const search = entry.path === '/reviews' ? staffReviewSearch(window.location.search) : '';
+  const search =
+    entry.path === '/reviews'
+      ? staffReviewSearch(window.location.search)
+      : entry.path === '/coins'
+        ? staffCoinSearch(window.location.search)
+        : '';
   window.history.replaceState(null, '', entry.path + search);
   let returnTo: (path: string) => void = () => {};
   const access = createStaffAccess({

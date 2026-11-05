@@ -282,6 +282,9 @@ function StaffScreen({ access, snapshot }: { access: StaffAccess; snapshot: Staf
               {snapshot.permissions.includes('tickets.assigned.read') ? (
                 <ActionLink href="/tickets">Open support workspace</ActionLink>
               ) : null}
+              {snapshot.permissions.includes('coins.read') ? (
+                <ActionLink href="/coins">Open owner coin tools</ActionLink>
+              ) : null}
               {snapshot.permissions.includes('review.read') ? (
                 <ActionLink href="/reviews">Open inspection and review tools</ActionLink>
               ) : null}

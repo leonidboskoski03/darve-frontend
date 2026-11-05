@@ -50,10 +50,10 @@ export async function startLocalApi({
   coins = false,
 }) {
   if (
-    (coins || ['f09-02', 'f09-g01', 'f09-03', 'f09-04', 'f09-05'].includes(task)) &&
+    (coins || ['f09-02', 'f09-g01', 'f09-03', 'f09-04', 'f09-05', 'f09-06'].includes(task)) &&
     (!coins ||
-      !['f09-02', 'f09-g01', 'f09-03', 'f09-04', 'f09-05'].includes(task) ||
-      support ||
+      !['f09-02', 'f09-g01', 'f09-03', 'f09-04', 'f09-05', 'f09-06'].includes(task) ||
+      (task === 'f09-06' ? !support : support) ||
       (['f09-03', 'f09-05'].includes(task)
         ? !collection || !review || !terms
         : collection || review || terms) ||
@@ -97,13 +97,14 @@ export async function startLocalApi({
       'f09-03',
       'f09-04',
       'f09-05',
+      'f09-06',
     ].includes(task)
   )
     throw new Error('Invalid local task identity.');
   if (
-    (support || ['f08-04', 'f08-05', 'f08-06', 'f08-07', 'f08-08'].includes(task)) &&
+    (support || ['f08-04', 'f08-05', 'f08-06', 'f08-07', 'f08-08', 'f09-06'].includes(task)) &&
     (!support ||
-      !['f08-04', 'f08-05', 'f08-06', 'f08-07', 'f08-08'].includes(task) ||
+      !['f08-04', 'f08-05', 'f08-06', 'f08-07', 'f08-08', 'f09-06'].includes(task) ||
       collection ||
       review ||
       reporting ||
@@ -442,9 +443,10 @@ export async function startLocalApi({
       ? await (
           await import('./local-coin-fixture.mjs')
         ).createLocalCoinFixture(backend, databaseUrl, deps.database, {
-          linuxJournal: ['f09-g01', 'f09-03', 'f09-04', 'f09-05'].includes(task),
+          linuxJournal: ['f09-g01', 'f09-03', 'f09-04', 'f09-05', 'f09-06'].includes(task),
           task,
           runId,
+          staffAuthority: task === 'f09-06' ? supportFixture?.coinAuthority : null,
         })
       : null;
     if (coinFixture) config = readApiEnvironment({ ...runtimeInput, ...coinFixture.environment });
@@ -602,10 +604,11 @@ export async function startLocalApi({
       supportFixture,
       coinFixture,
       createStaffWorkbench: async () => {
-        if (!['f08-05', 'f08-06', 'f08-07', 'f08-08'].includes(task) || !supportFixture)
+        if (!['f08-05', 'f08-06', 'f08-07', 'f08-08', 'f09-06'].includes(task) || !supportFixture)
           throw new Error('Staff workbench requires F08-05 disposable composition.');
         return supportFixture.workbench(deps.redis, {
-          administration: ['f08-06', 'f08-07', 'f08-08'].includes(task),
+          administration: ['f08-06', 'f08-07', 'f08-08', 'f09-06'].includes(task),
+          coinWorkbench: task === 'f09-06' ? coinFixture?.staffWorkbench : null,
           recovery: ['f08-07', 'f08-08'].includes(task),
         });
       },
@@ -656,7 +659,8 @@ export async function startLocalApi({
       async seedSession({ expiresInMs = 60_000, coinOwner = false } = {}) {
         if (
           coinOwner &&
-          (!['f09-g01', 'f09-03', 'f09-04', 'f09-05'].includes(task) || !coinFixture?.durability)
+          (!['f09-g01', 'f09-03', 'f09-04', 'f09-05', 'f09-06'].includes(task) ||
+            !coinFixture?.durability)
         )
           throw new Error('Existing coin owner requires the exact journal acceptance fixture.');
         const secret = randomBytes(32).toString('base64url');

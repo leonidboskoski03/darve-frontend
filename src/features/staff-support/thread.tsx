@@ -12,6 +12,7 @@ import { CommandResult } from './command';
 import { staffError } from './error';
 import { TicketActions } from './ticket-actions';
 import { TicketRecovery } from './recovery';
+import { TicketCoins } from './coins';
 
 export function StaffThread({
   client,
@@ -271,6 +272,11 @@ export function StaffThread({
               </section>
             </aside>
           </div>
+          {phase === 'live' &&
+          (client.access.getSnapshot().permissions.includes('coins.assigned.read') ||
+            client.access.getSnapshot().permissions.includes('coins.read')) ? (
+            <TicketCoins key={'coins:' + epoch} client={client} id={id} epoch={epoch} />
+          ) : null}
           {client.access.getSnapshot().role === 'OWNER_ADMIN' &&
           client.access.getSnapshot().permissions.includes('tickets.context.write') ? (
             <TicketRecovery

@@ -11,7 +11,7 @@ export async function createLocalCoinFixture(
   backend,
   uri,
   owner,
-  { linuxJournal = false, runId, task = 'f09-02' } = {},
+  { linuxJournal = false, runId, task = 'f09-02', staffAuthority = null } = {},
 ) {
   const load = (file) => import(pathToFileURL(join(backend, file)).href);
   const requireBackend = createRequire(join(backend, 'package.json'));
@@ -36,7 +36,12 @@ export async function createLocalCoinFixture(
   try {
     await sql.connect();
     try {
-      for (const file of ['b13-runtime-grants.sql', 'b15-runtime-grants.sql'])
+      // F09-06 composes after the support fixture has installed the shared B13 roles.
+      const grantFiles =
+        task === 'f09-06'
+          ? ['b15-runtime-grants.sql']
+          : ['b13-runtime-grants.sql', 'b15-runtime-grants.sql'];
+      for (const file of grantFiles)
         await sql.query(readFileSync(join(backend, 'infra/sql', file), 'utf8'));
       await sql.query(`CREATE ROLE f09_public LOGIN PASSWORD 'disposable-coins-only' IN ROLE darve_public_runtime;
         CREATE ROLE f09_admin LOGIN PASSWORD 'disposable-coins-only' IN ROLE darve_admin_runtime;
@@ -73,11 +78,15 @@ export async function createLocalCoinFixture(
       admin = connection('f09_admin'),
       worker = connection('f09_worker');
     // Scoped tsx resolves the backend test sources' .js -> .ts imports without a global loader.
-    const { coinFixture } = await tsImport(
-      pathToFileURL(join(backend, 'tests/fixtures/coins.ts')).href,
-      import.meta.url,
-    );
-    const fixture = await coinFixture(owner, admin);
+    assert.equal(task === 'f09-06', Boolean(staffAuthority));
+    const fixture = staffAuthority
+      ? await createCombinedCoinSeed(owner, admin, db, domain, staffAuthority)
+      : await (
+          await tsImport(
+            pathToFileURL(join(backend, 'tests/fixtures/coins.ts')).href,
+            import.meta.url,
+          )
+        ).coinFixture(owner, admin);
     const cursorKey = randomBytes(32).toString('base64');
     const policy = {
       programId: fixture.program,
@@ -112,7 +121,7 @@ export async function createLocalCoinFixture(
     const journalReady = await journal.ready();
     // Node-only, task-bound controls install synthetic manifests into this disposable database.
     // No product asset, serving route, real renderer or commercial price is invented here.
-    const assets = ['f09-04', 'f09-05'].includes(task)
+    const assets = ['f09-04', 'f09-05', 'f09-06'].includes(task)
       ? db.createTemplateAssetRepository(owner)
       : null;
     const templates = assets
@@ -168,6 +177,38 @@ export async function createLocalCoinFixture(
         COIN_CREATOR_CURSOR_KEY_BASE64: cursorKey,
       },
       configure: () => fixture.configure(),
+      staffWorkbench:
+        task === 'f09-06'
+          ? async (adminDatabase, staffCrypto, staffPolicy) => {
+              // Fresh disposable program only: align both real consumers with this workbench authority.
+              await owner.coinProgram.update({ where: { id: 1 }, data: { staffPolicy } });
+              return {
+                coins: domain.createCoinAdminService(
+                  db.createCoinAdminRepository(adminDatabase),
+                  staffCrypto,
+                ),
+                templates: domain.createTemplateAdminService(
+                  db.createTemplateRepository(adminDatabase),
+                  staffCrypto,
+                  integrations.createCoinCursorCrypto(randomBytes(32).toString('base64'), 'staff'),
+                  policy,
+                ),
+              };
+            }
+          : null,
+      async staffEvidence(actorId) {
+        assert.equal(task, 'f09-06');
+        return {
+          audits: await owner.staffAudit.findMany({
+            where: { actorId, action: { in: ['coins.configure', 'coins.adjust', 'coins.price'] } },
+            select: { action: true, reason: true },
+          }),
+          receipts: await owner.staffCommandReceipt.count({ where: { actorId } }),
+          configurations: await owner.coinConfiguration.count(),
+          prices: await owner.coinTemplatePrice.count(),
+          ledger: await owner.coinLedger.count(),
+        };
+      },
       templates:
         assets && templates
           ? {
@@ -222,4 +263,73 @@ export async function createLocalCoinFixture(
     await close();
     throw error;
   }
+}
+
+async function createCombinedCoinSeed(owner, admin, db, domain, authority) {
+  // Fresh F09-06 storage only. Reuse the already seeded support authority; no second bootstrap.
+  const program = randomUUID(),
+    binding = randomUUID();
+  await owner.coinProgram.create({
+    data: {
+      id: 1,
+      identity: program,
+      journalBinding: binding,
+      staffPolicy: authority.policy,
+      consumersReady: true,
+    },
+  });
+  const accountOwner = await owner.darveUser.create({ data: {} }),
+    service = domain.createCoinAdminService(db.createCoinAdminRepository(admin), authority.crypto),
+    rewards = {
+      'collection.first_success': '20',
+      'funding.first_goal': '40',
+      'completion.first_declaration': '40',
+      'suggestions.10': '10',
+      'suggestions.100': '100',
+      'suggestions.1000': '1000',
+    };
+  return {
+    program,
+    binding,
+    accountOwner,
+    service,
+    crypto: authority.crypto,
+    owner: { secret: authority.secret },
+    configure: () =>
+      service.execute(
+        authority.secret,
+        authority.crypto.csrf(authority.secret),
+        'configure',
+        null,
+        randomUUID(),
+        {
+          expectedRevision: 0,
+          active: true,
+          rewards,
+          reason: 'Synthetic isolated F09-06 rewards',
+          confirmation: { programId: program },
+        },
+      ),
+    adjust: (
+      amount,
+      direction = 'credit',
+      expectedRevision = 0,
+      balance = '0',
+      key = randomUUID(),
+    ) =>
+      service.execute(
+        authority.secret,
+        authority.crypto.csrf(authority.secret),
+        'adjust',
+        accountOwner.id,
+        key,
+        {
+          expectedRevision,
+          direction,
+          amount,
+          reason: 'Synthetic isolated F09-06 initial credit',
+          confirmation: { ownerId: accountOwner.id, balance },
+        },
+      ),
+  };
 }

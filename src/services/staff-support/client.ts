@@ -17,6 +17,8 @@ import {
   SupportExtensionInputSchema,
   SupportContinuationInputSchema,
   SupportRecoveryResponseSchema,
+  CoinAssignedDataSchema,
+  coinEnvelope,
 } from '@/services/contracts/index';
 import { failure, type ApiFailure, type JsonRequest } from '@/services/api/index';
 import type { StaffAccess } from '@/services/staff-access/index';
@@ -145,6 +147,27 @@ export function createStaffSupportClient(access: StaffAccess) {
   } as const;
   return {
     scope,
+    async coins(id: string, signal: AbortSignal) {
+      active();
+      const current = access.getSnapshot();
+      if (
+        !current.permissions.includes('coins.assigned.read') &&
+        !current.permissions.includes('coins.read')
+      )
+        throw new StaffSupportError(failure('authority', 'STAFF_PERMISSION_REQUIRED', 403));
+      const value = await request({
+        path: path(id) + '/coins',
+        schema: coinEnvelope(CoinAssignedDataSchema),
+        success: [200],
+        signal,
+      });
+      if (
+        new Set(value.data.templates.map((row) => row.id)).size !== value.data.templates.length ||
+        value.data.templates.some((row) => row.owned !== (row.ownershipState !== 'not_owned'))
+      )
+        mismatch();
+      return value.data;
+    },
     access,
     retryDelay: () => Math.max(0, retryAt - Date.now()),
     recoveryNow,

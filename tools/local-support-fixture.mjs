@@ -88,7 +88,12 @@ export async function createLocalSupportFixture(backend, uri, owner, policy) {
   const command = (id, action, body) => service.execute(actor, id, action, randomUUID(), body);
   return {
     publicDatabase,
-    async workbench(redis, { administration = false, recovery = false } = {}) {
+    // Private composition value, never exposed by an HTTP route or product build.
+    coinAuthority: { policy: staffPolicy, crypto, secret },
+    async workbench(
+      redis,
+      { administration = false, recovery = false, coinWorkbench = null } = {},
+    ) {
       assert(!recovery || administration);
       const recoveryPolicy = {
         version: 'synthetic-recovery-v1',
@@ -156,6 +161,7 @@ export async function createLocalSupportFixture(backend, uri, owner, policy) {
             },
           }
         : null;
+      const coinServices = coinWorkbench ? await coinWorkbench(admin, crypto, staffPolicy) : null;
       const access = domain.createStaffAccessService(
         db.createStaffRepository(admin, staffPolicy, administration),
         provider,
@@ -170,8 +176,10 @@ export async function createLocalSupportFixture(backend, uri, owner, policy) {
             }
           : null,
         true,
+        Boolean(coinServices),
       );
       const app = createAdminApp({
+        ...coinServices,
         service: access,
         support: { service, crypto },
         recoveryContext: domain.createSupportRecoveryContextService(
@@ -200,7 +208,8 @@ export async function createLocalSupportFixture(backend, uri, owner, policy) {
           : {}),
         config: { secure: false, frontendOrigin, loginSeconds: staffPolicy.loginSeconds },
         store: createStaffRateLimitStore(redis),
-        ready: async () => db.staffRuntimeAuthorityReady(admin, true, recovery),
+        ready: async () =>
+          db.staffRuntimeAuthorityReady(admin, true, recovery, Boolean(coinServices)),
         log: () => {},
       });
       return {

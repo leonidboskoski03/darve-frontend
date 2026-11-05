@@ -67,6 +67,9 @@ export function StaffAdminWorkspace({
           </span>
           <nav aria-label="Staff workspace">
             <a href="/tickets">Support desk</a>
+            {access.getSnapshot().permissions.includes('coins.read') ? (
+              <a href="/coins">Coin tools</a>
+            ) : null}
             <a href="/">Staff access</a>
             <Button tone="secondary" onClick={() => void access.logout()}>
               Sign out
