@@ -20,3 +20,7 @@ For every actual selected screen, record source path/revision or file hash, chos
 Retain loading/empty/error/unavailable/offline/expired authority states, keyboard/focus, reduced motion, long text and exact money. Replace old fake API, localStorage tokens, simulated donor/activity timestamps, local authoritative timers and clip actions with current backend behavior. Screen existence is not feature completion.
 
 F00's text mark, system font and simplified foundation layout are temporary engineering presentation, not replacement brand decisions. [DESIGN_AND_MOTION](DESIGN_AND_MOTION.md) owns primitives/motion rules; [PLAN](PLAN.md) owns subsequent delivery scope.
+
+## Product coverage versus selected appearance
+
+The founder's 2026-11-05 reconciliation makes the standalone page/fragment/flow inventory the historical product-coverage reference, alongside the selected F/M/R/A appearance choices above. Selecting the F dashboard or M/R OBS did not exclude standalone onboarding, private profile/payout setup, operational navigation or public help/policy questions. [F01-04](F01_REFERENCE_AND_COMPONENT_AUDIT.md#f01-04-product-coverage-reconciliation) records each implemented, missing, adapted or contract/input-limited surface and its owner. Current backend rules still supersede obsolete historical authority/financial behavior; this is not a wholesale visual redesign or public-policy approval.

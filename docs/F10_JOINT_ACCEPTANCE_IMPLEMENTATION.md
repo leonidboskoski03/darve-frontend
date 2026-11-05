@@ -110,4 +110,12 @@ Actual source/contract identities, 346 source fingerprints, the three-provider m
 
 All owned browser/preview/API/clients and matching task/run PostgreSQL/Redis containers were cleaned; no listeners remain on 3310/4175. The retained backend is clean at the unchanged pin; ordinary development/staging services/data and feature activation are untouched. No email, real provider/payment, native OBS or phone test was started. After interruption inspect actual Git and source/custody, not old process handles.
 
-Next recommended task is **F10-03**: connect the same lifecycle with OBS, fresh guest checkout, independently verified provider funding and declaration. Coordinate fresh genuine sandbox scope before those external runs; existing F06 approval windows are consumed. F08-EXT01 and deployment/activation gates remain deferred/open under their existing owners.
+The earlier recommendation to proceed to F10-03 is superseded by the [coverage reconciliation hold](#coverage-reconciliation-sequencing-hold). F10-02 remains locally qualified within its recorded boundaries; core product omissions must be corrected before further joint acceptance.
+
+## Coverage reconciliation sequencing hold
+
+2026-11-05: [F01-04](F01_REFERENCE_AND_COMPONENT_AUDIT.md#f01-04-product-coverage-reconciliation) identifies missing creator receiving setup, account/onboarding/authenticated entry, operational home and public-content decisions. The founder prioritizes correcting the original batches. F10-01/02 stay CLOSED within their bounded evidence; no previous source/test result is relabelled as full product parity.
+
+F10-03 stays OPEN with a sequencing hold, not a newly invented status or a claim of failed payment tests. Resume local integration after the P0/P1 original-batch corrections (F03-04/05/06, F06-05/06, F04-04 with G01 and F05-04) and F01-05 core walkthrough qualify. Record remaining non-core content/projection/chat decisions explicitly. F10-04/05/06 retain their planned acceptance, but do not use them to conceal missing earlier screens or declare final F10 complete.
+
+The correction sequence and criteria belong to PLAN/F01 and the original feature owners; do not duplicate a second backlog here. Fresh genuine sandbox scope, F04-G04 real collection/analysis, F08-EXT01, B15-03-G01 and the deployment/activation gates remain separate. This reconciliation starts no provider/payment/mail/OBS runtime.

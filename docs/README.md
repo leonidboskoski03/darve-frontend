@@ -2,6 +2,8 @@
 
 Start with [CURRENT_STATE](CURRENT_STATE.md), the relevant [task tracker](FRONTEND_TASK_TRACKER.md) row and [ARCHITECTURE](ARCHITECTURE.md). Follow [WORKFLOW](WORKFLOW.md). Use the table below to read only the owning documents for the authorized work. Historical test counts and reference folders do not establish current functionality.
 
+Current correction priority: [F01-04 product-coverage reconciliation](F01_REFERENCE_AND_COMPONENT_AUDIT.md#f01-04-product-coverage-reconciliation). Use its original-batch owners and the tracker before resuming F10-03.
+
 ## Task routing
 
 | Work                                           | Owning records                                                                                                                                                                                                                                 |
