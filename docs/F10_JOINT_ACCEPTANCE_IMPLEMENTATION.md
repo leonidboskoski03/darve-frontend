@@ -69,3 +69,43 @@ Task branch: `docs/f10-acceptance-map`, based on frontend dev `007a4c822f8f0de50
 The task's ignored `artifacts.local/f10-01/` owns local check logs and exact PR/head/check/protection/merge/ancestry/identical-tree/branch-cleanup custody. Integration is established by those actual records and Git, not this pre-merge note. After interruption, inspect branch/status and custody before editing or claiming integration. The F09-07 custody recheck above is the only renewed product-evidence comparison in this mapping task.
 
 Next recommended implementation is **F10-02**, starting with its bounded composition design and missing-contract handoff. It requires a later task instruction; no real payment, Resend setup or deployment is needed to begin its controlled local portion. Keep F08-EXT01 deferred and all ordinary activation gates intact.
+
+## F10-02 connected local creator lifecycle
+
+Authorized 2026-11-05 from clean frontend dev `ae6a86d34ac046a68d2a03de0c23190a5ec53a96`; task branch `test/f10-creator-lifecycle`. Backend/browser contracts remain `32d8716bf93fef695a4fef4fcb51a9fa2a59fdcf`. Scope is an exact disposable F10 composition and production-browser creator journey, not genuine provider/model/payment or staff/OBS acceptance. No backend contract change is required to exercise the existing known-round lifecycle.
+
+Implementation checklist:
+
+- Add positive/negative composition checks before source, secret or Docker access; refuse payment/OAuth/OBS/staff/coin extensions and ordinary ports/origins.
+- Exercise all three providers through actual ingestion/admission/snapshot/analysis repositories with controlled provider observations and model outputs; no mocked internal HTTP or fixture login route.
+- Connect real creator UI, current terms, Start/known-round reload/Stop, review/credits/versioned acceptance, retained dashboard/history/analytics and declaration preconditions. Prove committed-response uncertainty with identical held retry and no second operation.
+- Keep any synthetic verified-financial facts explicit and separate from genuine payment acceptance; F10-03 owns that linkage. Qualify wrong authority/CSRF/revision and source/stream denial without weakening domain guards.
+- Run affected operator checks, current-source production-browser/API/storage proof and settled frontend gates; record failures and clean owned runtime. F04-G01 unknown-round discovery and F04-G03 original URLs remain with B04/B12 and B05/B12 respectively. Missing projections are not implemented by the fixture.
+
+### Implementation and actual local qualification
+
+The exact `f10-02` guard requires collection/review/reporting/development terms on 3310/4175 before source/secret/Docker access. Three new operator cases cover the permitted configuration, missing/wrong local prerequisites and forbidden payment/OAuth/OBS/staff/coin extensions; all seventeen focused composition cases pass. Existing F05/F06/F07/F08/F09 restrictions remain intact. No app, backend, contract or dependency change was needed; the package adds only the named acceptance command.
+
+`npm.cmd run test:lifecycle:local` builds the regular production entry into an isolated output, then exercises real browser/HTTP/domain/SQL/Redis behavior against 61 fresh disposable migrations. The Node-only fixture adds controlled YouTube batch/cursor writes and locally signed Kick ingress/consumption beside existing Twitch storage; actual admission, frozen snapshots and processing repositories produce the review results. External discovery/reader observations, identity, receiving and model outputs remain explicitly synthetic. Kick's generated test key is not a provider key, and its delivered readiness observation does not prove continuous quiet capture.
+
+All **nineteen** connected scenarios pass on the final implementation bytes:
+
+- Current creator terms and an empty real dashboard; three separate provider paths through Start, known-round reload, competing-Start denial, actual idea admission, Stop and one snapshot each.
+- Actual processing and two safe grouped ideas per provider, three retained submissions and distinct duplicate-name author credits; current-version pinning and exact reviewed acceptance. Wrong CSRF/stale revisions, unavailable receiving and changed stream create no extra commitment.
+- Lost committed Start and acceptance responses: the UI holds uncertainty without automatic POST replay; deliberate retry sends the identical key/body. Three rounds result in exactly three challenges and three acceptance receipts; changing the held acceptance terms conflicts.
+- Each accepted challenge binds its round/history/analytics, exact goal/currency and three admitted ideas. All three initially have zero recorded money and reject completion as NOT_FUNDED; no declaration is persisted.
+- Two explicitly synthetic financial prerequisites through the real financial repositories enable local declaration checks. The UI requires unchecked confirmation; changed stream and wrong CSRF fail. One deliberate original-stream declaration and same-key replay persist exactly one statement, immutable accepted terms and `streamer_declaration` verification. This does not establish a genuine payment or verified stream performance.
+- Retained history/dashboard reconcile three accepted/two historically funded/one declared challenge, with exact separate EUR2550 and USD1007 minor-unit gross rows. URL history filtering survives reload and the Warsaw civil-day filter preserves the 23-hour DST interval.
+- A fresh mobile browser reads the same known round/declaration without horizontal overflow. A foreign creator cannot read any of the three lifecycle resources or reuse the owner's history cursor. Source restriction hides content; sign-out revokes private reads/caches while preserving the statement. No browser page errors or external browser requests occur.
+
+The first run passed thirteen scenarios, then a history assertion matched both links to one challenge. The second passed fifteen, then its exact-label filter locator timed out. The selectors now target the View challenge action and the established combobox role/name; no product guard, timeout or assertion outcome was weakened. The third complete run passes all nineteen. Failed results remain separate in ignored custody; both failed runtimes were cleaned. Initial failure metadata preceded cleanup, so use each run-matched cleanup record/observed finalizer rather than treating that intermediate field as a live resource report.
+
+### Scope limits, handoff and restart
+
+F04-G01 still needs the B04/B12 owner-safe unknown-active-round/lost-operation read. This task proves deliberate same-key recovery while the original attempt is held and known-ID reload, not recovery after losing that identity. F04-G03 still needs B05/B12's safe original-source URL projection; grouped credits/source memberships are retained without invented provider URLs. F04-G05 remains closed by F08-07; optional recovery-policy integration belongs to F10-04. No backend endpoint or projection was fabricated and no backend B-series status changes.
+
+Actual source/contract identities, 346 source fingerprints, the three-provider matrix, failed-run history and cleanup are in ignored `artifacts.local/f10-02/`. The successful run identifies its pre-commit Git base/dirty state honestly; compare recorded file bytes with the settled candidate before carrying its evidence forward. Local gate/browser logs and exact PR/head/hosted/protection/merge/ancestry/identical-tree/ref-cleanup records in that directory govern integration claims. Required settled checks remain mandatory before protected dev integration.
+
+All owned browser/preview/API/clients and matching task/run PostgreSQL/Redis containers were cleaned; no listeners remain on 3310/4175. The retained backend is clean at the unchanged pin; ordinary development/staging services/data and feature activation are untouched. No email, real provider/payment, native OBS or phone test was started. After interruption inspect actual Git and source/custody, not old process handles.
+
+Next recommended task is **F10-03**: connect the same lifecycle with OBS, fresh guest checkout, independently verified provider funding and declaration. Coordinate fresh genuine sandbox scope before those external runs; existing F06 approval windows are consumed. F08-EXT01 and deployment/activation gates remain deferred/open under their existing owners.

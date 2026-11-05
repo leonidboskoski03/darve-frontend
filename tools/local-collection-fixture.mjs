@@ -1,4 +1,4 @@
-import { randomUUID, createHash } from 'node:crypto';
+import { randomUUID, randomBytes, createHash } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 import path from 'node:path';
 
@@ -7,7 +7,7 @@ export async function createLocalCollectionFixture(
   backend,
   database,
   config,
-  { coinActivity = false } = {},
+  { coinActivity = false, allProviderIdeas = false } = {},
 ) {
   const db = await import(
     pathToFileURL(path.join(backend, 'packages/database/dist/index.js')).href
@@ -159,9 +159,21 @@ export async function createLocalCollectionFixture(
       if (!['TWITCH', 'YOUTUBE', 'KICK'].includes(provider))
         throw new Error('Invalid fixture provider');
       const clock = await now();
-      const providerChannelId = provider === 'KICK' ? '123' : randomUUID();
+      const providerChannelId =
+        allProviderIdeas && provider === 'KICK'
+          ? String(randomBytes(5).readUIntBE(0, 5) + 1000)
+          : allProviderIdeas && provider === 'YOUTUBE'
+            ? 'UC' + randomBytes(11).toString('hex')
+            : provider === 'KICK'
+              ? '123'
+              : randomUUID();
       const identity = await database.externalIdentity.create({
-        data: { userId, provider, issuer: 'synthetic.invalid', subject: randomUUID() },
+        data: {
+          userId,
+          provider,
+          issuer: 'synthetic.invalid',
+          subject: allProviderIdeas && provider === 'KICK' ? providerChannelId : randomUUID(),
+        },
       });
       const connection = await database.providerConnection.create({
         data: { userId, provider, identityId: identity.id },
@@ -236,10 +248,24 @@ export async function createLocalCollectionFixture(
           externalId: randomUUID(),
           socketSessionId: 'synthetic-collection-socket',
         });
-      if (provider === 'YOUTUBE') await db.createYouTubeIngestionStore(database).open(claim);
+      if (provider === 'YOUTUBE' && !allProviderIdeas)
+        await db.createYouTubeIngestionStore(database).open(claim);
+      const providerWriter =
+        allProviderIdeas && provider !== 'TWITCH'
+          ? await (
+              await import('./local-provider-ideas-fixture.mjs')
+            ).createLocalProviderIdeaWriter({
+              backend,
+              database,
+              db,
+              ingestion,
+              claim,
+              now,
+            })
+          : null;
       if (provider !== 'KICK' && !(await ingestion.healthy(claim, { kind: 'transport' })))
         throw new Error('Controlled reader health was not accepted.');
-      readers.set(context.broadcastId, { context, claim, subscription });
+      readers.set(context.broadcastId, { context, claim, subscription, providerWriter });
       return { connectionId: connection.id, broadcastId: context.broadcastId };
     },
     async admitIdeas(
@@ -258,6 +284,18 @@ export async function createLocalCollectionFixture(
         where: { id: roundId, userId, state: 'collecting' },
       });
       const reader = readers.get(round.broadcastId);
+      if (reader?.providerWriter && reader.context.userId === userId) {
+        const repository = db.createCollectionRepository(database);
+        for (const [index, text] of texts.entries()) {
+          const id = await reader.providerWriter(
+            '#darve ' + text,
+            authors?.[index] ?? 'review-viewer-' + index,
+          );
+          if ((await repository.admit(userId, roundId, round.version, id)).kind !== 'admitted')
+            throw new Error('Controlled provider idea was not admitted.');
+        }
+        return;
+      }
       if (!reader?.subscription || reader.context.userId !== userId)
         throw new Error('Controlled Twitch reader is unavailable');
       const store = db.createTwitchIngestionStore(database),
