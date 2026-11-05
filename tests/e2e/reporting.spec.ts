@@ -12,6 +12,7 @@ import {
 import {
   connectionFixture,
   discoveryFixture,
+  roundFixture,
 } from '../../src/services/collection/fixture.test-helper';
 const base = 'http://127.0.0.1:4175/tests/fixtures/creator.html';
 const fixture = (view: string, extra = '') =>
@@ -61,6 +62,11 @@ async function scenario(
     reads: [] as string[],
     expired: false,
     readFailure: false,
+    activeRound: false,
+    overlappingWindows: false,
+    windowsClosed: false,
+    displayUnavailable: false,
+    writes: [] as string[],
   };
   await page.route('http://127.0.0.1:3310/**', async (route) => {
     const request = route.request(),
@@ -69,6 +75,7 @@ async function scenario(
       await route.fulfill({ status: 204, headers: cors });
       return;
     }
+    if (request.method() !== 'GET') state.writes.push(url.pathname);
     if (url.pathname === '/api/session') {
       await json(route, syntheticReportingSession);
       return;
@@ -147,9 +154,60 @@ async function scenario(
       await route.abort('failed');
       return;
     }
+    if (url.pathname === '/api/rounds/current') {
+      await json(route, envelope(state.activeRound ? { roundId: ids.round } : null));
+      return;
+    }
+    if (url.pathname === '/api/rounds/' + ids.round) {
+      const round = roundFixture();
+      round.data.id = ids.round;
+      round.data.ownerId = syntheticReportingSession.user.id;
+      await json(route, round);
+      return;
+    }
+    if (url.pathname === '/api/overlay-displays/' + ids.other) {
+      if (state.displayUnavailable) await json(route, failure('RESOURCE_NOT_FOUND'), 404);
+      else
+        await json(
+          route,
+          envelope({
+            displayId: ids.other,
+            version: 1,
+            roundId: ids.round,
+            challengeId: ids.other,
+          }),
+        );
+      return;
+    }
+    if (
+      url.pathname === '/api/payment-accounts/stripe' ||
+      url.pathname === '/api/payment-accounts/paypal'
+    ) {
+      const stripe = url.pathname.endsWith('/stripe');
+      await json(
+        route,
+        envelope({
+          environment: 'test',
+          state: stripe ? 'unconfigured' : 'pending',
+          version: stripe ? null : 1,
+          country: stripe ? null : 'US',
+          currencies: [],
+          observedAt: null,
+          validUntil: null,
+          ...(stripe ? {} : { walletActive: false, cardsActive: false }),
+        }),
+      );
+      return;
+    }
     if (url.pathname === '/api/challenges' || url.pathname === '/api/challenges/current') {
       const current = url.pathname.endsWith('/current');
-      const all = current ? [state.challenge] : [state.challenge, state.second];
+      const all = current
+        ? state.windowsClosed
+          ? []
+          : state.overlappingWindows
+            ? [state.challenge, state.second]
+            : [state.challenge]
+        : [state.challenge, state.second];
       const items =
         options.partial && !current
           ? all.slice(
@@ -197,6 +255,49 @@ async function openDeclaration(page: Page) {
   ).toBeVisible();
 }
 const consent = 'I confirm I completed this challenge on its original or authorized stream.';
+test('synthetic operational home keeps round, overlapping windows and explicit OBS selection independent and read-only', async ({
+  page,
+}) => {
+  const state = await scenario(page);
+  state.activeRound = true;
+  state.overlappingWindows = true;
+  state.second.contentAvailability = 'unavailable';
+  state.second.terms.text = 'Hidden source text';
+  state.second.terms.goal.currency = 'USD';
+  await page.goto(fixture('dashboard', '&displayId=' + ids.other));
+  const collection = page.getByRole('region', { name: 'Collection', exact: true });
+  const windows = page.getByRole('region', { name: 'Current funding windows' });
+  const obs = page.getByRole('region', { name: 'OBS display' });
+  await expect(collection.getByText('Preparing', { exact: true })).toBeVisible();
+  await expect(collection.getByRole('link', { name: 'Resume collection' })).toHaveAttribute(
+    'href',
+    '/collection/' + ids.round,
+  );
+  await expect(windows.getByRole('heading', { level: 3 })).toHaveCount(2);
+  await expect(windows.getByText('Challenge content unavailable')).toBeVisible();
+  await expect(page.getByText('Hidden source text')).toHaveCount(0);
+  await expect(windows.getByText(/USD eligible/)).toBeVisible();
+  await expect(obs.getByRole('link', { name: 'Open displayed challenge' })).toHaveAttribute(
+    'href',
+    '/challenges/' + ids.other,
+  );
+  await expect(page.getByText('Setup pending', { exact: true })).toBeVisible();
+  await expect(page.getByText('Setup unavailable', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Apply reporting filters' }).click();
+  await expect(page).toHaveURL(new RegExp('displayId=' + ids.other));
+  state.windowsClosed = true;
+  state.displayUnavailable = true;
+  await windows.getByRole('button', { name: 'Check funding windows' }).click();
+  await expect(windows.getByText('No open funding windows were returned.')).toBeVisible();
+  await obs.getByRole('button', { name: 'Check OBS settings' }).click();
+  await expect(obs.getByText('This display’s selection is unavailable.')).toBeVisible();
+  await expect(obs.getByRole('link', { name: 'Open displayed challenge' })).toHaveCount(0);
+  state.readFailure = true;
+  await collection.getByRole('button', { name: 'Check collection status' }).click();
+  await expect(collection.getByText(/Active collection could not be checked/)).toBeVisible();
+  await expect(collection.getByRole('link', { name: 'Resume collection' })).toHaveCount(0);
+  expect(state.writes).toEqual([]);
+});
 test('synthetic dashboard keeps exact currency rows, unknown adjustments and audience separate', async ({
   page,
 }) => {

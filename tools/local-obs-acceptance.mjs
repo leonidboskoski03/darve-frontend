@@ -227,6 +227,38 @@ try {
   checks.push(
     'actual explicit owner selection binds exact accepted round/challenge without changing immutable challenge or money',
   );
+  if (!process.argv.includes('--observe')) {
+    const href = await creatorPage
+      .getByRole('link', { name: 'View this display on the dashboard' })
+      .getAttribute('href');
+    assert.equal(href, '/dashboard?displayId=' + displayId);
+    const dashboard = await owner.newPage();
+    const writes = [];
+    dashboard.on('request', (request) => {
+      if (
+        new URL(request.url()).origin === api.apiOrigin &&
+        !['GET', 'OPTIONS'].includes(request.method())
+      )
+        writes.push(request.method());
+    });
+    await dashboard.goto(origin + href);
+    const summary = dashboard.getByRole('region', { name: 'OBS display' });
+    await expect(summary.getByRole('link', { name: 'Open displayed challenge' })).toHaveAttribute(
+      'href',
+      '/challenges/' + challenge.id,
+    );
+    await expect(summary.getByText(/Template:/)).toBeVisible();
+    await expect(summary.getByRole('link', { name: 'Open OBS setup' })).toHaveAttribute(
+      'href',
+      '/obs?displayId=' + displayId,
+    );
+    assert.deepEqual(await get('/api/overlay-displays/' + displayId), binding);
+    assert.deepEqual(writes, []);
+    await dashboard.close();
+    checks.push(
+      'actual dashboard reads the explicitly opened OBS selection and preferences without changing the binding or issuing a grant',
+    );
+  }
   stage = 'isolated reader bootstrap';
   const reader = await browser.newContext({ viewport: { width: 1920, height: 1080 } }),
     page = await reader.newPage();

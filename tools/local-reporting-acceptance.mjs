@@ -2,15 +2,17 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { chromium, expect } from '@playwright/test';
-import { createServer } from 'vite';
+import { resolve } from 'node:path';
+import { build, preview } from 'vite';
 import { startLocalApi } from './local-api.mjs';
 const origin = 'http://127.0.0.1:4175',
   checks = [],
   errors = [];
-let api, vite, browser;
+const outDir = resolve('artifacts.local/f05-04/product-build');
+let api, site, browser;
 try {
   api = await startLocalApi({
-    backend: process.argv[2] ?? '../darve-backend',
+    backend: process.argv[2] ?? '../tmp/backend-f06-checkout',
     origins: [origin],
     task: 'f05',
     collection: true,
@@ -20,13 +22,12 @@ try {
   });
   process.env.VITE_APP_ENV = 'local';
   process.env.VITE_PUBLIC_API_ORIGIN = api.apiOrigin;
-  vite = await createServer({
-    mode: 'acceptance-reporting',
-    envDir: false,
-    clearScreen: false,
-    server: { host: '127.0.0.1', port: 4175, strictPort: true, hmr: false },
+  await build({ envDir: false, logLevel: 'silent', build: { outDir, emptyOutDir: true } });
+  site = await preview({
+    logLevel: 'silent',
+    build: { outDir },
+    preview: { host: '127.0.0.1', port: 4175, strictPort: true },
   });
-  await vite.listen();
   browser = await chromium.launch();
   const creator = await api.seedSession({ expiresInMs: 600000 }),
     context = await browser.newContext();
@@ -45,6 +46,19 @@ try {
   await page.getByRole('checkbox', { name: /I have read and accept account terms/ }).check();
   await page.getByRole('button', { name: 'Accept and continue', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Dashboard', exact: true })).toBeVisible();
+  const collection = page.getByRole('region', { name: 'Collection', exact: true });
+  const windows = page.getByRole('region', { name: 'Current funding windows' });
+  await expect(collection.getByRole('link', { name: 'Open collection setup' })).toBeVisible();
+  await expect(windows.getByText('No open funding windows were returned.')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Open OBS setup' })).toHaveAttribute('href', '/obs');
+  await expect(page.getByRole('link', { name: 'Open payout settings' })).toHaveAttribute(
+    'href',
+    '/account/payments',
+  );
+  await expect(page.getByRole('link', { name: 'Creator support' })).toHaveAttribute(
+    'href',
+    '/support',
+  );
   const session = await (
       await context.request.get(api.apiOrigin + '/api/session', { headers: { Origin: origin } })
     ).json(),
@@ -70,7 +84,12 @@ try {
     'actual encoded IANA timezone and civil-day report retain the 23-hour daylight-saving interval',
   );
   api.collectionFixture.capacity('available');
-  async function accepted(currency = 'EUR', amountMinor = '1000', seconds = 600) {
+  async function accepted(
+    currency = 'EUR',
+    amountMinor = '1000',
+    seconds = 600,
+    fromDashboard = false,
+  ) {
     const stream = await api.collectionFixture.seed(creator.userId);
     const start = await context.request.post(api.apiOrigin + '/api/rounds', {
       headers: { ...headers, 'Idempotency-Key': randomUUID() },
@@ -86,6 +105,18 @@ try {
     await api.collectionFixture.recover();
     const active = await get('/api/rounds/' + roundId);
     assert.equal(active.state, 'collecting');
+    if (fromDashboard) {
+      await collection.getByRole('button', { name: 'Check collection status' }).click();
+      await expect(collection.getByText('Collecting viewer ideas', { exact: true })).toBeVisible();
+      await collection.getByRole('link', { name: 'Resume collection' }).press('Enter');
+      await expect(page).toHaveURL(origin + '/collection/' + roundId);
+      await expect(
+        page.getByRole('button', { name: 'Stop collection', exact: true }),
+      ).toBeEnabled();
+      checks.push(
+        'actual dashboard resumes the canonical collecting round and exposes its reviewed Stop action',
+      );
+    }
     await api.collectionFixture.admitIdeas(creator.userId, roundId);
     const stop = await context.request.post(
       `${api.apiOrigin}/api/rounds/${roundId}/collection/stop`,
@@ -112,7 +143,7 @@ try {
     assert.equal(response.status(), 201);
     return { challenge: (await response.json()).data, roundId, ...stream };
   }
-  const first = await accepted(),
+  const first = await accepted('EUR', '1000', 600, true),
     id = first.challenge.id,
     endpoint = `${api.apiOrigin}/api/challenges/${id}/completion-declarations`;
   let detail = await get('/api/challenges/' + id);
@@ -232,6 +263,23 @@ try {
   const current = await get('/api/challenges/current');
   assert.equal(current.items.length, 2);
   assert.ok(!current.items.some((value) => value.id === third.challenge.id));
+  const dashboardWrites = [];
+  const trackDashboardRequest = (request) => {
+    const path = new URL(request.url()).pathname;
+    if (path.startsWith('/api/') && !['GET', 'OPTIONS'].includes(request.method()))
+      dashboardWrites.push(path);
+  };
+  page.on('request', trackDashboardRequest);
+  await page.goto(origin + '/dashboard');
+  await expect(windows.getByRole('heading', { level: 3 })).toHaveCount(2);
+  await expect(windows.getByText(/10.00 EUR goal/)).toBeVisible();
+  await expect(windows.getByText(/10.07 USD goal/)).toBeVisible();
+  await expect(windows.locator('a[href="/challenges/' + third.challenge.id + '"]')).toHaveCount(0);
+  assert.deepEqual(dashboardWrites, []);
+  page.off('request', trackDashboardRequest);
+  checks.push(
+    'actual dashboard reads both open funding windows with exact currencies and leaves the expired challenge in history',
+  );
   checks.push(
     'actual owner cursor history preserves expired funding while current means open effective windows',
   );
@@ -313,11 +361,15 @@ try {
     externalProviderOrPaymentCalls: false,
     livePaymentsOrStreamVerification: false,
   };
-  mkdirSync('artifacts.local/f05', { recursive: true });
-  writeFileSync('artifacts.local/f05/acceptance.json', JSON.stringify(result, null, 2));
+  mkdirSync('artifacts.local/f05-04', { recursive: true });
+  writeFileSync('artifacts.local/f05-04/acceptance.json', JSON.stringify(result, null, 2));
   console.log(JSON.stringify(result));
 } finally {
   await browser?.close();
-  await vite?.close();
+  if (site)
+    await new Promise((done) => {
+      site.httpServer.closeAllConnections();
+      site.httpServer.close(done);
+    });
   await api?.close();
 }

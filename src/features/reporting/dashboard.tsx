@@ -54,13 +54,6 @@ export function Dashboard({
   const value = !query.isError ? query.data?.data : undefined;
   return (
     <>
-      <header className="report-heading">
-        <span>Your stream · Your records</span>
-        <h1>Dashboard</h1>
-        <p>
-          Retained challenge activity and verified contributions, with each currency kept separate.
-        </p>
-      </header>
       <section className="report-panel">
         <h2>Reporting period</h2>
         <form

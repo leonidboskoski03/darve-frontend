@@ -16,6 +16,45 @@
   max-width: 65ch;
   color: var(--color-muted);
 }
+.dashboard-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+  gap: var(--space-5);
+  align-items: start;
+}
+.dashboard-workspace__stream,
+.dashboard-workspace__setup {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-5);
+}
+.dashboard-workspace__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding-block-start: var(--space-3);
+  border-top: 1px solid var(--color-border);
+}
+.dashboard-workspace section {
+  overflow-wrap: anywhere;
+}
+.dashboard-challenges {
+  margin: var(--space-4) 0;
+  padding-inline-start: var(--space-5);
+}
+.dashboard-challenges li + li {
+  margin-block-start: var(--space-4);
+  padding-block-start: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+.dashboard-challenges h3 {
+  margin-block: 0 var(--space-2);
+}
+@media (max-width: 65rem) {
+  .dashboard-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
 .report-panel {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-large);

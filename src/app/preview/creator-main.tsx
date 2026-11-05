@@ -13,7 +13,15 @@ const view = query.get('view');
 const round = query.get('roundId');
 const reportingView = ['dashboard', 'history', 'challenge', 'analytics'].includes(view ?? '');
 const reportingSearch = new URLSearchParams();
-for (const key of ['timeZone', 'fromDate', 'throughDate', 'broadcastId', 'scope', 'status']) {
+for (const key of [
+  'timeZone',
+  'fromDate',
+  'throughDate',
+  'broadcastId',
+  'scope',
+  'status',
+  'displayId',
+]) {
   if (query.has(key)) reportingSearch.set(key, query.get(key)!);
 }
 const path =
