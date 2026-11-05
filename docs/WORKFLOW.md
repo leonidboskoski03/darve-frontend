@@ -66,6 +66,8 @@ Never include tokens, credentials, grant/receipt/consent URLs, private donor/tic
 
 ## Close and communicate
 
+Before batch closure, reconcile PLAN acceptance with the [F01 product-coverage matrix](F01_REFERENCE_AND_COMPONENT_AUDIT.md#f01-04-product-coverage-reconciliation) and the actual enabled screens, routes, state transitions and API prerequisites. Register missing work/inputs under its original owner or record an explicit agreed adaptation/exclusion. Keep the parent batch incomplete while required coverage is missing; preserve bounded completed subtasks and genuine test evidence. A test count cannot substitute for an omitted user journey.
+
 Update the owning record and tracker once with source identity, acceptance and remaining work. CURRENT_STATE changes only for capability/priority/blocker changes. Update affected rule/contracts/index links when ownership or behavior changes. Detailed logs stay in ignored `test-results/`; summarize relevant failures, not whole environment/log dumps. Close only the verified scope. Publication, hosted checks, sandbox approval, production deployment and live payment activation remain separate claims.
 
 ## FW-01 documentation adaptation

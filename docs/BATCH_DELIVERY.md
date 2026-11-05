@@ -32,6 +32,8 @@ Keep local verification, PR integration, hosted checks and actual release/deploy
 
 ## Batch review and release
 
+Apply PLAN's coverage-closure rule against the [F01 reconciliation](F01_REFERENCE_AND_COMPONENT_AUDIT.md#f01-04-product-coverage-reconciliation), including the complete signed-in entry/setup/navigation journey. Missing required screens or contract/content inputs remain registered under their original batches. Reopening a parent for omitted coverage does not invalidate its qualified subtasks or authorize unrelated historical features.
+
 At the batch boundary, demonstrate complete behavior and negative/recovery cases, consolidate genuine gaps and check affected neighbors. F10 supplies broader joint acceptance; it does not justify leaving earlier tasks untested. Several batches can accumulate on dev before a release is ready. Do not promote main after every task just because CI is green.
 
 Backend defects keep their backend owner and compatible source/contract revision. Coordinate dependencies instead of hiding them behind weakened frontend rules. Keep one implementation record per actual owner; no parallel trackers or repeated giant plans.
