@@ -1,1 +1,1 @@
-export { sanitizeOAuthReturn, oauthReturnNotice } from './oauth-return';
+export { sanitizeOAuthReturn, oauthReturnNotice, oauthReturnSearch } from './oauth-return';

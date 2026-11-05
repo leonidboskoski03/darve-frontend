@@ -67,7 +67,12 @@ export function createCreatorAccessClient(options: {
     async authorize(provider: Provider, input: OAuthStartInput): Promise<'redirecting'> {
       const providerValue = OAuthProviderSchema.safeParse(provider),
         body = OAuthStartInputSchema.safeParse(input);
-      if (!providerValue.success || !body.success || body.data.returnPath !== '/integrations')
+      if (
+        !providerValue.success ||
+        !body.success ||
+        (body.data.returnPath !== '/integrations' &&
+          !(body.data.intent === 'sign_in' && body.data.returnPath === '/'))
+      )
         throw new CreatorAccessError(failure('configuration', 'INVALID_AUTHORIZATION_REQUEST'));
       if (authorizing)
         throw new CreatorAccessError(failure('authority', 'AUTHORIZATION_IN_PROGRESS'));

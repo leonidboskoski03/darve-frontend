@@ -46,7 +46,7 @@ afterEach(() => {
   active.forEach((session) => session.stop());
   active.length = 0;
 });
-const signIn = { intent: 'sign_in', returnPath: '/integrations', connectionId: null } as const;
+const signIn = { intent: 'sign_in', returnPath: '/', connectionId: null } as const;
 
 describe('creator API and authorization boundary', () => {
   it.each([
@@ -150,6 +150,9 @@ describe('creator API and authorization boundary', () => {
     await expect(
       client.authorize('twitch', { ...signIn, returnPath: '//evil.test' }),
     ).rejects.toBeInstanceOf(CreatorAccessError);
+    await expect(
+      client.authorize('twitch', { intent: 'link', returnPath: '/', connectionId: null }),
+    ).rejects.toMatchObject({ problem: { code: 'INVALID_AUTHORIZATION_REQUEST' } });
     expect(send).toHaveBeenCalledOnce();
     send.mockResolvedValueOnce(
       json({

@@ -10,9 +10,20 @@ const results = new Set([
   'provider_error',
   'unconfirmed',
 ]);
+export function oauthReturnSearch(search: string) {
+  const incoming = new URLSearchParams(search);
+  if (!incoming.has('oauth_result') && !incoming.has('oauth_provider')) return '';
+  const result = incoming.get('oauth_result');
+  const provider = incoming.get('oauth_provider');
+  const safe = new URLSearchParams({
+    oauth_result: result && results.has(result) ? result : 'unconfirmed',
+  });
+  if (provider && providers.has(provider)) safe.set('oauth_provider', provider);
+  return '?' + safe.toString();
+}
 export function sanitizeOAuthReturn(href: string): string | null {
   const url = new URL(href);
-  if (!['/', '/authorize', '/integrations'].includes(url.pathname)) return null;
+  if (!/^(?:\/|\/(?:authorize|integrations|onboarding)\/?)$/i.test(url.pathname)) return null;
   const hasReturn = url.searchParams.has('oauth_result') || url.searchParams.has('oauth_provider');
   const hasSecret = [
     'code',
@@ -33,15 +44,12 @@ export function sanitizeOAuthReturn(href: string): string | null {
     'token',
   ].some((key) => fragment.has(key));
   if (!hasReturn && !hasSecret && !hasSecretFragment) return null;
-  const provider = url.searchParams.get('oauth_provider');
-  const value = url.searchParams.get('oauth_result');
-  url.search = '';
-  url.hash = '';
-  if (hasReturn || hasSecret) {
-    url.searchParams.set('oauth_result', value && results.has(value) ? value : 'unconfirmed');
-    if (provider && providers.has(provider)) url.searchParams.set('oauth_provider', provider);
-  }
-  return url.pathname + url.search;
+  const search = hasReturn
+    ? oauthReturnSearch(url.search)
+    : hasSecret
+      ? '?oauth_result=unconfirmed'
+      : '';
+  return url.pathname + search;
 }
 
 export function oauthReturnNotice(search: string, authenticated: boolean) {

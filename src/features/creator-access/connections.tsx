@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useInfiniteQuery, useMutation } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { ArrowRight, Bot, Check, RefreshCw } from 'lucide-react';
 import { Button } from '@/design-system/button';
 import { Dialog } from '@/design-system/dialog';
@@ -15,6 +15,7 @@ import {
 import type { CreatorSnapshot } from '@/services/creator-session/index';
 import { AccessError } from './error-message';
 import { providers } from './provider-options';
+import { useCreatorConnections } from './connection-query';
 
 type Action = {
   connection: Connection;
@@ -125,14 +126,7 @@ export function Connections({
   client: CreatorAccessClient;
   snapshot: CreatorSnapshot;
 }) {
-  const query = useInfiniteQuery({
-    queryKey: snapshot.scope.key(['creator-connections']),
-    initialPageParam: null,
-    queryFn: ({ pageParam, signal }: { pageParam: string | null; signal: AbortSignal }) =>
-      client.connections(pageParam, signal),
-    getNextPageParam: (last) => last.nextCursor,
-    retry: false,
-  });
+  const query = useCreatorConnections(client, snapshot.scope);
   const [action, setAction] = useState<Action | null>(null);
   const authorization = useMutation({
     mutationFn: ({

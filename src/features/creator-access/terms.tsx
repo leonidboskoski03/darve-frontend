@@ -54,6 +54,9 @@ function Confirmation({
           You have accepted this version.
         </p>
         <ActionLink href="/integrations">Continue to your connections</ActionLink>
+        <ActionLink href="/onboarding" tone="quiet">
+          Return to setup guide
+        </ActionLink>
       </div>
     );
   return (

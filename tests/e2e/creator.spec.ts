@@ -132,7 +132,7 @@ for (const [provider, label, target] of [
     expect(submitted).toEqual({
       intent: 'sign_in',
       connectionId: null,
-      returnPath: '/integrations',
+      returnPath: '/',
     });
   });
 }
@@ -294,14 +294,15 @@ test('synthetic creator 401 clears the account screen and keyboard dialog flow s
     .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
     .analyze();
   expect(accessibility.violations).toEqual([]);
-  await page.getByRole('button', { name: 'Open navigation menu' }).click();
-  await expect(page.getByRole('dialog', { name: 'Explore Darve' })).toBeVisible();
-  await page.keyboard.press('Escape');
-  await expect(page.getByRole('button', { name: 'Open navigation menu' })).toBeFocused();
   expired = true;
   await page.getByRole('button', { name: 'Refresh accounts' }).click();
   await expect(page.getByText('Your session expired. Sign in again to continue.')).toBeVisible();
   await expect(page.getByText('Synthetic channel', { exact: true })).toHaveCount(0);
+  const publicMenu = page.getByRole('button', { name: 'Open navigation menu' });
+  await publicMenu.click();
+  await expect(page.getByRole('dialog', { name: 'Explore Darve' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(publicMenu).toBeFocused();
 });
 
 test('public OAuth return removes secret fields and cannot fabricate signed-in UI', async ({

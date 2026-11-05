@@ -1,12 +1,15 @@
 import { useContext, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { Navigate, useLocation, useMatch } from 'react-router-dom';
 import { CreatorAccess } from '@/features/creator-access/index';
 import { CreatorSessionContext, useCreatorSession } from '@/features/session-status/index';
-import { oauthReturnNotice } from '@/services/identity-navigation/index';
+import { oauthReturnNotice, oauthReturnSearch } from '@/services/identity-navigation/index';
 
 function Configured({ mode, origin }: { mode: 'connect' | 'terms'; origin: string }) {
   const { controller: session, snapshot } = useCreatorSession();
   const { search } = useLocation();
+  const signInEntry = useMatch('/authorize');
+  if (signInEntry && snapshot.phase === 'authenticated')
+    return <Navigate replace to={{ pathname: '/onboarding', search: oauthReturnSearch(search) }} />;
   return (
     <CreatorAccess
       runtime={{ origin, session, snapshot }}
@@ -21,8 +24,7 @@ function Configured({ mode, origin }: { mode: 'connect' | 'terms'; origin: strin
 }
 export function Component() {
   const creator = useContext(CreatorSessionContext);
-  const { pathname } = useLocation();
-  const mode = pathname === '/terms' ? 'terms' : 'connect';
+  const mode = useMatch('/terms') ? 'terms' : 'connect';
   useEffect(() => {
     document.title = mode === 'terms' ? 'Account terms — Darve' : 'Connect your stream — Darve';
   }, [mode]);

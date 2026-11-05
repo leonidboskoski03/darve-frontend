@@ -14,6 +14,7 @@ import {
   LayoutTemplate,
   Wallet,
   UserRound,
+  ListChecks,
 } from 'lucide-react';
 import { Brand } from '@/design-system/brand';
 import { Button } from '@/design-system/button';
@@ -22,6 +23,7 @@ import './workspace-layout.css';
 
 const navigation = [
   { href: '/dashboard', label: 'Dashboard', Icon: LayoutDashboard },
+  { href: '/onboarding', label: 'Setup guide', Icon: ListChecks },
   { href: '/challenges', label: 'Challenge history', Icon: History },
   { href: '/collection', label: 'Collection', Icon: Radio },
   { href: '/obs', label: 'OBS display', Icon: Monitor },
@@ -64,7 +66,7 @@ export function Workspace({ children, session }: { children: ReactNode; session:
         <Navigation />
         <p className="workspace-sidebar__foot">
           Built for your live stream.
-          <Link to="/">
+          <Link to="/welcome">
             Public homepage <ArrowUpRight size={15} aria-hidden="true" />
           </Link>
         </p>
