@@ -13,6 +13,7 @@ import {
   Coins,
   LayoutTemplate,
   Wallet,
+  UserRound,
 } from 'lucide-react';
 import { Brand } from '@/design-system/brand';
 import { Button } from '@/design-system/button';
@@ -26,6 +27,7 @@ const navigation = [
   { href: '/obs', label: 'OBS display', Icon: Monitor },
   { href: '/coins', label: 'Coins', Icon: Coins },
   { href: '/templates', label: 'Templates', Icon: LayoutTemplate },
+  { href: '/account', label: 'Account', Icon: UserRound },
   { href: '/integrations', label: 'Connections', Icon: Cable },
   { href: '/account/payments', label: 'Payout settings', Icon: Wallet },
   { href: '/support', label: 'Support', Icon: MessageSquare },
@@ -35,7 +37,7 @@ function Navigation({ close }: { close?: () => void }) {
   return (
     <nav className="workspace-navigation" aria-label="Creator workspace">
       {navigation.map(({ href, label, Icon }) => (
-        <NavLink key={href} to={href} onClick={close}>
+        <NavLink key={href} to={href} end={href === '/account'} onClick={close}>
           <Icon size={19} aria-hidden="true" />
           {label}
         </NavLink>

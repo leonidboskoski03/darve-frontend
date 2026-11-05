@@ -22,6 +22,7 @@ export function RootLayout() {
   }, [pathname]);
   if (
     pathname === '/dashboard' ||
+    pathname === '/account' ||
     pathname === '/account/payments' ||
     pathname === '/obs' ||
     pathname === '/coins' ||
@@ -130,6 +131,9 @@ export function RootLayout() {
           </Link>
           <Link to="/authorize" onClick={() => setMenuOpen(false)}>
             Connect your stream
+          </Link>
+          <Link to="/account" onClick={() => setMenuOpen(false)}>
+            Account settings
           </Link>
           <Link to="/integrations" onClick={() => setMenuOpen(false)}>
             Account connections
