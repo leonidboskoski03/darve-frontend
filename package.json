@@ -60,7 +60,8 @@
     "templates:check": "node tools/template-assets.mjs && node --test tools/template-assets.test.mjs",
     "test:templates:obs": "node tools/local-template-obs-acceptance.mjs ../tmp/backend-f06-checkout",
     "test:staff-coins:local": "node tools/local-staff-coins-acceptance.mjs ../tmp/backend-f06-checkout",
-    "test:coins:combined": "node tools/local-coins-combined-acceptance.mjs ../tmp/backend-f06-checkout"
+    "test:coins:combined": "node tools/local-coins-combined-acceptance.mjs ../tmp/backend-f06-checkout",
+    "test:lifecycle:local": "node tools/local-creator-lifecycle-acceptance.mjs ../tmp/backend-f06-checkout"
   },
   "dependencies": {
     "@darve/contracts": "file:vendor/contracts/darve-contracts-32d8716bf93fef695a4fef4fcb51a9fa2a59fdcf.tgz",

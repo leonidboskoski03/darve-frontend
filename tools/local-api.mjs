@@ -4,6 +4,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { assertProviderLoginRuntime } from './provider-login-config.mjs';
+import { assertLifecycleComposition } from './local-lifecycle-config.mjs';
 import {
   assertPaymentSandboxSelection,
   readPaymentSandboxConfiguration,
@@ -49,6 +50,24 @@ export async function startLocalApi({
   support = false,
   coins = false,
 }) {
+  if (task === 'f10-02')
+    assertLifecycleComposition({
+      task,
+      port,
+      origins,
+      collection,
+      review,
+      reporting,
+      terms,
+      overlay,
+      contributionReads,
+      checkout,
+      sandboxPayment,
+      operatorOAuth,
+      qrPublicOrigin,
+      support,
+      coins,
+    });
   if (
     (coins ||
       ['f09-02', 'f09-g01', 'f09-03', 'f09-04', 'f09-05', 'f09-06', 'f09-07'].includes(task)) &&
@@ -100,6 +119,7 @@ export async function startLocalApi({
       'f09-05',
       'f09-06',
       'f09-07',
+      'f10-02',
     ].includes(task)
   )
     throw new Error('Invalid local task identity.');
@@ -149,18 +169,28 @@ export async function startLocalApi({
       'f09-03',
       'f09-05',
       'f09-07',
+      'f10-02',
     ].includes(task)
   )
     throw new Error('Controlled collection ports require their explicit disposable task.');
   if (
     review &&
-    (!['f04-03', 'f05', 'f06', 'f06-03', 'f06-04', 'f07', 'f09-03', 'f09-05', 'f09-07'].includes(
-      task,
-    ) ||
+    (![
+      'f04-03',
+      'f05',
+      'f06',
+      'f06-03',
+      'f06-04',
+      'f07',
+      'f09-03',
+      'f09-05',
+      'f09-07',
+      'f10-02',
+    ].includes(task) ||
       !collection)
   )
     throw new Error('Controlled review requires its explicit disposable collection task.');
-  if (reporting && (task !== 'f05' || !collection || !review))
+  if (reporting && (!['f05', 'f10-02'].includes(task) || !collection || !review))
     throw new Error('Controlled reporting requires its explicit disposable review task.');
   if (contributionReads && (task !== 'f06' || !collection || !review))
     throw new Error('Controlled receipt reads require their explicit disposable review task.');
@@ -455,6 +485,7 @@ export async function startLocalApi({
           await import('./local-collection-fixture.mjs')
         ).createLocalCollectionFixture(backend, deps.database, config, {
           coinActivity: ['f09-03', 'f09-05', 'f09-07'].includes(task),
+          allProviderIdeas: task === 'f10-02',
         })
       : null;
     coinFixture = coins

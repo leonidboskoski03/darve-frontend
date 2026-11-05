@@ -1,6 +1,56 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { startLocalApi } from './local-api.mjs';
+import { assertLifecycleComposition } from './local-lifecycle-config.mjs';
+
+const lifecycle = {
+  backend: 'not-used',
+  task: 'f10-02',
+  port: 3310,
+  origins: ['http://127.0.0.1:4175'],
+  collection: true,
+  review: true,
+  reporting: true,
+  terms: true,
+};
+test('creator lifecycle admits only its explicit local provider-free composition', () => {
+  assert.doesNotThrow(() => assertLifecycleComposition(lifecycle));
+  assert.throws(
+    () => assertLifecycleComposition({ ...lifecycle, task: 'f09-07' }),
+    /Creator lifecycle/,
+  );
+});
+test('creator lifecycle requires all coupled features and the isolated source/origin identity', async () => {
+  for (const change of [
+    { collection: false },
+    { review: false },
+    { reporting: false },
+    { terms: false },
+    { collection: 1 },
+    { port: 3000 },
+    { port: 3311 },
+    { origins: [] },
+    { origins: ['http://localhost:4175'] },
+    { origins: ['https://example.test'] },
+    { origins: [...lifecycle.origins, 'http://127.0.0.1:5173'] },
+  ])
+    await assert.rejects(startLocalApi({ ...lifecycle, ...change }), /Creator lifecycle/);
+});
+test('creator lifecycle refuses payment, external credentials, OBS, staff and coin extensions before runtime access', async () => {
+  for (const change of [
+    { checkout: true },
+    { sandboxPayment: {} },
+    { sandboxPayment: null },
+    { contributionReads: true },
+    { operatorOAuth: {} },
+    { operatorOAuth: null },
+    { overlay: true },
+    { qrPublicOrigin: 'https://synthetic.trycloudflare.com' },
+    { support: true },
+    { coins: true },
+  ])
+    await assert.rejects(startLocalApi({ ...lifecycle, ...change }), /Creator lifecycle/);
+});
 
 for (const task of ['f08-04', 'f08-05', 'f08-06', 'f08-07', 'f08-08'])
   test(
