@@ -17,7 +17,7 @@ export function SignIn({
     mutationFn: (provider: Provider) =>
       client!.authorize(provider, {
         intent: 'sign_in',
-        returnPath: '/integrations',
+        returnPath: '/',
         connectionId: null,
       }),
     retry: false,

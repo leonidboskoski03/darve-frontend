@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { useQuery, type UseQueryResult } from '@tanstack/react-query';
+import type { UseQueryResult } from '@tanstack/react-query';
 import { FlaskConical, Wallet } from 'lucide-react';
 import { Button } from '@/design-system/button';
 import { Dialog } from '@/design-system/dialog';
@@ -11,15 +11,16 @@ import {
   receivingMessage,
   statusText,
   useExpired,
+  useReceivingStatus,
   type Client,
   type Flow,
   type Provider,
+  type Reading,
   type Receiving,
 } from './model';
 import { SetupReview } from './setup';
 import './workspace.css';
 
-type Reading = { status: Receiving['data']; deadline: number | null };
 type Setup = {
   flow: Flow;
   country: string | null;
@@ -28,17 +29,6 @@ type Setup = {
 };
 type Target = { version: number; country: string | null };
 const formatter = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' });
-
-async function observe(get: () => Promise<Receiving>): Promise<Reading> {
-  const started = Date.now();
-  const { data, serverTime } = await get();
-  return {
-    status: data,
-    deadline: data.validUntil
-      ? started + Math.max(0, Date.parse(data.validUntil) - Date.parse(serverTime))
-      : null,
-  };
-}
 
 function ProviderCard({
   provider,
@@ -276,23 +266,8 @@ export function PayoutSettings({ session }: { session: CreatorSession }) {
   const trigger = useRef<HTMLElement | null>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   const resume = useRef<HTMLButtonElement>(null);
-  const { scope } = client;
-  const stripe = useQuery(
-    {
-      queryKey: scope.key(['receiving', 'stripe']),
-      queryFn: ({ signal }) => observe(() => client.stripeStatus(signal)),
-      retry: false,
-    },
-    scope.queryClient,
-  );
-  const paypal = useQuery(
-    {
-      queryKey: scope.key(['receiving', 'paypal']),
-      queryFn: ({ signal }) => observe(() => client.paypalStatus(signal)),
-      retry: false,
-    },
-    scope.queryClient,
-  );
+  const stripe = useReceivingStatus(client, 'stripe');
+  const paypal = useReceivingStatus(client, 'paypal');
   const current = setup && (flowProvider(setup.flow) === 'stripe' ? stripe : paypal);
   const allowed =
     !!current &&
@@ -361,7 +336,7 @@ export function PayoutSettings({ session }: { session: CreatorSession }) {
             setOpen(false);
             if (!retain) setSetup(null);
             requestAnimationFrame(() => {
-              if (scope.signal.aborted) return;
+              if (client.scope.signal.aborted) return;
               const previous = trigger.current;
               (retain
                 ? resume.current

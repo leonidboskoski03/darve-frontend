@@ -1,16 +1,32 @@
-import { Link, Outlet, useLocation } from 'react-router-dom';
+import { Link, Outlet, useLocation, useMatch } from 'react-router-dom';
 import { useContext, useEffect, useRef, useState } from 'react';
 import { Menu } from 'lucide-react';
 import { Brand } from '@/design-system/brand';
 import { Button } from '@/design-system/button';
 import { Dialog } from '@/design-system/dialog';
 import { ProviderMark } from '@/design-system/provider-mark';
-import { CreatorSessionContext, SessionStatus } from '@/features/session-status/index';
+import {
+  CreatorSessionContext,
+  SessionStatus,
+  useCreatorSession,
+} from '@/features/session-status/index';
 import { Workspace } from './workspace-layout';
+
+function SessionLayout() {
+  const { snapshot } = useCreatorSession();
+  return <Layout connected signedIn={snapshot.phase === 'authenticated'} />;
+}
 
 export function RootLayout() {
   const creator = useContext(CreatorSessionContext);
+  return creator ? <SessionLayout /> : <Layout connected={false} signedIn={false} />;
+}
+
+function Layout({ connected, signedIn }: { connected: boolean; signedIn: boolean }) {
   const { pathname } = useLocation();
+  const setupRoute = useMatch('/onboarding');
+  const termsRoute = useMatch('/terms');
+  const connectionsRoute = useMatch('/integrations');
   const main = useRef<HTMLElement>(null);
   const previous = useRef(pathname);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -21,6 +37,7 @@ export function RootLayout() {
     }
   }, [pathname]);
   if (
+    (signedIn && (setupRoute || termsRoute || connectionsRoute)) ||
     pathname === '/dashboard' ||
     pathname === '/account' ||
     pathname === '/account/payments' ||
@@ -35,7 +52,7 @@ export function RootLayout() {
     pathname.startsWith('/collection/')
   )
     return (
-      <Workspace session={creator ? <SessionStatus /> : <span>Server not connected</span>}>
+      <Workspace session={connected ? <SessionStatus /> : <span>Server not connected</span>}>
         <Outlet />
       </Workspace>
     );
@@ -50,7 +67,7 @@ export function RootLayout() {
           <span className="alpha-label">ALPHA</span>
         </Link>
         <div className="site-header__actions">
-          {creator ? <SessionStatus /> : null}
+          {connected ? <SessionStatus /> : null}
           <Button
             tone="quiet"
             className="site-menu-button"
@@ -126,7 +143,7 @@ export function RootLayout() {
         className="site-menu"
       >
         <nav aria-label="Main navigation" className="site-menu__links">
-          <Link to="/collection" onClick={() => setMenuOpen(false)}>
+          <Link to="/onboarding" onClick={() => setMenuOpen(false)}>
             Creator workspace
           </Link>
           <Link to="/authorize" onClick={() => setMenuOpen(false)}>
@@ -141,7 +158,7 @@ export function RootLayout() {
           <Link to="/terms" onClick={() => setMenuOpen(false)}>
             Account terms
           </Link>
-          <a href="/#how-it-works" onClick={() => setMenuOpen(false)}>
+          <a href="/welcome#how-it-works" onClick={() => setMenuOpen(false)}>
             How it works
           </a>
         </nav>

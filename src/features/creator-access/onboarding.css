@@ -1,0 +1,66 @@
+.onboarding-guide {
+  display: grid;
+  gap: var(--space-6);
+  max-width: 56rem;
+  margin-inline: auto;
+}
+.onboarding-intro {
+  padding-block-end: var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+}
+.onboarding-intro h1 {
+  margin: var(--space-2) 0 0;
+  font-size: var(--font-size-page);
+  text-wrap: balance;
+}
+.onboarding-intro p:not(.workspace-eyebrow),
+.onboarding-steps p,
+.onboarding-steps ul {
+  color: var(--color-muted);
+}
+.onboarding-intro > p:not(.workspace-eyebrow) {
+  max-width: 52ch;
+}
+.onboarding-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-block-start: var(--space-4);
+}
+.onboarding-steps {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+}
+.onboarding-steps > li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: clamp(0.75rem, 3vw, 1.5rem);
+  padding: clamp(0.875rem, 3vw, 1.5rem);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-large);
+  overflow-wrap: anywhere;
+}
+.onboarding-step-number {
+  color: var(--color-brand-readable);
+  font-size: var(--font-size-small);
+  font-weight: var(--font-weight-strong);
+  font-variant-numeric: tabular-nums;
+  padding-block-start: var(--space-1);
+}
+.onboarding-steps h2 {
+  margin: 0;
+  font-size: var(--font-size-title);
+}
+.onboarding-steps p,
+.onboarding-steps ul {
+  margin-block: var(--space-2) var(--space-3);
+}
+.onboarding-steps ul {
+  padding-inline-start: var(--space-4);
+}
+.onboarding-steps ul li + li {
+  margin-block-start: var(--space-2);
+}

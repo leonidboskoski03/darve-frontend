@@ -18,6 +18,15 @@ describe('safe OAuth return handling', () => {
       'private-marker',
     );
   });
+  it('only carries allowlisted hints across the signed-in entry redirect', () => {
+    expect(
+      sanitizeOAuthReturn('https://frontend.test/?oauth_result=success&code=private&next=/account'),
+    ).toBe('/?oauth_result=success');
+    expect(
+      sanitizeOAuthReturn('https://frontend.test/onboarding/?oauth_provider=twitch#token=private'),
+    ).toBe('/onboarding/?oauth_result=unconfirmed&oauth_provider=twitch');
+    expect(sanitizeOAuthReturn('https://frontend.test//?oauth_result=success')).toBeNull();
+  });
   it('does not treat an asserted success as a signed-in session', () => {
     expect(oauthReturnNotice('?oauth_result=success', false)).toContain('No signed-in session');
     expect(oauthReturnNotice('?oauth_result=success', true)).toContain('refreshed');

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import {
   ReceivingError,
   receivingUncertain,
@@ -11,6 +12,7 @@ export type Provider = 'stripe' | 'paypal';
 export type Flow = Provider | 'stripeExisting';
 export type Receiving = StripeReceiving | PayPalReceiving;
 export type Client = ReturnType<typeof createReceivingClient>;
+export type Reading = { status: Receiving['data']; deadline: number | null };
 export const providerName = { stripe: 'Stripe', paypal: 'PayPal' } as const;
 export const flowProvider = (flow: Flow): Provider => (flow === 'paypal' ? 'paypal' : 'stripe');
 export const statusText: Record<Receiving['data']['state'], [string, string]> = {
@@ -59,4 +61,27 @@ export function useExpired(deadline: number | null) {
     return () => window.clearTimeout(timer);
   }, [deadline]);
   return deadline !== null && deadline === elapsed;
+}
+
+export function useReceivingStatus(client: Client, provider: Provider) {
+  const { scope } = client;
+  return useQuery(
+    {
+      queryKey: scope.key(['receiving', provider]),
+      queryFn: async ({ signal }): Promise<Reading> => {
+        const started = Date.now();
+        const { data, serverTime } = await (provider === 'stripe'
+          ? client.stripeStatus(signal)
+          : client.paypalStatus(signal));
+        return {
+          status: data,
+          deadline: data.validUntil
+            ? started + Math.max(0, Date.parse(data.validUntil) - Date.parse(serverTime))
+            : null,
+        };
+      },
+      retry: false,
+    },
+    scope.queryClient,
+  );
 }

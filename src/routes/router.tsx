@@ -34,7 +34,12 @@ export const createAppRouter = ({
       errorElement: <RouteError />,
       children: [
         { path: '/', lazy: () => import('./home') },
+        {
+          path: '/welcome',
+          lazy: async () => ({ Component: (await import('./home')).PublicHome }),
+        },
         { path: '/authorize', lazy: () => import('./creator-connection') },
+        { path: '/onboarding', lazy: () => import('./onboarding') },
         { path: '/integrations', lazy: () => import('./creator-connection') },
         { path: '/terms', lazy: () => import('./creator-connection') },
         { path: '/collection', lazy: () => import('./collection') },

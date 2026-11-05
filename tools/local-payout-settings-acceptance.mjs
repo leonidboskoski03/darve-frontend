@@ -197,6 +197,17 @@ try {
   await expect(region('PayPal').getByText('Setup pending', { exact: true })).toBeVisible();
   await page.reload();
   await expect(region('PayPal').getByText('Setup pending', { exact: true })).toBeVisible();
+  const setupGuide = page.getByRole('link', { name: 'Setup guide', exact: true });
+  const guidePayPal = page
+    .getByRole('list', { name: 'Test receiving status' })
+    .getByRole('listitem')
+    .filter({ hasText: 'PayPal' });
+  await setupGuide.click();
+  await expect(guidePayPal).toContainText('Setup pending');
+  await page.reload();
+  await expect(guidePayPal).toContainText('Setup pending');
+  await page.getByRole('link', { name: 'Open payout settings' }).click();
+  await expect(region('PayPal').getByText('Setup pending', { exact: true })).toBeVisible();
   assert.equal(writes.length, count);
   await exact('Verify PayPal receiving').click();
   await expect(region('PayPal').getByText('Receiving verified', { exact: true })).toBeVisible();
@@ -207,8 +218,12 @@ try {
   await dialog().getByRole('checkbox').check();
   await confirm.click();
   await expect(region('PayPal').getByText('Disconnected', { exact: true })).toBeVisible();
+  const afterRevoke = writes.length;
+  await setupGuide.click();
+  await expect(guidePayPal).toContainText('Disconnected');
+  assert.equal(writes.length, afterRevoke);
   pass(
-    'PayPal consent, clean read-only return and reload, independent wallet/card status and revoke',
+    'PayPal consent, clean read-only return and reload, independent wallet/card status and canonical pending/revoked guide state',
   );
   phase = 'Stripe existing account';
   await creator();
