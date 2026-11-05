@@ -55,6 +55,11 @@ function Configured({ origin }: { origin: string }) {
           Continue to dashboard
         </Link>
       }
+      collectionLink={
+        <Link className={controlStyles('secondary')} to="/collection">
+          Open collection
+        </Link>
+      }
     />
   );
 }

@@ -42,6 +42,8 @@ All paths below belong to the configured public API origin. F02-02 installs the 
 
 ## Feature families
 
+F04-04 consumes the additive owner recovery reads at browser/backend pin `0ac317d952ca621f164f33c12c423659623f6019`. `GET /api/rounds/current` has no query/body or key. `GET /api/rounds/start-result` sends only the existing Start `Idempotency-Key` header with the owner session. Both parse `RoundRecoveryResponseSchema` (200, timed `{ roundId } | null` data). Open the canonical known-ID round read for state and version. An empty Start-result lookup leaves the reviewed intent held because the original request may still commit.
+
 F03-06 sign-in requests the already allowlisted `/` return. Link and reauthorize still request `/integrations`. The browser sanitizes callback hints and inspects the creator session before selecting the next page. The setup guide reuses the existing scoped connections and receiving status reads after current terms acceptance.
 
 The register gives each individual method, request/query, response/status and source line. Some endpoints serve several journeys.

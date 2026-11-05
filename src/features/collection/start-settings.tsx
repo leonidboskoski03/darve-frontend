@@ -8,6 +8,7 @@ import {
   type CollectionClient,
   type StartAttempt,
   type Discovery,
+  CollectionError,
   uncertainCommand,
 } from '@/services/collection/index';
 import type { Connection } from '@/services/creator-access/index';
@@ -28,12 +29,16 @@ export function StartSettings({
   connection,
   onStarted,
   onLocked,
+  startAllowed,
+  onActiveConflict,
 }: {
   client: CollectionClient;
   snapshot: CreatorSnapshot;
   connection: Connection;
   onStarted: (roundId: string) => void;
   onLocked: (locked: boolean) => void;
+  startAllowed: boolean;
+  onActiveConflict: () => void;
 }) {
   const { now } = useDisplayClock();
   const [broadcastId, setBroadcastId] = useState('');
@@ -42,6 +47,7 @@ export function StartSettings({
   const [pin, setPin] = useState(false);
   const [attempt, setAttempt] = useState<StartAttempt | null>(null);
   const [inputError, setInputError] = useState<unknown>(null);
+  const [uncertain, setUncertain] = useState(false);
   const streams = useInfiniteQuery({
     queryKey: snapshot.scope.key(['collection-streams', connection.id, connection.version]),
     initialPageParam: null as string | null,
@@ -52,17 +58,41 @@ export function StartSettings({
   });
   const start = useMutation({
     mutationFn: (value: StartAttempt) => client.start(value),
-    onError: (error) => onLocked(uncertainCommand(error)),
     retry: false,
-    onSuccess: (read) => {
-      snapshot.scope.queryClient.setQueryData(
-        snapshot.scope.key(['collection-round', read.round.id]),
-        read,
-      );
-      onStarted(read.round.id);
-    },
+    networkMode: 'always',
   });
-  const uncertain = start.isError && uncertainCommand(start.error);
+  const lookup = useMutation({
+    mutationFn: (value: StartAttempt) => client.startResult(value),
+    retry: false,
+    networkMode: 'always',
+  });
+  const startCode = start.error instanceof CollectionError ? start.error.problem.code : null;
+  const lookupFound = lookup.isSuccess && lookup.data !== null;
+  function submit(value: StartAttempt) {
+    lookup.reset();
+    start.mutate(value, {
+      onError: (error) => {
+        if (snapshot.scope.signal.aborted) return;
+        const held = uncertain || uncertainCommand(error);
+        setUncertain(held);
+        onLocked(held);
+        if (
+          !held &&
+          error instanceof CollectionError &&
+          error.problem.code === 'COLLECTION_ALREADY_ACTIVE'
+        )
+          onActiveConflict();
+      },
+      onSuccess: (read) => {
+        if (snapshot.scope.signal.aborted) return;
+        snapshot.scope.queryClient.setQueryData(
+          snapshot.scope.key(['collection-round', read.round.id]),
+          read,
+        );
+        onStarted(read.round.id);
+      },
+    });
+  }
   const busy = start.isPending || start.isSuccess;
   const locked = busy || uncertain;
   const pages = streams.data?.pages ?? [];
@@ -77,6 +107,7 @@ export function StartSettings({
       connection.grantState,
     );
   const canStart =
+    startAllowed &&
     selected &&
     fresh &&
     permitted &&
@@ -206,7 +237,7 @@ export function StartSettings({
             });
             setAttempt(next);
             onLocked(true);
-            start.mutate(next);
+            submit(next);
           } catch (error) {
             setInputError(error);
           }
@@ -270,15 +301,43 @@ export function StartSettings({
           the collection failed.
         </p>
         <CollectionProblem error={inputError ?? start.error} />
+        {!uncertain && startCode === 'PAYMENT_SETUP_REQUIRED' ? (
+          <a href="/account/payments">Open payout settings</a>
+        ) : null}
         {uncertain && attempt ? (
           <div className="collection-uncertain">
             <p>
-              The result is unconfirmed. Your settings are held for a deliberate retry of the same
-              request. Do not start a second collection from another tab.
+              The result is unconfirmed. Keep this page open to check the original request or retry
+              it with the same settings.
             </p>
-            <Button tone="secondary" busy={start.isPending} onClick={() => start.mutate(attempt)}>
+            <Button
+              tone="secondary"
+              busy={lookup.isPending}
+              disabled={start.isPending || lookupFound}
+              onClick={() =>
+                lookup.mutate(attempt, {
+                  onSuccess: (roundId) => {
+                    if (roundId && !snapshot.scope.signal.aborted) onStarted(roundId);
+                  },
+                })
+              }
+            >
+              Check original Start result
+            </Button>
+            <Button
+              tone="secondary"
+              busy={start.isPending}
+              disabled={lookup.isPending || lookupFound}
+              onClick={() => submit(attempt)}
+            >
               Retry the same Start request
             </Button>
+            {lookup.isSuccess && lookup.data === null ? (
+              <p role="status">
+                The server has no visible round for this request yet. It may still finish.
+              </p>
+            ) : null}
+            <CollectionProblem error={lookup.error} />
           </div>
         ) : null}
         <Button

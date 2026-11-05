@@ -16,6 +16,8 @@ The profile keeps account data and settings in its named volumes. Keep those vol
 
 Session, development terms, the creator workspace and deep links use the current API. The profile supplies an OBS display origin and retains its grant epoch. Receiving, worker, analysis and bot configuration remain under F03/F04/F06. Staff email and coin activation retain their own tasks. See [F02-04 qualification](F02_CONTRACTS_AND_AUTH_IMPLEMENTATION.md#f02-04-implementation-and-qualification).
 
+The F04-04 source-only upgrade from `32d8716bf93fef695a4fef4fcb51a9fa2a59fdcf` to `0ac317d952ca621f164f33c12c423659623f6019` has identical Prisma schema and migration files. For an existing profile at that exact old revision, verify the clean stopped runtime, the absence of a running owner/children or pending API restore, and the identity of its stopped containers and volumes before updating only the private profile's `source` field. Preserve the profile ID, credentials, cipher key, OBS epoch and volumes. Then run `npm.cmd run product:check`. Normal startup still verifies all 61 migration names and checksums before opening the API. Other source changes require their own compatibility review.
+
 ## Current environment
 
 Local-first work is approved. No hosted resources, remote frontend repository, live payment activation or persistent database migrations are created by F00. The Vite server binds loopback at 5173; production preview uses 4173. Strict ports avoid accidentally testing a different process. HTTPS/origin/cookie behavior still needs actual hosted verification later.

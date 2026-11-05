@@ -274,6 +274,8 @@ export function CollectionRound({
       </div>
       <div className="collection-bottom">
         <a href="/collection">Back to collection setup</a>
+        <a href="/challenges">Challenge history</a>
+        <a href="/obs">OBS display</a>
         <span className="collection-muted">
           Keep this collection link to return after a reload.
         </span>
