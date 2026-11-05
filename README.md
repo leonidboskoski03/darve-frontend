@@ -13,6 +13,17 @@ npm.cmd run dev
 
 Open `http://127.0.0.1:5173`. The default presentation preview needs no backend, Docker or credentials and makes no API calls. The optional exact public API origin enables actual session inspection/logout and creator onboarding; see [isolated local API setup and acceptance](docs/LOCAL_API_COMPOSITION.md). Copy `.env.example` to `.env.local` only for documented public settings. Every `VITE_*` value is browser-visible. Provider keys belong in backend configuration.
 
+## Connected creator workspace
+
+With Docker Desktop running, open PowerShell in this repository.
+
+```powershell
+npm.cmd run product:check
+npm.cmd run dev:connected -- --pause-development-api
+```
+
+Open [Darve's connected creator workspace](http://localhost:5174/dashboard). The profile uses the pinned backend on localhost:3000 and preserves its own database between runs. The flag temporarily stops the existing Darve Docker API if it owns port 3000. Omit it when the port is free. Stop with Ctrl+C or `npm.cmd run product:stop` from another terminal to restore the previous API. See the [connected local runbook](docs/OPERATIONS.md#connected-local-creator-workspace).
+
 ## Staff access locally
 
 `npm.cmd run dev:staff` opens the independent staff entry at `http://localhost:5176`. It uses the separate browser-public example in [env/staff](env/staff/.env.example); omit its paired addresses for the unavailable/no-request state. A configured sign-in needs the matching admin API and reviewed identity/email settings. [Staff operations](docs/OPERATIONS.md#separate-staff-entry) and [F08-03 qualification](docs/F08_STAFF_AND_SUPPORT_IMPLEMENTATION.md#f08-03-staff-entry-and-authority) own the exact setup and controlled local API proof. This command does not start/configure a backend or send email.
