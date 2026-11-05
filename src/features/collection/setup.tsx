@@ -18,14 +18,19 @@ export function CollectionSetup({
   client,
   snapshot,
   onStarted,
+  startAllowed,
+  onActiveConflict,
 }: {
   client: CollectionClient;
   snapshot: CreatorSnapshot;
   onStarted: (roundId: string) => void;
+  startAllowed: boolean;
+  onActiveConflict: () => void;
 }) {
   const [provider, setProvider] = useState<Connection['provider']>('twitch');
   const [connectionId, setConnectionId] = useState('');
-  const [locked, setLocked] = useState(false);
+  const [heldConnection, setHeldConnection] = useState<Connection | null>(null);
+  const locked = heldConnection !== null;
   const query = useInfiniteQuery({
     queryKey: snapshot.scope.key(['creator-connections']),
     initialPageParam: null as string | null,
@@ -39,6 +44,7 @@ export function CollectionSetup({
       if ((rows.get(row.id)?.version ?? 0) <= row.version) rows.set(row.id, row);
   const accounts = [...rows.values()].filter((row) => row.provider === provider);
   const selected =
+    heldConnection ??
     accounts.find((row) => row.id === connectionId) ??
     (accounts.length === 1 ? accounts[0] : undefined);
   return (
@@ -84,6 +90,7 @@ export function CollectionSetup({
                 <CollectionProblem error={query.error} />
                 <Button
                   tone="secondary"
+                  disabled={locked}
                   onClick={() => {
                     void query.refetch();
                   }}
@@ -137,14 +144,16 @@ export function CollectionSetup({
               </>
             )}
           </section>
-          {selected && !query.hasNextPage && !query.isError ? (
+          {selected && (locked || (!query.hasNextPage && !query.isError)) ? (
             <StartSettings
               key={`${selected.id}:${selected.version}`}
               client={client}
               snapshot={snapshot}
               connection={selected}
               onStarted={onStarted}
-              onLocked={setLocked}
+              onLocked={(value) => setHeldConnection(value ? selected : null)}
+              startAllowed={startAllowed}
+              onActiveConflict={onActiveConflict}
             />
           ) : null}
         </div>
@@ -165,8 +174,9 @@ export function CollectionSetup({
             </li>
           </ol>
           <p>
-            To resume an existing collection, open its original tab or saved collection link.
-            Previous rounds and accepted challenges are kept.
+            Return here to resume an active collection. Previous rounds and accepted challenges are
+            available from <a href="/challenges">Challenge history</a> when a challenge was
+            accepted.
           </p>
           <a href="/terms">Review account terms</a>
         </aside>

@@ -1,15 +1,17 @@
 import assert from 'node:assert/strict';
 import { mkdirSync, writeFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { chromium, expect } from '@playwright/test';
-import { createServer } from 'vite';
+import { build, preview } from 'vite';
 import { startLocalApi } from './local-api.mjs';
 const origin = 'http://127.0.0.1:4175';
-let api, vite, browser;
+const outDir = resolve('artifacts.local/f04-04/product-build');
+let api, site, browser;
 const checks = [],
   errors = [];
 try {
   api = await startLocalApi({
-    backend: process.argv[2] ?? '../darve-backend',
+    backend: process.argv[2] ?? '../tmp/backend-f06-checkout',
     origins: [origin],
     task: 'f04-02',
     collection: true,
@@ -17,13 +19,12 @@ try {
   });
   process.env.VITE_APP_ENV = 'local';
   process.env.VITE_PUBLIC_API_ORIGIN = api.apiOrigin;
-  vite = await createServer({
-    mode: 'acceptance-collection',
-    clearScreen: false,
-    envDir: false,
-    server: { host: '127.0.0.1', port: 4175, strictPort: true, hmr: false },
+  await build({ envDir: false, logLevel: 'silent', build: { outDir, emptyOutDir: true } });
+  site = await preview({
+    logLevel: 'silent',
+    build: { outDir },
+    preview: { host: '127.0.0.1', port: 4175, strictPort: true },
   });
-  await vite.listen();
   browser = await chromium.launch();
   const creator = await api.seedSession({ expiresInMs: 300000 });
   const streams = {};
@@ -58,14 +59,35 @@ try {
         page.getByRole('button', { name: 'Start collection', exact: true }),
       ).toBeEnabled();
     } catch (error) {
-      mkdirSync('artifacts.local/f04-02', { recursive: true });
+      mkdirSync('artifacts.local/f04-04', { recursive: true });
       writeFileSync(
-        'artifacts.local/f04-02/disabled-synthetic.txt',
+        'artifacts.local/f04-04/disabled-synthetic.txt',
         await page.locator('body').innerText(),
       );
       throw error;
     }
-    await page.getByRole('button', { name: 'Start collection', exact: true }).click();
+    if (provider === 'TWITCH') {
+      const endpoint = api.apiOrigin + '/api/rounds';
+      let sent = 0;
+      const observeStart = async (route) => {
+        sent++;
+        const response = await route.fetch({ maxRedirects: 0 });
+        assert.equal(response.status(), 202);
+        await route.abort('failed');
+      };
+      await page.route(endpoint, observeStart);
+      await page.getByRole('button', { name: 'Start collection', exact: true }).click();
+      await page.getByRole('button', { name: 'Check original Start result' }).click();
+      await expect(page.getByRole('heading', { name: 'Preparing your collection' })).toBeVisible();
+      assert.equal(sent, 1);
+      assert.equal(await api.collectionFixture.roundCount(creator.userId), 1);
+      await page.unroute(endpoint, observeStart);
+      checks.push(
+        'a lost actual Start response recovers the committed round by exact key with no second creation',
+      );
+    } else {
+      await page.getByRole('button', { name: 'Start collection', exact: true }).click();
+    }
     await expect(
       page.getByRole('heading', { name: 'Preparing your collection', exact: true }),
     ).toBeVisible();
@@ -102,10 +124,10 @@ try {
   await page.getByRole('button', { name: 'Accept and continue', exact: true }).click();
   api.collectionFixture.capacity('available');
   await expect(page.getByRole('button', { name: 'Start collection', exact: true })).toBeEnabled();
-  await page.getByLabel('Collection duration').fill('10');
+  await page.getByLabel('Collection duration').fill('25');
   const session = await context.request.get(api.apiOrigin + '/api/session');
   const sessionValue = await session.json();
-  const body = { ...activeStream, collectionDurationSeconds: 10, announcementPinMode: 'off' };
+  const body = { ...activeStream, collectionDurationSeconds: 25, announcementPinMode: 'off' };
   const bad = await context.request.post(api.apiOrigin + '/api/rounds', {
     headers: {
       Origin: origin,
@@ -138,6 +160,40 @@ try {
   }
   const roundId = new URL(page.url()).pathname.split('/').at(-1);
   assert.equal((await api.collectionFixture.roundState(roundId)).state, 'collecting');
+  const fresh = await browser.newContext({
+    viewport: { width: 393, height: 851 },
+    isMobile: true,
+    hasTouch: true,
+  });
+  await fresh.addCookies([
+    {
+      name: 'darve_session',
+      value: activeCreator.secret,
+      url: api.apiOrigin,
+      httpOnly: true,
+      sameSite: 'Lax',
+    },
+  ]);
+  const freshPage = await fresh.newPage();
+  await freshPage.goto(origin + '/onboarding');
+  await freshPage.getByRole('link', { name: 'Open collection' }).click();
+  await expect(
+    freshPage.getByRole('button', { name: 'Start collection', exact: true }),
+  ).toHaveCount(0);
+  await freshPage.getByRole('button', { name: 'Resume collection' }).press('Enter');
+  await expect(freshPage).toHaveURL(origin + '/collection/' + roundId);
+  await expect(freshPage.getByRole('heading', { name: 'Collecting viewer ideas' })).toBeVisible();
+  assert.deepEqual(
+    await freshPage.evaluate(() => [
+      globalThis.localStorage.length,
+      globalThis.sessionStorage.length,
+    ]),
+    [0, 0],
+  );
+  await fresh.close();
+  checks.push(
+    'fresh mobile browser without round storage resumes the same collection through onboarding and keyboard navigation',
+  );
   await page.reload();
   await expect(
     page.getByRole('heading', { name: 'Collecting viewer ideas', exact: true }),
@@ -151,7 +207,23 @@ try {
   const closed = await api.collectionFixture.roundState(roundId);
   assert.equal(closed.state, 'closed');
   assert.equal(closed.snapshotCount, 1);
-  checks.push('actual Stop closes the durable round and freezes one empty snapshot');
+  await expect(page.getByRole('link', { name: 'Review viewer ideas' })).toHaveAttribute(
+    'href',
+    '/collection/' + roundId + '/suggestions',
+  );
+  await expect(
+    page.getByRole('main').getByRole('link', { name: 'Challenge history' }),
+  ).toHaveAttribute('href', '/challenges');
+  await expect(page.getByRole('main').getByRole('link', { name: 'OBS display' })).toHaveAttribute(
+    'href',
+    '/obs',
+  );
+  await page.getByRole('link', { name: 'Review viewer ideas' }).click();
+  await expect(page).toHaveURL(origin + '/collection/' + roundId + '/suggestions');
+  await expect(page.getByRole('heading', { name: 'Review viewer ideas' })).toBeVisible();
+  checks.push(
+    'actual Stop freezes one empty snapshot and opens its review with history and OBS destinations available',
+  );
   const foreign = await browser.newContext();
   const foreignActor = await api.seedSession();
   await foreign.addCookies([
@@ -188,9 +260,22 @@ try {
   checks.push('actual same-key Start replay retains one operation identity');
   api.collectionFixture.funding('not_ready');
   await page.goto(origin + '/collection');
+  await page.getByRole('button', { name: 'Resume collection' }).click();
+  await page.getByRole('button', { name: 'Cancel preparation', exact: true }).click();
+  await page.getByRole('button', { name: 'Confirm cancellation', exact: true }).click();
+  await expect(
+    page.getByRole('heading', { name: 'Collection cancelled', exact: true }),
+  ).toBeVisible();
+  await page.getByRole('link', { name: 'Back to collection setup' }).click();
   await expect(page.getByRole('button', { name: 'Start collection', exact: true })).toBeEnabled();
   await page.getByRole('button', { name: 'Start collection', exact: true }).click();
   await expect(page.getByRole('alert')).toContainText('ready receiving account');
+  await expect(page.getByRole('link', { name: 'Open payout settings' })).toHaveAttribute(
+    'href',
+    '/account/payments',
+  );
+  await page.getByRole('link', { name: 'Open payout settings' }).click();
+  await expect(page.getByRole('heading', { name: 'Payout settings', exact: true })).toBeVisible();
   checks.push('actual funding denial is visible and is not fabricated readiness');
   await page.getByRole('button', { name: 'Sign out', exact: true }).click();
   await expect(
@@ -198,8 +283,8 @@ try {
   ).toBeVisible();
   assert.equal(await api.revoked(activeCreator.sessionId), true);
   assert.deepEqual(errors, []);
-  checks.push('actual logout revokes authority and removes collection controls');
-  mkdirSync('artifacts.local/f04-02', { recursive: true });
+  checks.push('actual logout after the payout handoff revokes the owner session');
+  mkdirSync('artifacts.local/f04-04', { recursive: true });
   const result = {
     source: api.source,
     migrations: api.migrations,
@@ -214,10 +299,18 @@ try {
     externalProviderCalls: false,
     liveCollectionVerified: false,
   };
-  writeFileSync('artifacts.local/f04-02/acceptance.json', JSON.stringify(result, null, 2));
+  writeFileSync('artifacts.local/f04-04/acceptance.json', JSON.stringify(result, null, 2));
   console.log(JSON.stringify(result));
 } finally {
-  const result = await Promise.allSettled([browser?.close(), vite?.close(), api?.close()]);
+  const result = await Promise.allSettled([
+    browser?.close(),
+    site &&
+      new Promise((done) => {
+        site.httpServer.closeAllConnections();
+        site.httpServer.close(done);
+      }),
+    api?.close(),
+  ]);
   if (result.some((value) => value.status === 'rejected')) {
     process.stderr.write('Collection acceptance cleanup failed; inspect owned metadata.\n');
     process.exitCode = 1;

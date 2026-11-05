@@ -25,6 +25,27 @@ const startInput = {
   collectionDurationSeconds: 30,
   announcementPinMode: 'off',
 } as const;
+it('reads current and held Start identity without a body or mutation proof', async () => {
+  const { client, send } = await setup();
+  const attempt = client.prepareStart(startInput);
+  const response = { schemaVersion: 1, serverTime: '2026-11-05T12:00:00.000Z' };
+  send.mockResolvedValueOnce(json({ ...response, data: null }));
+  await expect(client.currentRound(new AbortController().signal)).resolves.toBeNull();
+  send.mockResolvedValueOnce(json({ ...response, data: { roundId: ids.round } }));
+  await expect(client.startResult(attempt)).resolves.toBe(ids.round);
+  const [current, original] = send.mock.calls.slice(1);
+  expect(current?.[0]).toBe('https://api.example.test/api/rounds/current');
+  expect(original?.[0]).toBe('https://api.example.test/api/rounds/start-result');
+  expect(original?.[1]?.method).toBe('GET');
+  expect(original?.[1]?.body).toBeUndefined();
+  const headers = new Headers(original?.[1]?.headers);
+  expect(headers.get('Idempotency-Key')).toBe(attempt.key);
+  expect(headers.has('X-CSRF-Token')).toBe(false);
+  await expect(client.startResult({ ...attempt })).rejects.toMatchObject({
+    problem: { code: 'INVALID_START_ATTEMPT' },
+  });
+  expect(send).toHaveBeenCalledTimes(3);
+});
 it.each(['preparing', 'collecting', 'closed', 'failed'] as const)(
   'synthetic %s fixture satisfies the exact pinned wire',
   (state) => {

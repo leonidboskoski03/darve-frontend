@@ -5,6 +5,7 @@ import {
   StopRoundInputSchema,
   RoundParamsSchema,
   RoundResponseSchema,
+  RoundRecoveryResponseSchema,
   type StartRoundInput,
   type RoundDto,
 } from '@/services/contracts/index';
@@ -97,7 +98,30 @@ export function createCollectionClient(session: CreatorSession, clock = () => pe
     }
   };
   const access = createCreatorAccessClient({ origin: session.origin!, session });
+  const requireAttempt = (attempt: StartAttempt) => {
+    if (!attempts.has(attempt) || attempt.scopeId !== scope.id)
+      throw new CollectionError(failure('authority', 'INVALID_START_ATTEMPT'));
+  };
   return {
+    async currentRound(signal: AbortSignal) {
+      const value = await request({
+        path: '/api/rounds/current',
+        signal,
+        schema: RoundRecoveryResponseSchema,
+        success: [200],
+      });
+      return value.data?.roundId ?? null;
+    },
+    async startResult(attempt: StartAttempt) {
+      requireAttempt(attempt);
+      const value = await request({
+        path: '/api/rounds/start-result',
+        idempotencyKey: attempt.key,
+        schema: RoundRecoveryResponseSchema,
+        success: [200],
+      });
+      return value.data?.roundId ?? null;
+    },
     async connections(cursor: string | null, signal: AbortSignal) {
       active();
       const value = await access.connections(cursor, signal);
@@ -136,8 +160,7 @@ export function createCollectionClient(session: CreatorSession, clock = () => pe
     },
     start(attempt: StartAttempt) {
       return command(() => {
-        if (!attempts.has(attempt) || attempt.scopeId !== scope.id)
-          throw new CollectionError(failure('authority', 'INVALID_START_ATTEMPT'));
+        requireAttempt(attempt);
         return readRound(
           {
             path: '/api/rounds',

@@ -53,6 +53,8 @@ type Options = {
   start?: (route: Route) => Promise<void>;
   stop?: (route: Route) => Promise<void>;
   read?: (route: Route) => Promise<void>;
+  current?: (route: Route) => Promise<void>;
+  startResult?: (route: Route) => Promise<void>;
   partial?: boolean;
 };
 async function scenario(page: Page, options: Options = {}) {
@@ -93,6 +95,16 @@ async function scenario(page: Page, options: Options = {}) {
       const response = discoveryFixture();
       response.data.items[0].liveViewers.source = provider;
       await json(route, response);
+      return;
+    }
+    if (url.pathname === '/api/rounds/current') {
+      if (options.current) await options.current(route);
+      else await json(route, envelope(null));
+      return;
+    }
+    if (url.pathname === '/api/rounds/start-result') {
+      if (options.startResult) await options.startResult(route);
+      else await json(route, envelope(null));
       return;
     }
     if (url.pathname === '/api/rounds' && request.method() === 'POST') {
@@ -176,6 +188,7 @@ test('synthetic unconfirmed Start holds source/settings and explicitly retries t
   const state = await scenario(page, {
     start: async (route) => {
       if (++calls === 1) await route.abort('failed');
+      else if (calls === 2) await json(route, failure('PAYMENT_SETUP_REQUIRED'), 409);
       else await json(route, roundFixture(), 202);
     },
   });
@@ -184,12 +197,70 @@ test('synthetic unconfirmed Start holds source/settings and explicitly retries t
   await expect(page.getByText('The result is unconfirmed.', { exact: false })).toBeVisible();
   await expect(page.getByRole('radio', { name: 'YouTube', exact: true })).toBeDisabled();
   await expect(page.getByLabel('Collection duration')).toBeDisabled();
-  await page.getByRole('button', { name: 'Retry the same Start request' }).click();
+  const retry = page.getByRole('button', { name: 'Retry the same Start request' });
+  await retry.click();
+  await expect(page.getByRole('alert')).toContainText('ready receiving account');
+  await expect(page.getByRole('button', { name: 'Start collection', exact: true })).toBeDisabled();
+  await retry.click();
   await expect(
     page.getByRole('heading', { name: 'Preparing your collection', exact: true }),
   ).toBeVisible();
-  expect(state.starts).toHaveLength(2);
+  expect(state.starts).toHaveLength(3);
   expect(state.starts[1]).toEqual(state.starts[0]);
+  expect(state.starts[2]).toEqual(state.starts[0]);
+});
+test('synthetic unknown Start checks only the original key and stays locked when the result is still empty', async ({
+  page,
+}) => {
+  const keys: (string | undefined)[] = [];
+  const state = await scenario(page, {
+    start: (route) => route.abort('failed'),
+    startResult: async (route) => {
+      expect(route.request().method()).toBe('GET');
+      keys.push(route.request().headers()['idempotency-key']);
+      await json(route, envelope(keys.length === 1 ? null : { roundId: ids.round }));
+    },
+  });
+  await page.goto(fixture);
+  const start = page.getByRole('button', { name: 'Start collection', exact: true });
+  await start.click();
+  const check = page.getByRole('button', { name: 'Check original Start result' });
+  await check.click();
+  await expect(page.getByText(/no visible round for this request yet/)).toBeVisible();
+  await expect(start).toBeDisabled();
+  await check.click();
+  await expect(
+    page.getByRole('heading', { name: 'Preparing your collection', exact: true }),
+  ).toBeVisible();
+  expect(state.starts).toHaveLength(1);
+  expect(keys).toEqual([state.starts[0].key, state.starts[0].key]);
+});
+test('synthetic unavailable lookup blocks Start and a reservation conflict offers the server round', async ({
+  page,
+}) => {
+  let reads = 0;
+  let active = false;
+  const state = await scenario(page, {
+    current: (route) =>
+      ++reads === 1
+        ? json(route, failure('SERVICE_UNAVAILABLE'), 503)
+        : json(route, envelope(active ? { roundId: ids.round } : null)),
+    start: (route) => {
+      active = true;
+      return json(route, failure('COLLECTION_ALREADY_ACTIVE'), 409);
+    },
+  });
+  await page.goto(fixture);
+  const start = page.getByRole('button', { name: 'Start collection', exact: true });
+  await expect(page.getByText('Active collection could not be checked')).toBeVisible();
+  await expect(start).toHaveCount(0);
+  await page.getByRole('button', { name: 'Check active collection' }).click();
+  await start.click();
+  await page.getByRole('button', { name: 'Resume collection' }).click();
+  await expect(
+    page.getByRole('heading', { name: 'Preparing your collection', exact: true }),
+  ).toBeVisible();
+  expect(state.starts).toHaveLength(1);
 });
 test('synthetic round URL counts from server time, never posts Stop at zero and hides status after a failed read', async ({
   page,

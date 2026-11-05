@@ -7,7 +7,7 @@ export function collectionErrorMessage(error: unknown) {
     PAYMENT_SETUP_REQUIRED:
       'Connect a ready receiving account before collecting. Payment setup is required by the server.',
     COLLECTION_ALREADY_ACTIVE:
-      'A collection is already running. Return to its original tab or saved collection link. No new collection was started.',
+      'Your account already has an active collection. Check the current round before starting again.',
     TERMS_REQUIRED:
       'Your account terms need attention. Review the current account terms before continuing.',
     PERMISSION_REQUIRED:

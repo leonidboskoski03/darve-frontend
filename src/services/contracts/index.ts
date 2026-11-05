@@ -53,6 +53,7 @@ export {
   StopRoundInputSchema,
   RoundParamsSchema,
   RoundResponseSchema,
+  RoundRecoveryResponseSchema,
   type StartRoundInput,
   type RoundDto,
   SuggestionParamsSchema,

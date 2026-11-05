@@ -98,6 +98,7 @@ export function OnboardingGuide({
   payoutsLink,
   obsLink,
   dashboardLink,
+  collectionLink,
 }: {
   session: CreatorSession;
   scope: CreatorSnapshot['scope'];
@@ -109,6 +110,7 @@ export function OnboardingGuide({
   payoutsLink: ReactNode;
   obsLink: ReactNode;
   dashboardLink: ReactNode;
+  collectionLink: ReactNode;
 }) {
   const accepted = terms.status === 'accepted';
   return (
@@ -123,6 +125,7 @@ export function OnboardingGuide({
         {accepted ? (
           <div className="onboarding-actions">
             {dashboardLink}
+            {collectionLink}
             <Button
               tone="quiet"
               onClick={() => {

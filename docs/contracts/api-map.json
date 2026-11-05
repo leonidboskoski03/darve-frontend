@@ -1,5 +1,5 @@
 {
-  "sourceRevision": "32d8716bf93fef695a4fef4fcb51a9fa2a59fdcf",
+  "sourceRevision": "0ac317d952ca621f164f33c12c423659623f6019",
   "status": "B15/F09-02 aligns coin/template request revision limits and exports the strict existing history query; existing F08 recovery and authority handoffs retained. Ordinary activation remains separate.",
   "operations": [
     {
@@ -424,7 +424,7 @@
         "file": "apps/api/src/modules/collection/collection.routes.ts",
         "line": 9,
         "handler": "controller.start",
-        "sha256": "92c9e9bd6b0c5cca0cf8823b8dd1f5dfe05574ebc530670b3b74d05694c1a704"
+        "sha256": "2672d8684ecfdb14c5d77df53e270a840244285aa031d7b73e97e2513d0d4848"
       },
       "frontend": "F04"
     },
@@ -445,7 +445,7 @@
         "file": "apps/api/src/modules/collection/collection.routes.ts",
         "line": 10,
         "handler": "controller.stop",
-        "sha256": "92c9e9bd6b0c5cca0cf8823b8dd1f5dfe05574ebc530670b3b74d05694c1a704"
+        "sha256": "2672d8684ecfdb14c5d77df53e270a840244285aa031d7b73e97e2513d0d4848"
       },
       "frontend": "F04"
     },
@@ -470,7 +470,7 @@
         "file": "apps/api/src/modules/collection/collection.routes.ts",
         "line": 12,
         "handler": "chat.confirm",
-        "sha256": "92c9e9bd6b0c5cca0cf8823b8dd1f5dfe05574ebc530670b3b74d05694c1a704"
+        "sha256": "2672d8684ecfdb14c5d77df53e270a840244285aa031d7b73e97e2513d0d4848"
       },
       "frontend": "F04"
     },
@@ -495,7 +495,7 @@
         "file": "apps/api/src/modules/collection/collection.routes.ts",
         "line": 13,
         "handler": "chat.unpin",
-        "sha256": "92c9e9bd6b0c5cca0cf8823b8dd1f5dfe05574ebc530670b3b74d05694c1a704"
+        "sha256": "2672d8684ecfdb14c5d77df53e270a840244285aa031d7b73e97e2513d0d4848"
       },
       "frontend": "F04"
     },
@@ -516,7 +516,49 @@
         "file": "apps/api/src/modules/collection/collection.routes.ts",
         "line": 14,
         "handler": "chat.status",
-        "sha256": "92c9e9bd6b0c5cca0cf8823b8dd1f5dfe05574ebc530670b3b74d05694c1a704"
+        "sha256": "2672d8684ecfdb14c5d77df53e270a840244285aa031d7b73e97e2513d0d4848"
+      },
+      "frontend": "F04"
+    },
+    {
+      "id": "public-api:GET /api/rounds/current",
+      "origin": "public-api",
+      "method": "GET",
+      "path": "/api/rounds/current",
+      "authority": "creator",
+      "csrf": "no mutation CSRF; Origin policy still applies",
+      "idempotency": "none",
+      "request": "none",
+      "query": "empty",
+      "response": "RoundRecoveryResponseSchema",
+      "successStatuses": [200],
+      "publicExports": ["RoundRecoveryResponseSchema"],
+      "source": {
+        "file": "apps/api/src/modules/collection/collection.routes.ts",
+        "line": 16,
+        "handler": "controller.current",
+        "sha256": "2672d8684ecfdb14c5d77df53e270a840244285aa031d7b73e97e2513d0d4848"
+      },
+      "frontend": "F04"
+    },
+    {
+      "id": "public-api:GET /api/rounds/start-result",
+      "origin": "public-api",
+      "method": "GET",
+      "path": "/api/rounds/start-result",
+      "authority": "creator",
+      "csrf": "no mutation CSRF; Origin policy still applies",
+      "idempotency": "Original Start Idempotency-Key header validated by RoundIdempotencyKeySchema",
+      "request": "none",
+      "query": "empty",
+      "response": "RoundRecoveryResponseSchema",
+      "successStatuses": [200],
+      "publicExports": ["RoundRecoveryResponseSchema", "RoundIdempotencyKeySchema"],
+      "source": {
+        "file": "apps/api/src/modules/collection/collection.routes.ts",
+        "line": 17,
+        "handler": "controller.startResult",
+        "sha256": "2672d8684ecfdb14c5d77df53e270a840244285aa031d7b73e97e2513d0d4848"
       },
       "frontend": "F04"
     },
@@ -535,9 +577,9 @@
       "publicExports": ["RoundParamsSchema", "RoundResponseSchema"],
       "source": {
         "file": "apps/api/src/modules/collection/collection.routes.ts",
-        "line": 16,
+        "line": 18,
         "handler": "controller.status",
-        "sha256": "92c9e9bd6b0c5cca0cf8823b8dd1f5dfe05574ebc530670b3b74d05694c1a704"
+        "sha256": "2672d8684ecfdb14c5d77df53e270a840244285aa031d7b73e97e2513d0d4848"
       },
       "frontend": "F04"
     },
@@ -2915,9 +2957,9 @@
     "apps/api/src/modules/coins/templates.routes.ts": "cf90674701ace10656b7ead8f8b5699f7d433eaa9f618bdb4d60921495ac1b9a",
     "apps/api/src/modules/collection/collection-chat.controller.ts": "a7b9cae1e5216e3fe1462e171fb92cc687267092f56f899a90655dedaa709db4",
     "apps/api/src/modules/collection/collection-chat.mapper.ts": "14445bc3bfa9243859bea0c3f5ab9720912c51b64c8b17e23371de3b8cab50ec",
-    "apps/api/src/modules/collection/collection.controller.ts": "87bde090096d2d73d3741aa5b96b90991b6a31cef17928977d314ee499b1404c",
-    "apps/api/src/modules/collection/collection.mapper.ts": "9f4b73ba2aa0ae122e8b37a394876366c9d2f9cfe66ba0c1a5b07640389349b9",
-    "apps/api/src/modules/collection/collection.routes.ts": "92c9e9bd6b0c5cca0cf8823b8dd1f5dfe05574ebc530670b3b74d05694c1a704",
+    "apps/api/src/modules/collection/collection.controller.ts": "1082e47e3ee679ea8113cd8c80ee7059a97706c7b11411fd8779d606ceffd4d6",
+    "apps/api/src/modules/collection/collection.mapper.ts": "e5864cc9590f0c6160ce30b32f4b331e059ec82ddce0e0ada089f715ec38d93a",
+    "apps/api/src/modules/collection/collection.routes.ts": "2672d8684ecfdb14c5d77df53e270a840244285aa031d7b73e97e2513d0d4848",
     "apps/api/src/modules/connections/broadcasts.mapper.ts": "8ec337952b3ce3821463fcfdfab1793dbce0e97493fdd6c04f885fdae13acaab",
     "apps/api/src/modules/connections/connections.controller.ts": "75d962751d123959e2c224d0815ff303263ee6a78ca3ccc76db82c378c76eaf1",
     "apps/api/src/modules/connections/connections.mapper.ts": "b84dd795402de48595cf14945f851af777ade626b9716a9e997b703975efe0fb",
