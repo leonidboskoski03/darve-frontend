@@ -1,5 +1,21 @@
 # Environments, security and release operations
 
+## Connected local creator workspace
+
+Use `npm.cmd run product:check` to check Docker, ports, the contract source and whether provider client pairs are present. The backend checkout at `../tmp/backend-f06-checkout` must match the frontend contract pin and have its dependencies installed. The launcher builds that checkout and starts the regular frontend and API. It reads only the three OAuth client pairs from `../darve-backend/.env`. A missing pair leaves that provider unavailable. The launcher supplies client credentials only to the API process.
+
+```powershell
+npm.cmd run dev:connected -- --pause-development-api
+```
+
+Open [the creator dashboard](http://localhost:5174/dashboard) and use **localhost** throughout. The API allows browser requests from `http://localhost:5174` and generates callbacks at `http://localhost:3000/api/auth/<provider>/callback` for Twitch, YouTube and Kick. It allows returns to `/` and `/integrations`. The profile uses the origin pair exercised in the earlier provider verification.
+
+When port 3000 is free, omit the pause flag. With the flag, the launcher checks the Darve Compose API identity and port before temporarily stopping it. Ctrl+C or `npm.cmd run product:stop` closes the app and API, stops the profile's database and cache containers, and restores the previous API. Run `npm.cmd run product:status` from another terminal for shareable status and capability availability.
+
+The profile keeps account data and settings in its named volumes. Keep those volumes together with the ignored `artifacts.local/connected-product/private.json`, which holds local credentials and the encryption key. The launcher initializes a fresh owned database and checks migration names and checksums on each restart. A changed contract pin, missing volume or incompatible schema requires a reviewed upgrade. After an interrupted handover, inspect the recorded process and container identities before restarting. Once the old owner and children exit, the next start carries forward the recorded API restore obligation.
+
+Session, development terms, the creator workspace and deep links use the current API. The profile supplies an OBS display origin and retains its grant epoch. Receiving, worker, analysis and bot configuration remain under F03/F04/F06. Staff email and coin activation retain their own tasks. See [F02-04 qualification](F02_CONTRACTS_AND_AUTH_IMPLEMENTATION.md#f02-04-implementation-and-qualification).
+
 ## Current environment
 
 Local-first work is approved. No hosted resources, remote frontend repository, live payment activation or persistent database migrations are created by F00. The Vite server binds loopback at 5173; production preview uses 4173. Strict ports avoid accidentally testing a different process. HTTPS/origin/cookie behavior still needs actual hosted verification later.

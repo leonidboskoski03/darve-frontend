@@ -2,6 +2,8 @@
 
 Owners: F02-02 session, F02-03 realtime and F03 creator/terms. [Implementation evidence](F02_CONTRACTS_AND_AUTH_IMPLEMENTATION.md#f02-02-transport-session-and-authority) records the qualified source and checks. [OPERATIONS](OPERATIONS.md) owns environment policy. The default composition uses the actual backend with disposable PostgreSQL and Redis; it configures no identity, payment, analysis or email provider. The separately approved operator mode below explicitly enables registered identity providers only.
 
+For ordinary connected development use the [persistent creator workspace](OPERATIONS.md#connected-local-creator-workspace). This document covers disposable acceptance profiles.
+
 ## Start and stop
 
 Current acceptance uses the exact contract source in `vendor/contracts/provenance.json` and the retained clean checkout `../tmp/backend-f06-checkout`. Its current F09-06/F10 pin is `32d8716bf93fef695a4fef4fcb51a9fa2a59fdcf`; the historical F09-02 pin was `8103c8607e475e711c8b8fc5f5e3eceb1d0e65fc`. Historical source paths/checkpoints below are not overrides: a different HEAD or changed/untracked backend build input fails closed. The original dirty checkout and ordinary data remain untouched.
