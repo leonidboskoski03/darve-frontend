@@ -43,6 +43,7 @@
     "test:realtime:local": "node tools/local-realtime-acceptance.mjs",
     "test:creator:local": "node tools/local-creator-acceptance.mjs",
     "test:receiving:local": "node tools/local-receiving-acceptance.mjs",
+    "test:payouts:local": "node tools/local-payout-settings-acceptance.mjs",
     "test:operator": "node --test tools/provider-login-config.test.mjs tools/local-collection.test.mjs tools/mobile-qr-relay.test.mjs tools/local-coins.test.mjs tools/connected-product.test.mjs",
     "provider:local": "node --use-system-ca tools/local-provider-login.mjs",
     "provider:audit": "node tools/provider-login-audit.mjs",

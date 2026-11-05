@@ -22,6 +22,7 @@ export function RootLayout() {
   }, [pathname]);
   if (
     pathname === '/dashboard' ||
+    pathname === '/account/payments' ||
     pathname === '/obs' ||
     pathname === '/coins' ||
     pathname === '/templates' ||
