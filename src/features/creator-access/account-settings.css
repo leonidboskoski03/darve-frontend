@@ -1,0 +1,37 @@
+.creator-account {
+  display: grid;
+  gap: var(--space-6);
+  max-width: var(--content-width);
+  margin-inline: auto;
+}
+.creator-account__header {
+  padding-block-end: var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+}
+.creator-account__header h1 {
+  margin: 0;
+  font-size: var(--font-size-page);
+}
+.creator-account__header p {
+  margin: var(--space-2) 0 0;
+  color: var(--color-muted);
+}
+.creator-account__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  gap: var(--space-4);
+}
+.creator-account__grid > section {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.creator-account__grid p,
+.creator-account__profile dt {
+  color: var(--color-muted);
+}
+.creator-account__profile {
+  margin: 0;
+}
+.creator-account__profile dd {
+  margin: var(--space-2) 0 0;
+}

@@ -743,7 +743,11 @@ export async function startLocalApi({
         server = await listen();
       },
       // Node-only acceptance fixture. This is never an HTTP login endpoint or product shortcut.
-      async seedSession({ expiresInMs = 60_000, coinOwner = false } = {}) {
+      async seedSession({
+        expiresInMs = 60_000,
+        coinOwner = false,
+        displayName = 'Synthetic local creator',
+      } = {}) {
         if (
           coinOwner &&
           (!['f09-g01', 'f09-03', 'f09-04', 'f09-05', 'f09-06', 'f09-07'].includes(task) ||
@@ -758,7 +762,7 @@ export async function startLocalApi({
           : await deps.database.darveUser.create({
               data: {
                 ...(sandboxConfiguration ? { id: sandboxConfiguration.ownerId } : {}),
-                displayName: 'Synthetic local creator',
+                displayName,
               },
             });
         await deps.database.externalIdentity.create({
