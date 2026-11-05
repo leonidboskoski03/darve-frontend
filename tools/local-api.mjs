@@ -49,7 +49,28 @@ export async function startLocalApi({
   qrPublicOrigin,
   support = false,
   coins = false,
+  receiving = false,
 }) {
+  if (
+    (receiving || task === 'f03-04') &&
+    (task !== 'f03-04' ||
+      !terms ||
+      port !== 3310 ||
+      origins.length !== 1 ||
+      origins[0] !== 'http://127.0.0.1:4175' ||
+      overlay ||
+      operatorOAuth !== undefined ||
+      collection ||
+      review ||
+      reporting ||
+      contributionReads ||
+      checkout ||
+      sandboxPayment !== undefined ||
+      qrPublicOrigin !== undefined ||
+      support ||
+      coins)
+  )
+    throw Error('Receiving qualification requires its exact disposable provider-free composition.');
   if (task === 'f10-02')
     assertLifecycleComposition({
       task,
@@ -99,6 +120,7 @@ export async function startLocalApi({
       'f02-02',
       'f02-03',
       'f03',
+      'f03-04',
       'f03-live',
       'f04-02',
       'f04-03',
@@ -410,6 +432,12 @@ export async function startLocalApi({
           conversationRetentionSeconds: 1,
         }
       : null;
+    const receivingFixture = receiving
+      ? (await import('./local-receiving-fixture.mjs')).localReceivingFixture(
+          origins[0],
+          'http://127.0.0.1:' + port,
+        )
+      : null;
     const runtimeInput = {
       NODE_ENV: 'development',
       HOST: '127.0.0.1',
@@ -419,6 +447,7 @@ export async function startLocalApi({
       REDIS_URL: `redis://:${redisPassword}@127.0.0.1:${redisPort}`,
       CORS_ORIGINS: origins.join(','),
       RATE_LIMIT_MAX: 1000,
+      ...receivingFixture?.environment,
       ...(support
         ? {
             SUPPORT_POLICY_JSON: JSON.stringify(supportPolicy),
@@ -536,6 +565,7 @@ export async function startLocalApi({
           ...contributionFixture?.dependencies,
           ...checkoutFixture?.dependencies,
           ...sandboxFixture?.dependencies,
+          ...receivingFixture?.dependencies,
           ...(supportFixture ? { database: supportFixture.publicDatabase } : {}),
           ...(coinFixture ? { database: coinFixture.publicDatabase } : {}),
         }).listen(port, '127.0.0.1', () => resolve(listener));
@@ -564,6 +594,7 @@ export async function startLocalApi({
     );
     return {
       ...state,
+      receivingCounts: receivingFixture?.counts,
       collectionFixture,
       async prepareTemplateOverlay(secret) {
         if (!['f09-05', 'f09-07'].includes(task) || !collectionFixture || !reviewFixture)

@@ -3,6 +3,28 @@ import test from 'node:test';
 import { startLocalApi } from './local-api.mjs';
 import { assertLifecycleComposition } from './local-lifecycle-config.mjs';
 
+test('receiving fixture rejects unreviewed origins, ports and combined capabilities before startup', async () => {
+  const options = {
+    backend: 'not-used',
+    task: 'f03-04',
+    origins: ['http://127.0.0.1:4175'],
+    terms: true,
+    receiving: true,
+  };
+  for (const override of [
+    { task: 'f03' },
+    { terms: false },
+    { port: 3000 },
+    { origins: ['https://foreign.invalid'] },
+    { operatorOAuth: {} },
+    { sandboxPayment: {} },
+    { checkout: true },
+    { collection: true },
+    { support: true },
+  ])
+    await assert.rejects(startLocalApi({ ...options, ...override }), /Receiving qualification/);
+});
+
 const lifecycle = {
   backend: 'not-used',
   task: 'f10-02',
