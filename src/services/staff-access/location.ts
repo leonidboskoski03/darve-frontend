@@ -1,5 +1,22 @@
-const paths = new Set(['/', '/staff/enrol', '/tickets', '/reviews']);
+const paths = new Set(['/', '/staff/enrol', '/tickets', '/reviews', '/coins']);
 const entryPaths = new Set([...paths, '/staff/verify-email']);
+export function staffCoinSearch(search: string) {
+  if (search.length > 2048) return '';
+  const input = new URLSearchParams(search),
+    output = new URLSearchParams();
+  const unique = (name: string) => (input.getAll(name).length === 1 ? input.get(name) : null);
+  const view = unique('view'),
+    owner = unique('owner'),
+    template = unique('template');
+  if (view && ['configuration', 'account', 'prices'].includes(view)) output.set('view', view);
+  if (
+    owner &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(owner)
+  )
+    output.set('owner', owner.toLowerCase());
+  if (template && /^[a-z][a-z0-9_-]{0,63}$/.test(template)) output.set('template', template);
+  return output.size ? '?' + output.toString() : '';
+}
 /** Preserve only public staff-tool navigation filters; proofs and arbitrary query fields are stripped. */
 export function staffReviewSearch(search: string) {
   if (search.length > 2048) return '';

@@ -136,6 +136,12 @@ test('separate staff product entry is unavailable without configuration and excl
   expect(response?.headers()['content-security-policy']).toContain("frame-ancestors 'none'");
   expect((await page.request.get('http://localhost:4176/index.html')).status()).toBe(404);
   expect((await page.request.get('http://localhost:4176/overlay.html')).status()).toBe(404);
+  const coinEntry = await page.goto(
+    'http://localhost:4176/coins?view=prices&template=standalone&secret=removed',
+  );
+  expect(coinEntry?.status()).toBe(200);
+  await expect(page.getByRole('heading', { name: 'Staff access is unavailable' })).toBeVisible();
+  await expect(page).toHaveURL('http://localhost:4176/coins?view=prices&template=standalone');
   expect(requests).toHaveLength(0);
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 });

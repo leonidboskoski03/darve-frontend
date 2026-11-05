@@ -19,7 +19,9 @@ function rewrite(
 ) {
   const path = (request.url ?? '/').split('?')[0];
   if (
-    ['/', '/staff/enrol', '/staff/verify-email', '/tickets', '/reviews'].includes(path ?? '') ||
+    ['/', '/staff/enrol', '/staff/verify-email', '/tickets', '/reviews', '/coins'].includes(
+      path ?? '',
+    ) ||
     /^\/tickets\/[0-9a-f-]{36}$/i.test(path ?? '')
   )
     request.url = '/staff.html';

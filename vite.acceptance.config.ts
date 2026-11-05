@@ -21,6 +21,7 @@ export default defineConfig((environment) =>
             'staff',
             'staff-work',
             'staff-admin',
+            'staff-coins',
           ].map((name) => [
             name,
             fileURLToPath(new URL(`./tests/fixtures/${name}.html`, import.meta.url)),

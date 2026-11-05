@@ -26,24 +26,44 @@ export function createStaffRouter(access: StaffAccess) {
       },
     };
   };
+  const coins = async () => {
+    const { StaffCoinsRoute } = await import('./staff-coins');
+    return {
+      Component: function CoinRoute() {
+        return <StaffCoinsRoute access={access} />;
+      },
+    };
+  };
   return createBrowserRouter(
-    ['/', '/staff/enrol', '/staff/verify-email', '/tickets', '/tickets/:ticketId', '/reviews'].map(
-      (path) => ({
-        path,
-        lazy: path.startsWith('/tickets') ? work : path === '/reviews' ? administration : lazy,
-        hydrateFallbackElement: (
-          <main className="staff-shell">
-            <p role="status">Checking staff access…</p>
-          </main>
-        ),
-        errorElement: (
-          <main>
-            <h1>Staff access is unavailable</h1>
-            <p>The staff page could not be loaded.</p>
-            <a href="/">Reload staff access</a>
-          </main>
-        ),
-      }),
-    ),
+    [
+      '/',
+      '/staff/enrol',
+      '/staff/verify-email',
+      '/tickets',
+      '/tickets/:ticketId',
+      '/reviews',
+      '/coins',
+    ].map((path) => ({
+      path,
+      lazy: path.startsWith('/tickets')
+        ? work
+        : path === '/reviews'
+          ? administration
+          : path === '/coins'
+            ? coins
+            : lazy,
+      hydrateFallbackElement: (
+        <main className="staff-shell">
+          <p role="status">Checking staff access…</p>
+        </main>
+      ),
+      errorElement: (
+        <main>
+          <h1>Staff access is unavailable</h1>
+          <p>The staff page could not be loaded.</p>
+          <a href="/">Reload staff access</a>
+        </main>
+      ),
+    })),
   );
 }

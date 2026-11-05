@@ -1,6 +1,17 @@
 // Reviewed browser-only artifact. Add further public exports with their first concrete caller.
 export {
   CoinCreatorAccountDataSchema,
+  CoinConfigurationInputSchema,
+  CoinAdjustmentInputSchema,
+  TemplatePriceInputSchema,
+  TemplateIdSchema,
+  CoinCommandResponseSchema,
+  CoinConfigurationViewSchema,
+  CoinAccountViewSchema,
+  CoinConfigurationItemSchema,
+  CoinPriceItemSchema,
+  CoinPriceDataSchema,
+  CoinAssignedDataSchema,
   TemplateRedemptionInputSchema,
   TemplateSelectionInputSchema,
   CoinRedemptionDataSchema,
