@@ -24,4 +24,20 @@ Deferral never authorizes external exposure, live payments, persistent migration
 - Verify chosen designs on actual devices and OBS, physical QR destination, fresh-browser sandbox payment journeys, accessibility and agreed workload/performance limits.
 - Record monitoring/alert owners, scrubbed telemetry and artifact retention, rollback compatibility, operator checks and separately authorized release/deployment steps.
 
+## Coin and template activation handoff (F09)
+
+F09 local qualification does not enable ordinary earning/redemption or approve example values. Carry these decisions into the separately authorized activation/release checkpoint; their backend and operational owners remain authoritative.
+
+| Required decision or proof                                                                             | Owner                              | Activation prerequisite                                                                                                                                                         |
+| ------------------------------------------------------------------------------------------------------ | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Six prospective mission rewards, unlock pacing and exact template prices                               | Founder/product and B15            | Approve finite real values and intended new-only earning behavior. Local 20/12/5 coin examples are not defaults.                                                                |
+| Program/journal identities, private consumer/cursor configuration and constrained serving/worker roles | B15 and R02/B12-INT-01             | Match all independent bindings and readiness checks in the intended environment. Browser flags do not grant authority; secrets stay server-side.                                |
+| Reviewed catalogue, asset/approval hashes, versions, licensing and withdrawal ownership                | Product/asset owner and B15        | Deliberately install only reviewed compatible assets. Preserve old ownership on updates/withdrawal; never execute catalogue-supplied code.                                      |
+| Independent journal/frontier storage, key/backup/restore custody and retention/erasure                 | R02/B12-04 and named operator      | Qualify durable hosting, recovery-point/time objectives, retention/deletion and held restore without SQL-only rollback of verified coins or resurrection of revoked access.     |
+| Workload, worker/queue/SSE limits, alerts and incident responsibility                                  | B12-02/B12-05 and named operator   | Agree measurable pilot limits, monitoring thresholds and responders. Passing local tests is not a production capacity measurement.                                              |
+| Complete source/schema/provisioning qualification                                                      | B06/R02 and B15                    | Resolve B15-03-G01's migration-replay/provisioning mismatch before claiming staging/release acceptance.                                                                         |
+| Real origins/identity/mail/provider and physical destination acceptance                                | F10/F11, B13-02 and feature owners | Complete applicable actual HTTPS/OBS/phone/provider journeys and genuine staff Auth0/Resend proof. Preserve founder-deferred F08-EXT01 and the client's unrelated Resend setup. |
+
+All prerequisites above remain open for ordinary activation unless their owning records explicitly qualify the actual target environment. F09's combined [local evidence](F09_COINS_AND_TEMPLATES_IMPLEMENTATION.md#f09-07-combined-local-acceptance-and-handoff) does not replace them.
+
 See [OPERATIONS](OPERATIONS.md) for environment/security rules and [GIT_AND_CI_SETUP](GIT_AND_CI_SETUP.md) for source/CI/release procedure. Resend selection is confirmed; actual sender/domain credentials and delivery remain pending.

@@ -50,15 +50,16 @@ export async function startLocalApi({
   coins = false,
 }) {
   if (
-    (coins || ['f09-02', 'f09-g01', 'f09-03', 'f09-04', 'f09-05', 'f09-06'].includes(task)) &&
+    (coins ||
+      ['f09-02', 'f09-g01', 'f09-03', 'f09-04', 'f09-05', 'f09-06', 'f09-07'].includes(task)) &&
     (!coins ||
-      !['f09-02', 'f09-g01', 'f09-03', 'f09-04', 'f09-05', 'f09-06'].includes(task) ||
-      (task === 'f09-06' ? !support : support) ||
-      (['f09-03', 'f09-05'].includes(task)
+      !['f09-02', 'f09-g01', 'f09-03', 'f09-04', 'f09-05', 'f09-06', 'f09-07'].includes(task) ||
+      (['f09-06', 'f09-07'].includes(task) ? !support : support) ||
+      (['f09-03', 'f09-05', 'f09-07'].includes(task)
         ? !collection || !review || !terms
         : collection || review || terms) ||
       reporting ||
-      (task === 'f09-05' ? !overlay : overlay) ||
+      (['f09-05', 'f09-07'].includes(task) ? !overlay : overlay) ||
       checkout ||
       contributionReads ||
       sandboxPayment ||
@@ -98,18 +99,19 @@ export async function startLocalApi({
       'f09-04',
       'f09-05',
       'f09-06',
+      'f09-07',
     ].includes(task)
   )
     throw new Error('Invalid local task identity.');
   if (
-    (support || ['f08-04', 'f08-05', 'f08-06', 'f08-07', 'f08-08', 'f09-06'].includes(task)) &&
+    (support ||
+      ['f08-04', 'f08-05', 'f08-06', 'f08-07', 'f08-08', 'f09-06', 'f09-07'].includes(task)) &&
     (!support ||
-      !['f08-04', 'f08-05', 'f08-06', 'f08-07', 'f08-08', 'f09-06'].includes(task) ||
-      collection ||
-      review ||
+      !['f08-04', 'f08-05', 'f08-06', 'f08-07', 'f08-08', 'f09-06', 'f09-07'].includes(task) ||
+      (task === 'f09-07'
+        ? !coins || !collection || !review || !overlay || !terms
+        : collection || review || overlay || terms) ||
       reporting ||
-      overlay ||
-      terms ||
       checkout ||
       contributionReads ||
       sandboxPayment ||
@@ -136,14 +138,25 @@ export async function startLocalApi({
   const providerEnvironment = assertProviderLoginRuntime({ task, port, origins, operatorOAuth });
   if (
     collection &&
-    !['f04-02', 'f04-03', 'f05', 'f06', 'f06-03', 'f06-04', 'f07', 'f09-03', 'f09-05'].includes(
-      task,
-    )
+    ![
+      'f04-02',
+      'f04-03',
+      'f05',
+      'f06',
+      'f06-03',
+      'f06-04',
+      'f07',
+      'f09-03',
+      'f09-05',
+      'f09-07',
+    ].includes(task)
   )
     throw new Error('Controlled collection ports require their explicit disposable task.');
   if (
     review &&
-    (!['f04-03', 'f05', 'f06', 'f06-03', 'f06-04', 'f07', 'f09-03', 'f09-05'].includes(task) ||
+    (!['f04-03', 'f05', 'f06', 'f06-03', 'f06-04', 'f07', 'f09-03', 'f09-05', 'f09-07'].includes(
+      task,
+    ) ||
       !collection)
   )
     throw new Error('Controlled review requires its explicit disposable collection task.');
@@ -382,7 +395,10 @@ export async function startLocalApi({
             SUPPORT_PUBLIC_CURSOR_KEY_BASE64: randomBytes(32).toString('base64'),
           }
         : {}),
-      ...(contributionReads || checkout || sandboxPayment || ['f07', 'f09-05'].includes(task)
+      ...(contributionReads ||
+      checkout ||
+      sandboxPayment ||
+      ['f07', 'f09-05', 'f09-07'].includes(task)
         ? { PUBLIC_CHALLENGE_BASE_URL: (qrPublicOrigin ?? origins[0]) + '/contribute/' }
         : {}),
       ...(review
@@ -416,7 +432,9 @@ export async function startLocalApi({
         ? {
             OVERLAY_PRESENTATION_BASE_URL:
               origins[0] +
-              (['f07', 'f09-05'].includes(task) ? '/overlay/' : '/tests/fixtures/realtime.html/'),
+              (['f07', 'f09-05', 'f09-07'].includes(task)
+                ? '/overlay/'
+                : '/tests/fixtures/realtime.html/'),
             OVERLAY_GRANT_EPOCH: randomUUID(),
             OVERLAY_SSE_POLL_MS: 250,
           }
@@ -436,17 +454,21 @@ export async function startLocalApi({
       ? await (
           await import('./local-collection-fixture.mjs')
         ).createLocalCollectionFixture(backend, deps.database, config, {
-          coinActivity: ['f09-03', 'f09-05'].includes(task),
+          coinActivity: ['f09-03', 'f09-05', 'f09-07'].includes(task),
         })
       : null;
     coinFixture = coins
       ? await (
           await import('./local-coin-fixture.mjs')
         ).createLocalCoinFixture(backend, databaseUrl, deps.database, {
-          linuxJournal: ['f09-g01', 'f09-03', 'f09-04', 'f09-05', 'f09-06'].includes(task),
+          linuxJournal: ['f09-g01', 'f09-03', 'f09-04', 'f09-05', 'f09-06', 'f09-07'].includes(
+            task,
+          ),
           task,
           runId,
-          staffAuthority: task === 'f09-06' ? supportFixture?.coinAuthority : null,
+          staffAuthority: ['f09-06', 'f09-07'].includes(task)
+            ? supportFixture?.coinAuthority
+            : null,
         })
       : null;
     if (coinFixture) config = readApiEnvironment({ ...runtimeInput, ...coinFixture.environment });
@@ -513,7 +535,7 @@ export async function startLocalApi({
       ...state,
       collectionFixture,
       async prepareTemplateOverlay(secret) {
-        if (task !== 'f09-05' || !collectionFixture || !reviewFixture)
+        if (!['f09-05', 'f09-07'].includes(task) || !collectionFixture || !reviewFixture)
           throw Error('Template observation requires its exact isolated composition.');
         const load = (file) => import(pathToFileURL(path.join(backend, file)).href);
         const db = await load('packages/database/dist/index.js'),
@@ -565,7 +587,7 @@ export async function startLocalApi({
         };
       },
       async diagnoseTemplateBinding(secret, id, command) {
-        if (task !== 'f09-05') throw Error('Wrong diagnostic scope');
+        if (!['f09-05', 'f09-07'].includes(task)) throw Error('Wrong diagnostic scope');
         const db = await import(
           pathToFileURL(path.join(backend, 'packages/database/dist/index.js')).href
         );
@@ -604,11 +626,14 @@ export async function startLocalApi({
       supportFixture,
       coinFixture,
       createStaffWorkbench: async () => {
-        if (!['f08-05', 'f08-06', 'f08-07', 'f08-08', 'f09-06'].includes(task) || !supportFixture)
+        if (
+          !['f08-05', 'f08-06', 'f08-07', 'f08-08', 'f09-06', 'f09-07'].includes(task) ||
+          !supportFixture
+        )
           throw new Error('Staff workbench requires F08-05 disposable composition.');
         return supportFixture.workbench(deps.redis, {
-          administration: ['f08-06', 'f08-07', 'f08-08', 'f09-06'].includes(task),
-          coinWorkbench: task === 'f09-06' ? coinFixture?.staffWorkbench : null,
+          administration: ['f08-06', 'f08-07', 'f08-08', 'f09-06', 'f09-07'].includes(task),
+          coinWorkbench: ['f09-06', 'f09-07'].includes(task) ? coinFixture?.staffWorkbench : null,
           recovery: ['f08-07', 'f08-08'].includes(task),
         });
       },
@@ -659,7 +684,7 @@ export async function startLocalApi({
       async seedSession({ expiresInMs = 60_000, coinOwner = false } = {}) {
         if (
           coinOwner &&
-          (!['f09-g01', 'f09-03', 'f09-04', 'f09-05', 'f09-06'].includes(task) ||
+          (!['f09-g01', 'f09-03', 'f09-04', 'f09-05', 'f09-06', 'f09-07'].includes(task) ||
             !coinFixture?.durability)
         )
           throw new Error('Existing coin owner requires the exact journal acceptance fixture.');

@@ -36,11 +36,10 @@ export async function createLocalCoinFixture(
   try {
     await sql.connect();
     try {
-      // F09-06 composes after the support fixture has installed the shared B13 roles.
-      const grantFiles =
-        task === 'f09-06'
-          ? ['b15-runtime-grants.sql']
-          : ['b13-runtime-grants.sql', 'b15-runtime-grants.sql'];
+      // Staff coin modes compose after support has installed the shared B13 roles.
+      const grantFiles = ['f09-06', 'f09-07'].includes(task)
+        ? ['b15-runtime-grants.sql']
+        : ['b13-runtime-grants.sql', 'b15-runtime-grants.sql'];
       for (const file of grantFiles)
         await sql.query(readFileSync(join(backend, 'infra/sql', file), 'utf8'));
       await sql.query(`CREATE ROLE f09_public LOGIN PASSWORD 'disposable-coins-only' IN ROLE darve_public_runtime;
@@ -49,11 +48,11 @@ export async function createLocalCoinFixture(
         GRANT SELECT ON darve_users,external_identities,darve_sessions TO darve_public_runtime;
         GRANT UPDATE(id) ON darve_users TO darve_public_runtime;
         GRANT UPDATE ON darve_sessions TO darve_public_runtime;`);
-      if (['f09-03', 'f09-05'].includes(task))
+      if (['f09-03', 'f09-05', 'f09-07'].includes(task))
         await sql.query(
           'GRANT SELECT,INSERT ON terms_documents,terms_acceptances TO darve_public_runtime',
         );
-      if (task === 'f09-05')
+      if (['f09-05', 'f09-07'].includes(task))
         await sql.query(`
         GRANT SELECT ON overlay_displays,overlay_grants,overlay_preferences,collection_rounds,provider_connections,collection_snapshot_access,analysis_runs,analysis_snapshots,analysis_profiles,analysis_processing_jobs,analysis_processing_results,accepted_challenges,challenge_public_links,challenge_completion_declarations,challenge_funding,challenge_funding_events,payment_checkout_attempts,financial_payments,financial_adjustment_evidence,funding_reviews TO darve_public_runtime;
         GRANT UPDATE("snapshotId") ON collection_snapshot_access TO darve_public_runtime;
@@ -78,7 +77,7 @@ export async function createLocalCoinFixture(
       admin = connection('f09_admin'),
       worker = connection('f09_worker');
     // Scoped tsx resolves the backend test sources' .js -> .ts imports without a global loader.
-    assert.equal(task === 'f09-06', Boolean(staffAuthority));
+    assert.equal(['f09-06', 'f09-07'].includes(task), Boolean(staffAuthority));
     const fixture = staffAuthority
       ? await createCombinedCoinSeed(owner, admin, db, domain, staffAuthority)
       : await (
@@ -121,7 +120,7 @@ export async function createLocalCoinFixture(
     const journalReady = await journal.ready();
     // Node-only, task-bound controls install synthetic manifests into this disposable database.
     // No product asset, serving route, real renderer or commercial price is invented here.
-    const assets = ['f09-04', 'f09-05', 'f09-06'].includes(task)
+    const assets = ['f09-04', 'f09-05', 'f09-06', 'f09-07'].includes(task)
       ? db.createTemplateAssetRepository(owner)
       : null;
     const templates = assets
@@ -177,27 +176,26 @@ export async function createLocalCoinFixture(
         COIN_CREATOR_CURSOR_KEY_BASE64: cursorKey,
       },
       configure: () => fixture.configure(),
-      staffWorkbench:
-        task === 'f09-06'
-          ? async (adminDatabase, staffCrypto, staffPolicy) => {
-              // Fresh disposable program only: align both real consumers with this workbench authority.
-              await owner.coinProgram.update({ where: { id: 1 }, data: { staffPolicy } });
-              return {
-                coins: domain.createCoinAdminService(
-                  db.createCoinAdminRepository(adminDatabase),
-                  staffCrypto,
-                ),
-                templates: domain.createTemplateAdminService(
-                  db.createTemplateRepository(adminDatabase),
-                  staffCrypto,
-                  integrations.createCoinCursorCrypto(randomBytes(32).toString('base64'), 'staff'),
-                  policy,
-                ),
-              };
-            }
-          : null,
+      staffWorkbench: ['f09-06', 'f09-07'].includes(task)
+        ? async (adminDatabase, staffCrypto, staffPolicy) => {
+            // Fresh disposable program only: align both real consumers with this workbench authority.
+            await owner.coinProgram.update({ where: { id: 1 }, data: { staffPolicy } });
+            return {
+              coins: domain.createCoinAdminService(
+                db.createCoinAdminRepository(adminDatabase),
+                staffCrypto,
+              ),
+              templates: domain.createTemplateAdminService(
+                db.createTemplateRepository(adminDatabase),
+                staffCrypto,
+                integrations.createCoinCursorCrypto(randomBytes(32).toString('base64'), 'staff'),
+                policy,
+              ),
+            };
+          }
+        : null,
       async staffEvidence(actorId) {
-        assert.equal(task, 'f09-06');
+        assert(['f09-06', 'f09-07'].includes(task));
         return {
           audits: await owner.staffAudit.findMany({
             where: { actorId, action: { in: ['coins.configure', 'coins.adjust', 'coins.price'] } },
@@ -266,7 +264,7 @@ export async function createLocalCoinFixture(
 }
 
 async function createCombinedCoinSeed(owner, admin, db, domain, authority) {
-  // Fresh F09-06 storage only. Reuse the already seeded support authority; no second bootstrap.
+  // Fresh combined staff-coin storage only; reuse its support authority without a second bootstrap.
   const program = randomUUID(),
     binding = randomUUID();
   await owner.coinProgram.create({

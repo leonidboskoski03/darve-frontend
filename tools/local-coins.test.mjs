@@ -12,6 +12,42 @@ const selected = {
   origins: ['http://127.0.0.1:4175'],
 };
 
+test('combined coin acceptance requires exactly its local creator/staff/OBS capabilities and journal ownership', async () => {
+  const input = {
+    ...selected,
+    task: 'f09-07',
+    support: true,
+    collection: true,
+    review: true,
+    terms: true,
+    overlay: true,
+  };
+  for (const override of [
+    { coins: false },
+    { support: false },
+    { collection: false },
+    { review: false },
+    { terms: false },
+    { overlay: false },
+    { reporting: true },
+    { checkout: true },
+    { contributionReads: true },
+    { operatorOAuth: {} },
+    { sandboxPayment: {} },
+    { port: 3000 },
+    { origins: ['https://other.example.test'] },
+    { qrPublicOrigin: 'https://external.example.test' },
+  ])
+    await assert.rejects(
+      startLocalApi({ ...input, ...override }),
+      /Coins require|Creator support acceptance requires|Mobile QR origin/,
+    );
+  const run = randomUUID(),
+    labels = { 'darve.frontend.task': 'f09-07', 'darve.frontend.run': run };
+  assert.doesNotThrow(() => assertJournalOwnership({ Labels: labels }, run, 'f09-07'));
+  assert.throws(() => assertJournalOwnership({ Labels: labels }, run, 'f09-06'));
+});
+
 test('staff coin acceptance permits only exact coins/support composition and matching journal labels', async () => {
   const input = { ...selected, task: 'f09-06', support: true };
   for (const override of [
