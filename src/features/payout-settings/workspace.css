@@ -1,0 +1,152 @@
+.payout-page {
+  display: grid;
+  gap: var(--space-6);
+  max-width: var(--content-width);
+  margin-inline: auto;
+}
+.payout-title,
+.payout-provider-heading {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+.payout-title {
+  justify-content: space-between;
+  padding-block-end: var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+}
+.payout-title h1 {
+  margin: 0;
+  font-size: var(--font-size-page);
+}
+.payout-title p,
+.payout-provider-heading p,
+.payout-guide p,
+.payout-hint {
+  color: var(--color-muted);
+}
+.payout-title p,
+.payout-provider-heading p,
+.payout-guide p {
+  margin: var(--space-2) 0 0;
+}
+.payout-title .workspace-eyebrow,
+.payout-environment {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.payout-environment,
+.payout-state {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-large);
+  font-size: var(--font-size-small);
+  color: var(--color-text);
+}
+.payout-state[data-state='ready'] {
+  border-color: #478873;
+  color: #a7edd5;
+}
+.payout-grid {
+  display: grid;
+  gap: var(--space-4);
+}
+.payout-provider {
+  padding: clamp(1rem, 3vw, 1.75rem);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-large);
+}
+.payout-provider-heading h2,
+.payout-guide h2 {
+  margin: 0;
+  font-size: var(--font-size-title);
+}
+.payout-provider-heading p {
+  font-size: var(--font-size-small);
+}
+.payout-state {
+  margin-inline-start: auto;
+}
+.payout-mark {
+  display: grid;
+  place-items: center;
+  inline-size: 2.75rem;
+  block-size: 2.75rem;
+  border-radius: var(--radius-large);
+  color: #f4f3ff;
+  background: #393286;
+  font-weight: var(--font-weight-strong);
+}
+.payout-mark--paypal {
+  color: #e1f5ff;
+  background: #17395e;
+}
+.payout-summary,
+.payout-feedback {
+  margin-block: var(--space-4);
+}
+.payout-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
+  gap: var(--space-4);
+  padding-block: var(--space-4);
+  border-block: 1px solid var(--color-border);
+}
+.payout-facts dt,
+.payout-hint {
+  font-size: var(--font-size-small);
+  color: var(--color-muted);
+}
+.payout-facts dd {
+  margin: var(--space-2) 0 0;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+.payout-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-block-start: var(--space-4);
+}
+.payout-guide {
+  padding-inline-start: var(--space-4);
+  border-inline-start: 2px solid var(--color-focus);
+}
+.payout-review {
+  display: grid;
+  gap: var(--space-4);
+}
+.payout-review label:not(.payout-check) {
+  display: grid;
+  gap: var(--space-2);
+}
+.payout-review input:not([type='checkbox']) {
+  inline-size: 6rem;
+  min-height: var(--control-height);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-control-border);
+  border-radius: var(--radius-large);
+  background: var(--color-raised);
+  color: var(--color-text);
+}
+.payout-check {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+.payout-check input {
+  margin-block-start: 0.25rem;
+}
+@media (max-width: 36rem) {
+  .payout-state {
+    margin-inline-start: 0;
+  }
+  .payout-actions > .ds-control {
+    flex: 1 1 100%;
+    white-space: normal;
+    text-align: center;
+  }
+}

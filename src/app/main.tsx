@@ -13,6 +13,13 @@ const cleanReturn = sanitizeOAuthReturn(window.location.href);
 if (cleanReturn) window.history.replaceState(window.history.state, '', cleanReturn);
 const cleanPaymentReturn = sanitizePaymentReturn(window.location.href);
 if (cleanPaymentReturn) window.history.replaceState(null, '', cleanPaymentReturn);
+if (
+  /^\/account\/payments\/?$/i.test(window.location.pathname) &&
+  (window.location.pathname !== '/account/payments' ||
+    window.location.search ||
+    window.location.hash)
+)
+  window.history.replaceState(null, '', '/account/payments');
 const router = createAppRouter();
 
 createRoot(root).render(

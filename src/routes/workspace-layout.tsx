@@ -12,6 +12,7 @@ import {
   MessageSquare,
   Coins,
   LayoutTemplate,
+  Wallet,
 } from 'lucide-react';
 import { Brand } from '@/design-system/brand';
 import { Button } from '@/design-system/button';
@@ -26,6 +27,7 @@ const navigation = [
   { href: '/coins', label: 'Coins', Icon: Coins },
   { href: '/templates', label: 'Templates', Icon: LayoutTemplate },
   { href: '/integrations', label: 'Connections', Icon: Cable },
+  { href: '/account/payments', label: 'Payout settings', Icon: Wallet },
   { href: '/support', label: 'Support', Icon: MessageSquare },
   { href: '/terms', label: 'Account terms', Icon: FileText },
 ];

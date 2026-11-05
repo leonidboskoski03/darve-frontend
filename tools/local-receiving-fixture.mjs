@@ -2,7 +2,7 @@ import { randomBytes, randomUUID } from 'node:crypto';
 
 /** Controlled provider ports for the disposable F03-04 runtime. */
 export function localReceivingFixture(origin, apiOrigin) {
-  const returnUrl = origin + '/integrations';
+  const returnUrl = origin + '/account/payments';
   const callback = apiOrigin + '/api/payment-accounts/stripe/oauth/callback';
   const counts = { stripeCreates: 0, paypalReferrals: 0, stripeExchanges: 0 };
   const stripeObservation = (accountId, country) => ({

@@ -225,7 +225,7 @@ try {
     { maxRedirects: 0 },
   );
   assert.equal(callback.status(), 303);
-  assert.equal(callback.headers().location, origin + '/integrations');
+  assert.equal(callback.headers().location, origin + '/account/payments');
   assert.deepEqual(
     await page.evaluate(async () => {
       const { client, existing } = globalThis.receivingTest;
