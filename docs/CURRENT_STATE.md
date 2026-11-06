@@ -1,6 +1,6 @@
 # Current frontend state
 
-Checkpoint: 2026-11-06, Europe/Warsaw. The core coverage corrections precede further F10 acceptance. F05 qualifies the creator dashboard locally. F06-06 implementation is in draft PR46 with genuine PayPal final verification pending. The founder is currently on a phone and prioritizes work requiring no PC interaction; F01-05's independent navigation/accessibility checks are underway. Stable deployment and ordinary/live payments remain disabled.
+Checkpoint: 2026-11-06, Europe/Warsaw. The core coverage corrections precede further F10 acceptance. F05 qualifies the creator dashboard locally. F01-05's independent navigation/accessibility coverage is integrated through PR47. F06-06 implementation remains in draft PR46 with controlled handoff and genuine Stripe receiving evidence; genuine PayPal final verification is pending. The founder is currently on a phone and prioritizes work requiring no PC interaction. Stable deployment and ordinary/live payments remain disabled.
 
 ## Implemented
 

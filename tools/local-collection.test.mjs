@@ -3,6 +3,43 @@ import test from 'node:test';
 import { startLocalApi } from './local-api.mjs';
 import { assertLifecycleComposition } from './local-lifecycle-config.mjs';
 
+test('F06-06 isolates controlled readiness from existing seller verification and checkout', async () => {
+  const base = { backend: 'must-not-be-read', origins: ['http://127.0.0.1:4175'], terms: true };
+  const controlled = {
+    ...base,
+    port: 3311,
+    origins: ['http://127.0.0.1:4177'],
+    task: 'f06-06',
+    collection: true,
+    review: true,
+    receiving: true,
+  };
+  const seller = {
+    ...base,
+    task: 'f06-06-seller',
+    sellerObservation: {
+      approval: 'F06-06',
+      provider: 'paypal',
+      sourceRoot: 'must-not-be-read',
+    },
+  };
+  for (const change of [
+    { checkout: true },
+    { operatorOAuth: {} },
+    { collection: false },
+    { sellerObservation: {} },
+  ])
+    await assert.rejects(startLocalApi({ ...controlled, ...change }), /exact disposable F06-06/);
+  for (const change of [
+    { checkout: true },
+    { receiving: true },
+    { collection: true },
+    { sellerObservation: undefined },
+    { port: 3000 },
+  ])
+    await assert.rejects(startLocalApi({ ...seller, ...change }), /exact disposable F06-06/);
+});
+
 test('receiving fixture rejects unreviewed origins, ports and combined capabilities before startup', async () => {
   const options = {
     backend: 'not-used',
