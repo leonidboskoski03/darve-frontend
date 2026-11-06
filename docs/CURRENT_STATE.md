@@ -1,6 +1,6 @@
 # Current frontend state
 
-Checkpoint: 2026-11-06, Europe/Warsaw. The core coverage corrections precede further F10 acceptance. F05 qualifies the creator dashboard locally. F01-05 now has independent navigation/accessibility coverage and a visual/usability correction slice; its connected actual API/storage walkthrough is still pending. F06-06 implementation remains in draft PR46 with genuine PayPal final verification pending. The founder is currently on a phone and prioritizes work requiring no PC interaction. Stable deployment and ordinary/live payments remain disabled.
+Checkpoint: 2026-11-06, Europe/Warsaw. The core coverage corrections precede further F10 acceptance. F05 qualifies the creator dashboard locally. F01-05 now covers independent navigation/accessibility, visual usability and OBS owner-screen recovery; its actual connected API/storage walkthrough is still pending. F06-06 implementation remains in draft PR46 with genuine PayPal final verification pending. The founder is currently on a phone and prioritizes work requiring no PC interaction. Stable deployment and ordinary/live payments remain disabled.
 
 ## Implemented
 
