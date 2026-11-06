@@ -7,7 +7,7 @@ export async function createLocalCollectionFixture(
   backend,
   database,
   config,
-  { coinActivity = false, allProviderIdeas = false } = {},
+  { coinActivity = false, allProviderIdeas = false, receivingReadiness } = {},
 ) {
   const db = await import(
     pathToFileURL(path.join(backend, 'packages/database/dist/index.js')).href
@@ -81,7 +81,7 @@ export async function createLocalCollectionFixture(
     throw new Error('OAuth is not available in the collection fixture.');
   };
   const capacityPort = { admit: async () => capacity };
-  const fundingPort = {
+  const fundingPort = receivingReadiness ?? {
     check: async (ownerId) =>
       funding === 'ready' ? { state: 'ready', ownerId, methods: ['STRIPE'] } : { state: funding },
   };
@@ -151,6 +151,7 @@ export async function createLocalCollectionFixture(
       capacity = value;
     },
     funding(value) {
+      if (receivingReadiness) throw Error('This fixture uses canonical receiving readiness.');
       if (!['ready', 'not_ready', 'unavailable'].includes(value))
         throw new Error('Invalid fixture funding');
       funding = value;

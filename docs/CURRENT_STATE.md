@@ -1,6 +1,6 @@
 # Current frontend state
 
-Checkpoint: 2026-11-05, Europe/Warsaw. The core coverage corrections precede further F10 acceptance. F05 now qualifies the creator dashboard locally. F01 and the remaining F03/F06 work are tracked separately. Stable deployment and ordinary/live payments remain disabled.
+Checkpoint: 2026-11-06, Europe/Warsaw. The core coverage corrections precede further F10 acceptance. F05 now qualifies the creator dashboard locally. F06-06 has controlled handoff and genuine Stripe receiving evidence; its genuine PayPal final check remains pending. The founder is using Codex from a phone and prioritizes work requiring no PC interaction. Stable deployment and ordinary/live payments remain disabled.
 
 ## Implemented
 

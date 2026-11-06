@@ -50,8 +50,38 @@ export async function startLocalApi({
   support = false,
   coins = false,
   receiving = false,
+  sellerObservation,
 }) {
+  const handoff = task === 'f06-06';
+  const seller = task === 'f06-06-seller';
   if (
+    (handoff || seller || sellerObservation !== undefined) &&
+    ((!handoff && !seller) ||
+      (handoff
+        ? !receiving || !collection || !review || sellerObservation !== undefined
+        : receiving ||
+          collection ||
+          review ||
+          sellerObservation?.approval !== 'F06-06' ||
+          !['stripe', 'paypal'].includes(sellerObservation?.provider) ||
+          typeof sellerObservation?.sourceRoot !== 'string') ||
+      !terms ||
+      port !== (handoff ? 3311 : 3310) ||
+      origins.length !== 1 ||
+      origins[0] !== (handoff ? 'http://127.0.0.1:4177' : 'http://127.0.0.1:4175') ||
+      reporting ||
+      overlay ||
+      contributionReads ||
+      checkout ||
+      sandboxPayment !== undefined ||
+      operatorOAuth !== undefined ||
+      qrPublicOrigin !== undefined ||
+      support ||
+      coins)
+  )
+    throw Error('Receiving handoff requires its exact disposable F06-06 composition.');
+  if (
+    !handoff &&
     (receiving || task === 'f03-04') &&
     (task !== 'f03-04' ||
       !terms ||
@@ -128,6 +158,8 @@ export async function startLocalApi({
       'f06',
       'f06-03',
       'f06-04',
+      'f06-06',
+      'f06-06-seller',
       'f07',
       'f08-04',
       'f08-05',
@@ -187,6 +219,7 @@ export async function startLocalApi({
       'f06',
       'f06-03',
       'f06-04',
+      'f06-06',
       'f07',
       'f09-03',
       'f09-05',
@@ -203,6 +236,7 @@ export async function startLocalApi({
       'f06',
       'f06-03',
       'f06-04',
+      'f06-06',
       'f07',
       'f09-03',
       'f09-05',
@@ -457,6 +491,7 @@ export async function startLocalApi({
       ...(contributionReads ||
       checkout ||
       sandboxPayment ||
+      handoff ||
       ['f07', 'f09-05', 'f09-07'].includes(task)
         ? { PUBLIC_CHALLENGE_BASE_URL: (qrPublicOrigin ?? origins[0]) + '/contribute/' }
         : {}),
@@ -500,6 +535,24 @@ export async function startLocalApi({
         : {}),
     };
     let config = readApiEnvironment(runtimeInput);
+    const sellerConfig = seller
+      ? await (
+          await import('./payment-sandbox-config.mjs')
+        ).readPaymentSandboxConfiguration(backend, sellerObservation)
+      : null;
+    if (sellerConfig?.provider === 'stripe')
+      config.stripeReceiving = {
+        ...sellerConfig.receiving,
+        returnUrl: origins[0] + '/account/payments',
+        refreshUrl: origins[0] + '/account/payments',
+      };
+    if (sellerConfig?.provider === 'paypal') {
+      config.paypalReceiving = {
+        ...sellerConfig.receiving,
+        returnUrl: origins[0] + '/account/payments',
+      };
+      config.credentialCipher = sellerConfig.cipher;
+    }
     const logger = createLogger('silent');
     deps = createDependencies(config, logger);
     const ready = await deps.checkReadiness();
@@ -509,12 +562,42 @@ export async function startLocalApi({
           await import('./local-support-fixture.mjs')
         ).createLocalSupportFixture(backend, databaseUrl, deps.database, supportPolicy)
       : null;
+    const sellerFixture = sellerConfig
+      ? await (
+          await import('./local-seller-observation.mjs')
+        ).createSellerObservation(backend, deps.database, config, sellerConfig)
+      : null;
+    let receivingReadiness;
+    if (handoff) {
+      const { createApiStripeReceiving } = await import(
+        pathToFileURL(path.join(backend, 'apps/api/dist/composition/stripe-receiving.js')).href
+      );
+      const { createApiPayPalReceiving } = await import(
+        pathToFileURL(path.join(backend, 'apps/api/dist/composition/paypal-receiving.js')).href
+      );
+      const { combineFundingReadiness } = await import(
+        pathToFileURL(path.join(backend, 'packages/domain/dist/index.js')).href
+      );
+      receivingReadiness = combineFundingReadiness([
+        createApiStripeReceiving(
+          deps.database,
+          config,
+          receivingFixture.dependencies.stripeReceivingProvider,
+        ).readiness,
+        createApiPayPalReceiving(
+          deps.database,
+          config,
+          receivingFixture.dependencies.paypalReceivingProvider,
+        ).readiness,
+      ]);
+    }
     const collectionFixture = collection
       ? await (
           await import('./local-collection-fixture.mjs')
         ).createLocalCollectionFixture(backend, deps.database, config, {
           coinActivity: ['f09-03', 'f09-05', 'f09-07'].includes(task),
           allProviderIdeas: task === 'f10-02',
+          receivingReadiness,
         })
       : null;
     coinFixture = coins
@@ -566,6 +649,15 @@ export async function startLocalApi({
           ...checkoutFixture?.dependencies,
           ...sandboxFixture?.dependencies,
           ...receivingFixture?.dependencies,
+          ...sellerFixture?.dependencies,
+          ...(receivingReadiness
+            ? {
+                checkoutExposure: {
+                  providers: ['stripe', 'paypal'],
+                  readiness: receivingReadiness,
+                },
+              }
+            : {}),
           ...(supportFixture ? { database: supportFixture.publicDatabase } : {}),
           ...(coinFixture ? { database: coinFixture.publicDatabase } : {}),
         }).listen(port, '127.0.0.1', () => resolve(listener));
@@ -595,6 +687,13 @@ export async function startLocalApi({
     return {
       ...state,
       receivingCounts: receivingFixture?.counts,
+      sellerFixture,
+      receivingHandoffAudit: handoff
+        ? async () => ({
+            attempts: await deps.database.paymentCheckoutAttempt.count(),
+            payments: await deps.database.financialPayment.count(),
+          })
+        : undefined,
       collectionFixture,
       async prepareTemplateOverlay(secret) {
         if (!['f09-05', 'f09-07'].includes(task) || !collectionFixture || !reviewFixture)
@@ -761,7 +860,9 @@ export async function startLocalApi({
             })
           : await deps.database.darveUser.create({
               data: {
-                ...(sandboxConfiguration ? { id: sandboxConfiguration.ownerId } : {}),
+                ...(sandboxConfiguration || sellerConfig
+                  ? { id: (sandboxConfiguration ?? sellerConfig).ownerId }
+                  : {}),
                 displayName,
               },
             });
