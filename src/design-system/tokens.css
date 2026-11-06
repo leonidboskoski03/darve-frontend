@@ -53,6 +53,7 @@
   --dialog-width: 32rem;
   --control-height: 2.75rem;
   --layer-skip-link: 10;
+  --layer-workspace-header: 1;
   --motion-fast: 120ms;
   --motion-standard: 220ms;
 }

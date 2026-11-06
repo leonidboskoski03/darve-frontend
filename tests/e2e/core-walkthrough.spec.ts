@@ -1,5 +1,7 @@
 import { test, expect, type Page, type Route } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { mkdir } from 'node:fs/promises';
+import { join } from 'node:path';
 import {
   dashboardFixture,
   syntheticReportingSession,
@@ -30,6 +32,8 @@ async function scenario(page: Page, accepted = false) {
     accepted,
     signedIn: true,
     sessionUnavailable: false,
+    displayName: syntheticReportingSession.user.displayName,
+    receivingGate: null as Promise<void> | null,
     paypal: 'pending' as 'pending' | 'ready' | 'revoked',
     receivingUnavailable: false,
     mutations: [] as string[],
@@ -71,6 +75,7 @@ async function scenario(page: Page, accepted = false) {
     if (path === '/api/session') {
       if (state.sessionUnavailable) return route.abort('failed');
       const session = structuredClone(syntheticReportingSession);
+      session.user.displayName = state.displayName;
       if (!state.accepted)
         Object.assign(session.user.termsStatus, {
           status: 'required',
@@ -130,6 +135,7 @@ async function scenario(page: Page, accepted = false) {
         '/api/payment-accounts/paypal/refresh',
       ].includes(path)
     ) {
+      if (state.receivingGate) await state.receivingGate;
       if (state.receivingUnavailable) return reply(route, failure(), 503);
       const stripe = path.endsWith('/stripe');
       const ready = !stripe && state.paypal === 'ready';
@@ -174,6 +180,9 @@ async function navigate(page: Page, label: string, heading: string) {
   await expect(page.getByRole('heading', { name: heading, exact: true })).toBeVisible();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(page.getByRole('main')).toBeFocused();
+  const title = await page.getByRole('heading', { name: heading, exact: true }).boundingBox();
+  const header = await page.locator('.workspace-topbar').boundingBox();
+  expect(title!.y).toBeGreaterThanOrEqual(header!.y + header!.height);
 }
 
 async function audit(page: Page) {
@@ -182,6 +191,17 @@ async function audit(page: Page) {
     .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
     .analyze();
   expect(result.violations).toEqual([]);
+}
+
+async function capture(page: Page, name: string, project: string) {
+  if (!process.env.F01_CAPTURE_DIR) return;
+  await mkdir(process.env.F01_CAPTURE_DIR, { recursive: true });
+  await page.getByRole('main').focus();
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.screenshot({
+    path: join(process.env.F01_CAPTURE_DIR, name + '-' + project + '.png'),
+    fullPage: true,
+  });
 }
 
 test('synthetic core walkthrough joins reviewed terms, setup, account and empty workspaces with keyboard navigation and sign-out', async ({
@@ -211,6 +231,7 @@ test('synthetic core walkthrough joins reviewed terms, setup, account and empty 
     await audit(page);
     if (label === 'OBS display')
       await expect(page.getByRole('button', { name: 'Create private OBS link' })).toBeDisabled();
+    await capture(page, label.toLowerCase().replaceAll(' ', '-'), info.project.name);
   }
   await page.getByRole('button', { name: 'Sign out', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Connect your stream to Darve' })).toBeVisible();
@@ -219,6 +240,75 @@ test('synthetic core walkthrough joins reviewed terms, setup, account and empty 
   expect(state.mutations).toEqual(['POST /api/terms/acceptance', 'POST /api/session/logout']);
   expect(state.unexpected).toEqual([]);
   expect(state.errors).toEqual([]);
+});
+
+test('synthetic long pages keep navigation in reach and full profile names available', async ({
+  page,
+}, info) => {
+  const state = await scenario(page, true);
+  state.displayName = 'SyntheticCreator' + 'LongUnbrokenName'.repeat(12);
+  const mobile = info.project.name.startsWith('mobile');
+  await page.setViewportSize({ width: mobile ? 320 : 1280, height: 720 });
+  await page.goto(fixture);
+  await navigate(page, 'Account', 'Account settings');
+  await expect(page.getByRole('definition').filter({ hasText: state.displayName })).toBeVisible();
+  expect((await page.locator('.workspace-topbar').boundingBox())!.height).toBeLessThanOrEqual(180);
+  await audit(page);
+  await capture(page, 'account-long-name', info.project.name);
+  await navigate(page, 'Dashboard', 'Dashboard');
+  await expect(page.getByRole('heading', { name: 'Recent activity', exact: true })).toBeVisible();
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  expect(await page.evaluate(() => scrollY)).toBeGreaterThan(0);
+  if (mobile) {
+    await expect(page.getByRole('button', { name: 'Open workspace navigation' })).toBeInViewport();
+  } else {
+    const sidebar = page.locator('.workspace-sidebar');
+    await expect(sidebar).toBeInViewport();
+    expect((await sidebar.boundingBox())!.height).toBeLessThanOrEqual(720);
+    const termsLink = sidebar.getByRole('link', { name: 'Account terms', exact: true });
+    await termsLink.focus();
+    await expect(termsLink).toBeInViewport();
+  }
+  if (process.env.F01_CAPTURE_DIR)
+    await page.screenshot({
+      path: join(process.env.F01_CAPTURE_DIR, 'navigation-scrolled-' + info.project.name + '.png'),
+    });
+  await navigate(page, 'Account', 'Account settings');
+  await audit(page);
+  expect(state.mutations).toEqual([]);
+  expect(state.unexpected).toEqual([]);
+  expect(state.errors).toEqual([]);
+});
+
+test('synthetic receiving loading remains read-only and becomes usable only after its status response', async ({
+  page,
+}, info) => {
+  const state = await scenario(page, true);
+  let resume!: () => void;
+  state.receivingGate = new Promise<void>((resolve) => {
+    resume = resolve;
+  });
+  state.paypal = 'ready';
+  try {
+    await page.goto(fixture);
+    await navigate(page, 'Payout settings', 'Payout settings');
+    const paypal = page.getByRole('region', { name: 'PayPal', exact: true });
+    await expect(paypal.getByText('Checking status', { exact: true })).toBeVisible();
+    await expect(paypal.getByRole('button', { name: 'Check PayPal status' })).toBeDisabled();
+    await expect(paypal.getByRole('button', { name: 'Verify PayPal receiving' })).toHaveCount(0);
+    await expect(paypal.getByRole('button', { name: 'Disconnect PayPal' })).toHaveCount(0);
+    await audit(page);
+    await capture(page, 'payout-loading', info.project.name);
+    state.receivingGate = null;
+    resume();
+    await expect(paypal.getByText('Receiving verified', { exact: true })).toBeVisible();
+    await expect(paypal.getByRole('button', { name: 'Verify PayPal receiving' })).toBeEnabled();
+    expect(state.mutations).toEqual([]);
+    expect(state.unexpected).toEqual([]);
+    expect(state.errors).toEqual([]);
+  } finally {
+    resume();
+  }
 });
 
 test('synthetic cross-screen session uncertainty removes private setup and cannot reuse it on another account route', async ({
