@@ -52,7 +52,8 @@ export function Workspace({ children, session }: { children: ReactNode; session:
   const { pathname } = useLocation();
   const main = useRef<HTMLElement>(null);
   useEffect(() => {
-    main.current?.focus();
+    main.current?.focus({ preventScroll: true });
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   }, [pathname]);
   return (
     <div className="workspace-shell">

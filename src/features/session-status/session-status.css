@@ -4,8 +4,20 @@
   align-items: center;
   gap: var(--space-3);
   font-size: var(--font-size-small);
+  min-width: 0;
+  max-width: 100%;
 }
 .session-status p {
   margin: 0;
   overflow-wrap: anywhere;
+  min-width: 0;
+  max-width: 100%;
+}
+.session-status__name {
+  display: inline-block;
+  max-inline-size: min(24rem, 100%);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
 }

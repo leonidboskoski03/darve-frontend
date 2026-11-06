@@ -9,16 +9,29 @@ export function SessionStatus() {
   return (
     <div className="session-status">
       <p role="status">
-        {snapshot.phase === 'authenticated'
-          ? `Signed in${snapshot.user?.displayName ? ` as ${snapshot.user.displayName}` : ''}`
-          : {
-              loading: 'Checking your session…',
-              signed_out: 'Signed out',
-              expired: 'Your session expired.',
-              unavailable: 'Session unavailable. No action has been confirmed.',
-              signing_out: 'Signing out…',
-              logout_unconfirmed: 'Sign-out could not be confirmed. Private content is hidden.',
-            }[snapshot.phase]}
+        {snapshot.phase === 'authenticated' ? (
+          <>
+            Signed in
+            {snapshot.user?.displayName ? (
+              <>
+                {' '}
+                as{' '}
+                <span className="session-status__name" title={snapshot.user.displayName}>
+                  {snapshot.user.displayName}
+                </span>
+              </>
+            ) : null}
+          </>
+        ) : (
+          {
+            loading: 'Checking your session…',
+            signed_out: 'Signed out',
+            expired: 'Your session expired.',
+            unavailable: 'Session unavailable. No action has been confirmed.',
+            signing_out: 'Signing out…',
+            logout_unconfirmed: 'Sign-out could not be confirmed. Private content is hidden.',
+          }[snapshot.phase]
+        )}
       </p>
       {snapshot.phase === 'authenticated' ? (
         <Button
