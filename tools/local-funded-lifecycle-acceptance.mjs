@@ -105,7 +105,7 @@ try {
   await page.getByRole('link', { name: 'Review viewer ideas', exact: true }).click();
   await page.getByRole('button', { name: 'Accept idea 1', exact: true }).click();
   await page.getByLabel('Funding goal', { exact: true }).fill('10.00');
-  await page.getByLabel('Currency', { exact: true }).selectOption('EUR');
+  await page.getByRole('combobox', { name: /Currency/ }).selectOption('EUR');
   await page.getByLabel('Funding duration in seconds', { exact: true }).fill('600');
   await page.getByRole('button', { name: 'Review exact terms', exact: true }).click();
   await page.getByRole('button', { name: 'Confirm acceptance', exact: true }).click();
