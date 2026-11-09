@@ -1,6 +1,6 @@
 # Current frontend state
 
-Checkpoint: 2026-11-09, Europe/Warsaw. F01-05 qualifies the connected creator walkthrough and the corrected core screens. F06-06 qualifies the controlled creator-to-guest handoff and genuine Stripe and PayPal sandbox receiving. F10-03's controlled funded lifecycle passes and fresh sandbox payments remain pending. Stable deployment and ordinary/live payments remain disabled.
+Checkpoint: 2026-11-09, Europe/Warsaw. F01-05 qualifies the connected creator walkthrough and the corrected core screens. F06-06 qualifies creator receiving. F10-03 qualifies the controlled funded lifecycle and fresh Stripe and PayPal sandbox payments through receipt reload, timing, funding, OBS projection and creator declaration. F10-04 is next. Stable deployment and ordinary/live payments remain disabled.
 
 ## Implemented
 
@@ -51,7 +51,7 @@ Use task branches/PRs into dev with light hosted validation; main is reserved fo
 
 F02-04 provides a persistent connected local creator profile at localhost:5174 with the pinned API on localhost:3000. Browser checks cover session, development terms, dashboard/collection, restart and logout. F03-04 qualifies the creator Stripe and PayPal receiving adapters with controlled provider inputs. F06-05 adds `/account/payments`, and [F03-05](F03_CREATOR_CONNECTION_IMPLEMENTATION.md#f03-05-private-creator-account) adds the private `/account` workspace. [F03-06](F03_CREATOR_CONNECTION_IMPLEMENTATION.md#f03-06-guided-creator-setup) adds the guided setup and signed-in entry. [F04-04](F04_COLLECTION_IMPLEMENTATION.md#f04-04-collection-entry-and-resume) uses the owner recovery reads for collection resume and lost Start response recovery. [F05-04](F05_DASHBOARD_IMPLEMENTATION.md#f05-04-creator-workspace-dashboard) adds collection, funding windows, OBS and setup status to the dashboard. Genuine collection and analysis, richer profile, public content and live-feed decisions retain their separate owners.
 
-**F10-03 remains in progress.** The [controlled funded lifecycle](F10_JOINT_ACCEPTANCE_IMPLEMENTATION.md#f10-03-controlled-funded-lifecycle) qualifies same-challenge OBS, guest checkout, timing, funding and declaration. Coordinate fresh sandbox payments separately. F09-07 and F10-02 retain their bounded acceptance. The connected profile uses backend/browser pin `0ac317d952ca621f164f33c12c423659623f6019`.
+**F10-04 is next.** [F10-03 sandbox qualification](F10_JOINT_ACCEPTANCE_IMPLEMENTATION.md#f10-03-genuine-sandbox-qualification) covers the fresh Stripe EUR10 and PayPal USD10 runs, each with its test fee, exact private receipt, eligible funding, independent OBS projection and reviewed creator declaration. Their temporary runtimes and PayPal webhook were cleaned. Connect staff/support/coin/template acceptance to the qualified lifecycle under F10-04. The connected profile uses backend/browser pin `0ac317d952ca621f164f33c12c423659623f6019`.
 
 [F01-05 connected qualification](F01_REFERENCE_AND_COMPONENT_AUDIT.md#f01-05-connected-walkthrough-qualification) covers sign-in, account and receiving setup, collection, history, explicit OBS selection and logout with the pinned API and disposable storage. F04-G04 retains the separate genuine collection and analysis work.
 
