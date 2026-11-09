@@ -382,13 +382,18 @@ try {
   assert.deepEqual(declared.terms, funded.terms);
   assert.equal(declared.performance.verification, 'streamer_declaration');
   assert.equal(await fixture.declarationCount(creator.userId), 1);
-  const { history } = await get(owner, '/api/dashboard/summary?timeZone=UTC');
+  const { history, currentStream } = await get(owner, '/api/dashboard/summary?timeZone=UTC');
+  assert.equal(currentStream.broadcastId, stream.broadcastId);
   assert.equal(history.acceptedChallenges, 1);
   assert.equal(history.historicallyFundedChallenges, 1);
   assert.equal(history.streamerDeclaredCompletions, 1);
   assert.deepEqual(
-    history.contributionsByCurrency.map((row) => [row.currency, row.grossContributions]),
-    [['EUR', '1000']],
+    history.contributionsByCurrency.map((row) => [
+      row.currency,
+      row.grossContributions,
+      row.paymentCount,
+    ]),
+    [['EUR', '1000', 2]],
   );
   stage = 'rendered date-filtered dashboard';
   await page.goto(origin + '/dashboard?timeZone=UTC');

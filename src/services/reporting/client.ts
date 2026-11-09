@@ -120,13 +120,16 @@ export function createReportingClient(session: CreatorSession) {
         schema: DashboardResponseSchema,
         success: [200],
       });
-      const data = value.data;
+      const { data } = value;
+      const stream = data.currentStream;
       if (
         data.period.timeZone !== query.timeZone ||
         (query.fromDate &&
           (data.period.fromDate !== query.fromDate ||
             data.period.throughDate !== query.throughDate)) ||
-        data.currentStream.broadcastId !== (query.broadcastId ?? null) ||
+        // Without an explicit filter, the server can use the owner's OBS-selected broadcast.
+        (stream.selection === 'selected') !== (stream.broadcastId !== null) ||
+        (query.broadcastId !== undefined && stream.broadcastId !== query.broadcastId) ||
         new Set(data.history.contributionsByCurrency.map((row) => row.currency)).size !==
           data.history.contributionsByCurrency.length
       )
