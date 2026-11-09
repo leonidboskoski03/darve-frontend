@@ -127,6 +127,28 @@ test('creator lifecycle refuses payment, external credentials, OBS, staff and co
     await assert.rejects(startLocalApi({ ...lifecycle, ...change }), /Creator lifecycle/);
 });
 
+test('funded lifecycle requires controlled checkout and OBS without direct reporting funding or credentials', async () => {
+  const funded = { ...lifecycle, task: 'f10-03', reporting: false, overlay: true, checkout: true };
+  assert.doesNotThrow(() => assertLifecycleComposition(funded));
+  for (const change of [
+    { collection: false },
+    { review: false },
+    { terms: false },
+    { reporting: true },
+    { checkout: false },
+    { overlay: false },
+    { contributionReads: true },
+    { sandboxPayment: {} },
+    { operatorOAuth: {} },
+    { qrPublicOrigin: 'https://synthetic.invalid' },
+    { support: true },
+    { coins: true },
+    { port: 3000 },
+    { origins: ['http://localhost:4175'] },
+  ])
+    await assert.rejects(startLocalApi({ ...funded, ...change }), /Creator lifecycle/);
+});
+
 for (const task of ['f08-04', 'f08-05', 'f08-06', 'f08-07', 'f08-08'])
   test(
     task + ' support qualification cannot enable unrelated controlled or external services',
