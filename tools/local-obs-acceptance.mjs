@@ -8,7 +8,7 @@ import { createServer, build } from 'vite';
 import jsQR from 'jsqr';
 import { startLocalApi } from './local-api.mjs';
 import { observationPage } from './obs-observation-page.mjs';
-import { createMobileQrRelay, openMobileQrTunnel } from './mobile-qr-relay.mjs';
+import { createMobileQrRelay, openAcceptanceTunnel } from './mobile-qr-relay.mjs';
 
 const phoneTest = process.argv.includes('--phone');
 if (phoneTest && !process.argv.includes('--observe'))
@@ -53,7 +53,7 @@ try {
   if (phoneTest) {
     stage = 'prepare scoped mobile HTTPS surface';
     relay = createMobileQrRelay({ directory: resolve(directory, 'dist') });
-    mobile = await openMobileQrTunnel(relay);
+    mobile = await openAcceptanceTunnel(relay);
     stage = 'build public mobile contribution entry';
     process.env.VITE_APP_ENV = 'local';
     process.env.VITE_PUBLIC_API_ORIGIN = mobile.origin;

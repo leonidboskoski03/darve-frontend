@@ -84,6 +84,7 @@ export async function createPaymentSandboxFixture(backend, database, config, san
         (heldKey && heldKey !== input.idempotencyKey)
       )
         throw new domain.FinancialStorageError('POLICY_UNAVAILABLE');
+      await repository.checkoutReadiness(input);
       heldKey = input.idempotencyKey;
       return base.checkout(input);
     },
