@@ -1,10 +1,13 @@
 import { test, expect, type Page, type Route } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { mkdir } from 'node:fs/promises';
+import { join } from 'node:path';
 import jsQR from 'jsqr';
 import { catalogueTemplate } from '../../src/entities/overlay-template/index';
 import {
   acceptedFrame,
   displayId,
+  foreignId,
   grantId,
 } from '../../src/services/realtime/fixtures.test-support';
 import { OverlaySnapshotV2ResponseSchema } from '../../src/services/contracts/index';
@@ -322,7 +325,7 @@ const cors = {
   'access-control-allow-headers': 'X-CSRF-Token,Content-Type',
   'access-control-allow-methods': 'GET,POST,PATCH,PUT,DELETE,OPTIONS',
 };
-async function owner(page: Page) {
+async function owner(page: Page, withDisplay = true) {
   const frame = OverlaySnapshotV2ResponseSchema.parse(acceptedFrame(2));
   const state = {
     issued: 0,
@@ -337,6 +340,11 @@ async function owner(page: Page) {
     },
     preferences: frame.data.preferences,
     stale: false,
+    issueDisplayId: displayId,
+    selectedDisplayIds: [] as string[],
+    readFailure: null as 'selection' | 'preferences' | 'history' | null,
+    heldRead: null as 'selection' | 'preferences' | 'history' | null,
+    readGate: null as Promise<void> | null,
   };
   const reply = (route: Route, data: unknown, status = 200) =>
     route.fulfill({
@@ -356,6 +364,21 @@ async function owner(page: Page) {
     if (url.pathname === '/api/session') {
       await reply(route, syntheticReportingSession);
       return;
+    }
+    const target =
+      url.pathname === '/api/challenges'
+        ? 'history'
+        : url.pathname === '/api/overlay-preferences'
+          ? 'preferences'
+          : /^\/api\/overlay-displays\/[^/]+$/.test(url.pathname)
+            ? 'selection'
+            : null;
+    if (method === 'GET' && target) {
+      if (state.heldRead === target && state.readGate) await state.readGate;
+      if (state.readFailure === target) {
+        await route.abort('failed');
+        return;
+      }
     }
     if (url.pathname === '/api/challenges') {
       await reply(route, envelope({ items: [reportingChallenge()], nextCursor: null }));
@@ -380,14 +403,15 @@ async function owner(page: Page) {
     }
     if (url.pathname === '/api/overlay-grants') {
       state.issued++;
+      state.selection = { ...state.selection, displayId: state.issueDisplayId };
       await reply(
         route,
         envelope({
           id: grantId,
-          displayId,
+          displayId: state.issueDisplayId,
           expiresAt: null,
           selection: state.selection,
-          presentationUrl: `${origin}/overlay/${displayId}#grant=${'s'.repeat(43)}`,
+          presentationUrl: `${origin}/overlay/${state.issueDisplayId}#grant=${'s'.repeat(43)}`,
         }),
         201,
       );
@@ -400,6 +424,7 @@ async function owner(page: Page) {
     }
     if (url.pathname.endsWith('/selection')) {
       state.selected.push(request.postDataJSON());
+      state.selectedDisplayIds.push(url.pathname.split('/')[3]);
       if (state.stale) {
         await reply(
           route,
@@ -422,7 +447,7 @@ async function owner(page: Page) {
       }
       state.selection = {
         ...request.postDataJSON(),
-        displayId,
+        displayId: state.selection.displayId,
         version: 2,
       } as typeof state.selection;
       delete (state.selection as Record<string, unknown>).expectedVersion;
@@ -435,10 +460,147 @@ async function owner(page: Page) {
     }
     await reply(route, envelope({}), 404);
   });
-  await page.goto(origin + '/tests/fixtures/creator.html?view=obs&displayId=' + displayId);
+  await page.goto(
+    origin +
+      '/tests/fixtures/creator.html?view=obs' +
+      (withDisplay ? '&displayId=' + displayId : ''),
+  );
   await expect(page.getByRole('heading', { name: 'OBS display', exact: true })).toBeVisible();
   return state;
 }
+
+test('synthetic OBS refresh without a selected display reads available settings without inventing a display lookup', async ({
+  page,
+}) => {
+  const state = await owner(page, false);
+  await expect(
+    page.getByRole('heading', { name: 'Position and appearance', exact: true }),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Refresh display and settings' }).click();
+  await expect(
+    page.getByRole('heading', { name: 'Position and appearance', exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Refresh display and settings' })).toBeEnabled();
+  await expect(page.getByRole('alert')).toHaveCount(0);
+  expect(state.issued).toBe(0);
+  expect(state.selected).toEqual([]);
+  expect(state.saved).toEqual([]);
+});
+
+for (const target of ['selection', 'preferences', 'history'] as const) {
+  test(`synthetic OBS ${target} recovery withdraws cached actions during pending and failed reads`, async ({
+    page,
+  }, info) => {
+    const state = await owner(page);
+    if (info.project.name.startsWith('mobile'))
+      await page.setViewportSize({ width: 320, height: 900 });
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await page.getByRole('button', { name: 'Review for display' }).click();
+    await page.getByRole('checkbox', { name: /Show this selection/ }).check();
+    await page.getByLabel('Opacity', { exact: true }).fill('0.7');
+    await page.getByRole('checkbox', { name: /Apply these settings/ }).check();
+    let release!: () => void;
+    state.heldRead = target;
+    state.readFailure = target;
+    state.readGate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const hiddenControl = page.getByRole('button', {
+      name:
+        target === 'preferences'
+          ? 'Save display settings'
+          : target === 'selection'
+            ? 'Show idle display'
+            : 'Review for display',
+      exact: true,
+    });
+    try {
+      await page.getByRole('button', { name: 'Refresh display and settings' }).click();
+      await expect(
+        page.getByRole('status').filter({
+          hasText:
+            target === 'selection'
+              ? 'Checking current display selection'
+              : target === 'preferences'
+                ? 'Checking display appearance'
+                : 'Checking available challenges',
+        }),
+      ).toBeVisible();
+      if (target !== 'selection')
+        await expect(page.getByText('Current display: idle · version 1')).toBeVisible();
+      await expect(hiddenControl).toHaveCount(0);
+      state.readGate = null;
+      release();
+      await expect(page.getByRole('alert')).toBeVisible();
+      await expect(page.getByText(/A link may have been issued/)).toHaveCount(0);
+      await expect(hiddenControl).toHaveCount(0);
+      expect(state.selected).toEqual([]);
+      expect(state.saved).toEqual([]);
+      expect(state.issued).toBe(0);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+        true,
+      );
+      expect(
+        (await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze())
+          .violations,
+      ).toEqual([]);
+      if (process.env.F01_RECOVERY_CAPTURE_DIR) {
+        await mkdir(process.env.F01_RECOVERY_CAPTURE_DIR, { recursive: true });
+        await page.getByRole('main').focus();
+        await page.evaluate(() => window.scrollTo(0, 0));
+        await page.screenshot({
+          path: join(
+            process.env.F01_RECOVERY_CAPTURE_DIR,
+            target + '-unavailable-' + info.project.name + '.png',
+          ),
+          fullPage: true,
+        });
+      }
+      state.readFailure = null;
+      state.heldRead = null;
+      await page.getByRole('button', { name: 'Refresh display and settings' }).focus();
+      await page.keyboard.press('Enter');
+      await expect(hiddenControl).toBeVisible();
+      await expect(page.getByRole('alert')).toHaveCount(0);
+      await expect(page.getByRole('checkbox', { name: /Apply these settings/ })).not.toBeChecked();
+      await expect(page.getByLabel('Opacity', { exact: true })).toHaveValue('1');
+      await page.getByRole('button', { name: 'Review for display' }).click();
+      await expect(page.getByRole('checkbox', { name: /Show this selection/ })).not.toBeChecked();
+      expect(state.selected).toEqual([]);
+      expect(state.saved).toEqual([]);
+    } finally {
+      release();
+    }
+  });
+}
+
+test('synthetic OBS display changes cannot carry a checked selection review into another display with the same version', async ({
+  page,
+}) => {
+  const state = await owner(page);
+  await page.getByRole('button', { name: 'Review for display' }).click();
+  await page.getByRole('checkbox', { name: /Show this selection/ }).check();
+  state.issueDisplayId = foreignId;
+  await page.getByRole('checkbox', { name: /I understand this read-only link/ }).check();
+  await page.getByRole('button', { name: 'Create private OBS link' }).click();
+  await expect(page).toHaveURL(new RegExp('displayId=' + foreignId));
+  await expect(page.getByText('Current display: idle · version 1')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Confirm display selection' })).toHaveCount(0);
+  expect(state.selected).toEqual([]);
+  await page.getByRole('button', { name: 'Review for display' }).click();
+  await expect(page.getByRole('checkbox', { name: /Show this selection/ })).not.toBeChecked();
+  await page.getByRole('checkbox', { name: /Show this selection/ }).check();
+  await page.getByRole('button', { name: 'Confirm display selection' }).click();
+  await expect.poll(() => state.selectedDisplayIds).toEqual([foreignId]);
+  const challenge = reportingChallenge();
+  expect(state.selected).toEqual([
+    {
+      roundId: challenge.roundId,
+      challengeId: challenge.id,
+      expectedVersion: 1,
+    },
+  ]);
+});
 test('synthetic owner controls never issue on mount and require separate review for link, selection and settings', async ({
   page,
 }) => {

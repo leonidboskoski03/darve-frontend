@@ -1,6 +1,6 @@
 # Current frontend state
 
-Checkpoint: 2026-11-06, Europe/Warsaw. The core coverage corrections precede further F10 acceptance. F05 qualifies the creator dashboard locally. F01-05's independent navigation/accessibility coverage is integrated through PR47. F06-06 implementation remains in draft PR46 with controlled handoff and genuine Stripe receiving evidence; genuine PayPal final verification is pending. The founder is currently on a phone and prioritizes work requiring no PC interaction. Stable deployment and ordinary/live payments remain disabled.
+Checkpoint: 2026-11-09, Europe/Warsaw. The core coverage corrections precede further F10 acceptance. F05 qualifies the creator dashboard locally. F01-05 covers independent navigation/accessibility, visual usability and OBS owner-screen recovery. The connected API/storage walkthrough resumes with Docker available. F06-06 implementation remains in draft PR46 with controlled handoff and genuine Stripe receiving evidence. Genuine PayPal final verification is in progress. Stable deployment and ordinary/live payments remain disabled.
 
 ## Implemented
 
@@ -53,6 +53,6 @@ F02-04 provides a persistent connected local creator profile at localhost:5174 w
 
 **F10-03 is on a sequencing hold** until the core corrections and F01-05 qualify. F09-07 and F10-02 remain valid within their recorded local scopes; neither proves omitted product coverage. The connected profile uses backend/browser pin `0ac317d952ca621f164f33c12c423659623f6019`.
 
-[F01-05's independent checkpoint](F01_REFERENCE_AND_COMPONENT_AUDIT.md#f01-05-independent-walkthrough-checkpoint) separates synthetic cross-screen navigation/accessibility from the pending connected API/storage walkthrough. Docker Desktop currently fails during local inference-socket startup, so fresh connected checks cannot start. No reset was attempted. Genuine PayPal consent/status checking remains for a later coordinated PC session; work needing neither Docker nor provider interaction can continue.
+[F01-05's independent checkpoint](F01_REFERENCE_AND_COMPONENT_AUDIT.md#f01-05-independent-walkthrough-checkpoint) separates synthetic cross-screen navigation/accessibility from the connected API/storage walkthrough. Docker Desktop is available again, and the isolated walkthrough and genuine PayPal consent/status check can resume.
 
 Genuine staff Auth0/Resend remains founder-deferred under F08-EXT01, and the client's unrelated Resend setup stays untouched. Ordinary rewards/prices/assets, provider/payment exposure and deployment remain unactivated. The [deployment checklist](DEPLOYMENT_PREPARATION_CHECKLIST.md) retains real values/credentials/origins/networking, custody/restore/retention, workload/alerts/incident ownership and B15-03-G01 staging qualification. No deployment or live payment follows this correction.

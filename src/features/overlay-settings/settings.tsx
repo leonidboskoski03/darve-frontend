@@ -35,6 +35,7 @@ export function OverlaySettings({
   const [issueReviewed, setIssueReviewed] = useState(false),
     [revokeReviewed, setRevokeReviewed] = useState(false);
   const [pick, setPick] = useState<{
+      displayId: string;
       roundId: string | null;
       challengeId: string | null;
       expectedVersion: number;
@@ -68,6 +69,24 @@ export function OverlaySettings({
     },
     scope.queryClient,
   );
+  const currentSelection = selection.isSuccess && !selection.isFetching ? selection.data : null;
+  const currentPreferences =
+    preferences.isSuccess && !preferences.isFetching ? preferences.data : null;
+  const currentHistory = history.isSuccess && !history.isFetching ? history.data.data : null;
+  const currentPick =
+    pick &&
+    currentSelection &&
+    pick.displayId === displayId &&
+    pick.expectedVersion === currentSelection.version &&
+    (!pick.challengeId ||
+      currentHistory?.items.some(
+        (challenge) =>
+          challenge.id === pick.challengeId &&
+          challenge.roundId === pick.roundId &&
+          challenge.contentAvailability === 'available',
+      ))
+      ? pick
+      : null;
   const run = async (action: () => Promise<void>) => {
     if (busy) return;
     setBusy(true);
@@ -84,11 +103,20 @@ export function OverlaySettings({
   const refresh = async () => {
     setPick(null);
     setSelectionReviewed(false);
-    await Promise.all([selection.refetch(), preferences.refetch(), history.refetch()]);
+    setNotice('');
+    await Promise.all([
+      displayId ? selection.refetch() : undefined,
+      preferences.refetch(),
+      history.refetch(),
+    ]);
   };
   const choose = (value: { roundId: string | null; challengeId: string | null }) => {
-    if (!selection.data || selection.isFetching) return;
-    setPick({ ...value, expectedVersion: selection.data.version });
+    if (!currentSelection || currentSelection.displayId !== displayId) return;
+    setPick({
+      ...value,
+      displayId: currentSelection.displayId,
+      expectedVersion: currentSelection.version,
+    });
     setSelectionReviewed(false);
   };
   return (
@@ -242,11 +270,19 @@ export function OverlaySettings({
             </p>
           </div>
         )}
-        {selection.data && !selection.isFetching && !selection.isError && (
+        {displayId && selection.isFetching && (
+          <p role="status">Checking current display selection…</p>
+        )}
+        {displayId && selection.isError && (
+          <p role="alert">
+            Display selection is unavailable. Refresh before reviewing another change.
+          </p>
+        )}
+        {currentSelection && (
           <>
-            <SelectionRead selection={selection.data} />
+            <SelectionRead selection={currentSelection} />
             <p>
-              <a href={'/dashboard?displayId=' + selection.data.displayId}>
+              <a href={'/dashboard?displayId=' + currentSelection.displayId}>
                 View this display on the dashboard
               </a>
             </p>
@@ -259,7 +295,7 @@ export function OverlaySettings({
         >
           Refresh display and settings
         </Button>
-        {displayId && selection.data && !selection.isFetching && (
+        {displayId && currentSelection && (
           <>
             <Button
               tone="quiet"
@@ -286,9 +322,13 @@ export function OverlaySettings({
               </Button>
             </div>
             <h3>Accepted challenges</h3>
-            {history.data?.data.items.length === 0 && <p>No accepted challenges on this page.</p>}
+            {history.isFetching && <p role="status">Checking available challenges…</p>}
+            {history.isError && (
+              <p role="alert">Challenges are unavailable. Refresh before reviewing a challenge.</p>
+            )}
+            {currentHistory?.items.length === 0 && <p>No accepted challenges on this page.</p>}
             <ul className="obs-challenges">
-              {history.data?.data.items.map((challenge) => (
+              {currentHistory?.items.map((challenge) => (
                 <li key={challenge.id}>
                   <div>
                     <strong>
@@ -313,11 +353,11 @@ export function OverlaySettings({
                 </li>
               ))}
             </ul>
-            {history.data?.data.nextCursor && (
+            {currentHistory?.nextCursor && (
               <Button
                 tone="secondary"
                 disabled={busy}
-                onClick={() => setCursor(history.data.data.nextCursor!)}
+                onClick={() => setCursor(currentHistory.nextCursor!)}
               >
                 Next challenges
               </Button>
@@ -327,14 +367,14 @@ export function OverlaySettings({
                 First challenges
               </Button>
             )}
-            {pick && (
+            {currentPick && (
               <div className="obs-selection-review">
                 <h3>Confirm display change</h3>
                 <p>
-                  {pick.challengeId
-                    ? `Selected challenge: ${pick.challengeId}`
-                    : pick.roundId
-                      ? `Selected round: ${pick.roundId}`
+                  {currentPick.challengeId
+                    ? `Selected challenge: ${currentPick.challengeId}`
+                    : currentPick.roundId
+                      ? `Selected round: ${currentPick.roundId}`
                       : 'The display will be idle.'}
                 </p>
                 <label className="obs-check">
@@ -353,7 +393,11 @@ export function OverlaySettings({
                       setPick(null);
                       setSelectionReviewed(false);
                       try {
-                        await client.select(displayId, pick);
+                        await client.select(currentPick.displayId, {
+                          roundId: currentPick.roundId,
+                          challengeId: currentPick.challengeId,
+                          expectedVersion: currentPick.expectedVersion,
+                        });
                       } finally {
                         await selection.refetch();
                       }
@@ -368,10 +412,14 @@ export function OverlaySettings({
           </>
         )}
       </section>
-      {preferences.data && !preferences.isFetching && (
+      {preferences.isFetching && <p role="status">Checking display appearance…</p>}
+      {preferences.isError && (
+        <p role="alert">Display appearance is unavailable. Refresh before editing settings.</p>
+      )}
+      {currentPreferences && (
         <StyleForm
-          key={preferences.data.version}
-          value={preferences.data}
+          key={currentPreferences.version}
+          value={currentPreferences}
           busy={busy}
           save={(value) =>
             void run(async () => {
@@ -382,13 +430,7 @@ export function OverlaySettings({
           }
         />
       )}
-      {[problem, selection.error, preferences.error, history.error]
-        .filter(Boolean)
-        .map((error, i) => (
-          <p role="alert" key={i}>
-            {overlayMessage(error)}
-          </p>
-        ))}
+      {problem ? <p role="alert">{overlayMessage(problem)}</p> : null}
       {notice && <p role="status">{notice}</p>}
     </div>
   );
