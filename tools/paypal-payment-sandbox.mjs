@@ -87,6 +87,8 @@ export async function createPayPalPaymentSandbox(backend, database, config, sand
         (heldKey && heldKey !== input.idempotencyKey)
       )
         throw new domain.FinancialStorageError('POLICY_UNAVAILABLE');
+      // An expired cookie from a prior disposable run must not reserve this run's one request.
+      await financial.checkoutReadiness(input);
       heldKey = input.idempotencyKey;
       return base.checkout(input);
     },
