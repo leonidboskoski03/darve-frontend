@@ -16,11 +16,15 @@ export function assertPaymentSandboxSelection({
   contributionReads,
   reporting,
   operatorOAuth,
+  overlay = false,
+  terms = false,
+  qrPublicOrigin,
 }) {
-  if (!sandboxPayment && task !== 'f06-04') return;
+  const funded = task === 'f10-03-sandbox';
+  if (!sandboxPayment && task !== 'f06-04' && !funded) return;
   if (
-    task !== 'f06-04' ||
-    sandboxPayment?.approval !== 'F06-04' ||
+    (task !== 'f06-04' && !funded) ||
+    sandboxPayment?.approval !== (funded ? 'F10-03' : 'F06-04') ||
     !['stripe', 'paypal'].includes(sandboxPayment.provider) ||
     typeof sandboxPayment.sourceRoot !== 'string' ||
     !collection ||
@@ -29,12 +33,15 @@ export function assertPaymentSandboxSelection({
     contributionReads ||
     reporting ||
     operatorOAuth !== undefined ||
+    overlay !== funded ||
+    (funded && terms !== true) ||
+    qrPublicOrigin !== undefined ||
     port !== 3310 ||
     origins.length !== 1 ||
     origins[0] !== 'http://127.0.0.1:4175'
   )
     throw new Error(
-      'Payment sandbox requires explicit F06-04 approval, one supported provider and its exact isolated composition.',
+      'Payment sandbox requires explicit task approval, one supported provider and its exact isolated composition.',
     );
 }
 const hash = (value) => createHash('sha256').update(value).digest('hex');

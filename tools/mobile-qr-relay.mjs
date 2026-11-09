@@ -138,7 +138,7 @@ export function createMobileQrRelay({ directory, fetcher = fetch, now = Date.now
 }
 
 /** Reuses the existing reviewed executable; no account, config, named tunnel or provider secret. */
-export async function openMobileQrTunnel(relay, { sourceRoot = '../darve-backend' } = {}) {
+export async function openAcceptanceTunnel(relay, { sourceRoot = '../darve-backend' } = {}) {
   const { cloudflaredTool, verifyTool } = await import(
     pathToFileURL(resolve(sourceRoot, 'infra/tunnel/tool.mjs')).href
   );

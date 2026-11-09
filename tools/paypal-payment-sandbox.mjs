@@ -217,6 +217,7 @@ export async function createPayPalPaymentSandbox(backend, database, config, sand
         verifiedReceiptReads,
         attemptCount: attempts.length,
         paymentCount: payments.length,
+        paypalTimingConfirmations: await database.payPalPaymentConfirmation.count(),
         expectedAmountAndFee: attempts.every(
           (row) =>
             row.amountMinor.toString() === '1000' &&

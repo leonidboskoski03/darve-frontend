@@ -56,6 +56,7 @@ export async function startLocalApi({
   const handoff = task === 'f06-06' || walkthrough;
   const seller = task === 'f06-06-seller';
   const fundedLifecycle = task === 'f10-03';
+  const fundedSandbox = task === 'f10-03-sandbox';
   if (
     (handoff || seller || sellerObservation !== undefined) &&
     ((!handoff && !seller) ||
@@ -183,6 +184,7 @@ export async function startLocalApi({
       'f09-07',
       'f10-02',
       'f10-03',
+      'f10-03-sandbox',
     ].includes(task)
   )
     throw new Error('Invalid local task identity.');
@@ -217,6 +219,9 @@ export async function startLocalApi({
     contributionReads,
     reporting,
     operatorOAuth,
+    overlay,
+    terms,
+    qrPublicOrigin,
   });
   const providerEnvironment = assertProviderLoginRuntime({ task, port, origins, operatorOAuth });
   if (
@@ -236,6 +241,7 @@ export async function startLocalApi({
       'f09-07',
       'f10-02',
       'f10-03',
+      'f10-03-sandbox',
     ].includes(task)
   )
     throw new Error('Controlled collection ports require their explicit disposable task.');
@@ -255,6 +261,7 @@ export async function startLocalApi({
       'f09-07',
       'f10-02',
       'f10-03',
+      'f10-03-sandbox',
     ].includes(task) ||
       !collection)
   )
@@ -341,6 +348,7 @@ export async function startLocalApi({
   let closing;
   let supportFixture;
   let coinFixture;
+  let paypalSandboxWebhook;
   const owned = (id) =>
     run('docker', ['inspect', '--format', '{{index .Config.Labels "darve.frontend.run"}}', id]) ===
     runId;
@@ -348,6 +356,13 @@ export async function startLocalApi({
     if (closing) return closing;
     closing = (async () => {
       const errors = [];
+      if (paypalSandboxWebhook) {
+        try {
+          await paypalSandboxWebhook.close();
+        } catch {
+          errors.push('PayPal sandbox webhook cleanup requires its recorded custody file.');
+        }
+      }
       if (server) {
         server.closeAllConnections();
         await new Promise((resolve) => server.close(resolve));
@@ -540,7 +555,7 @@ export async function startLocalApi({
         ? {
             OVERLAY_PRESENTATION_BASE_URL:
               origins[0] +
-              (['f01-05', 'f07', 'f09-05', 'f09-07', 'f10-03'].includes(task)
+              (['f01-05', 'f07', 'f09-05', 'f09-07', 'f10-03', 'f10-03-sandbox'].includes(task)
                 ? '/overlay/'
                 : '/tests/fixtures/realtime.html/'),
             OVERLAY_GRANT_EPOCH: randomUUID(),
@@ -549,6 +564,21 @@ export async function startLocalApi({
         : {}),
     };
     let config = readApiEnvironment(runtimeInput);
+    if (fundedSandbox && sandboxConfiguration.provider === 'paypal') {
+      const custodyDirectory = path.join(root, 'artifacts.local/f10-03-sandbox-paypal');
+      mkdirSync(custodyDirectory, { recursive: true });
+      const { startPayPalSandboxWebhook } = await import('./paypal-sandbox-webhook.mjs');
+      paypalSandboxWebhook = await startPayPalSandboxWebhook({
+        receiving: sandboxConfiguration.receiving,
+        sourceRoot: sandboxPayment.sourceRoot,
+        custodyFile: path.join(custodyDirectory, 'webhook-custody.json'),
+      });
+      config.paypalCheckout = sandboxConfiguration.checkout;
+      config.paypalWebhook = {
+        receiving: sandboxConfiguration.receiving,
+        webhookId: paypalSandboxWebhook.id,
+      };
+    }
     const sellerConfig = seller
       ? await (
           await import('./payment-sandbox-config.mjs')
@@ -610,15 +640,21 @@ export async function startLocalApi({
           await import('./local-checkout-fixture.mjs')
         ).createLocalCheckoutFixture(backend, deps.database, config)
       : null;
+    const sandboxFixture = sandboxConfiguration
+      ? await (
+          await import('./payment-sandbox-fixture.mjs')
+        ).createPaymentSandboxFixture(backend, deps.database, config, sandboxConfiguration)
+      : null;
+    const paymentReadiness = (checkoutFixture ?? sandboxFixture)?.dependencies.checkoutExposure
+      .readiness;
     const collectionFixture = collection
       ? await (
           await import('./local-collection-fixture.mjs')
         ).createLocalCollectionFixture(backend, deps.database, config, {
           coinActivity: ['f09-03', 'f09-05', 'f09-07'].includes(task),
           allProviderIdeas: task === 'f10-02' || fundedLifecycle,
-          receivingReadiness: fundedLifecycle
-            ? checkoutFixture.dependencies.checkoutExposure.readiness
-            : receivingReadiness,
+          receivingReadiness:
+            fundedLifecycle || fundedSandbox ? paymentReadiness : receivingReadiness,
         })
       : null;
     coinFixture = coins
@@ -653,11 +689,6 @@ export async function startLocalApi({
       ? await (
           await import('./local-contribution-fixture.mjs')
         ).createLocalContributionFixture(backend, deps.database)
-      : null;
-    const sandboxFixture = sandboxConfiguration
-      ? await (
-          await import('./payment-sandbox-fixture.mjs')
-        ).createPaymentSandboxFixture(backend, deps.database, config, sandboxConfiguration)
       : null;
     const listen = () =>
       new Promise((resolve, reject) => {
@@ -713,6 +744,7 @@ export async function startLocalApi({
     );
     return {
       ...state,
+      paypalSandboxIngress: paypalSandboxWebhook?.verifiedIngress,
       receivingCounts: receivingFixture?.counts,
       sellerFixture,
       receivingHandoffAudit: handoff

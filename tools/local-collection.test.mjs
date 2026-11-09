@@ -236,6 +236,30 @@ test('sandbox payments fail closed before configuration/storage unless separatel
     await assert.rejects(startLocalApi({ ...permitted, ...override }), /Payment sandbox requires/);
 });
 
+test('F10-03 sandbox requires separate approval and its local overlay composition', async () => {
+  const sandbox = { provider: 'paypal', approval: 'F10-03', sourceRoot: 'not-used' };
+  const permitted = {
+    backend: 'not-used',
+    task: 'f10-03-sandbox',
+    origins: ['http://127.0.0.1:4175'],
+    port: 3310,
+    collection: true,
+    review: true,
+    terms: true,
+    overlay: true,
+    sandboxPayment: sandbox,
+  };
+  for (const override of [
+    { overlay: false },
+    { terms: false },
+    { checkout: true },
+    { reporting: true },
+    { sandboxPayment: { ...sandbox, approval: 'F06-04' } },
+    { sandboxPayment: { ...sandbox, provider: 'live' } },
+  ])
+    await assert.rejects(startLocalApi({ ...permitted, ...override }), /Payment sandbox requires/);
+});
+
 test('controlled checkout requires explicit isolated selection before Docker or source access', async () => {
   for (const options of [
     { task: 'f06', collection: true, review: true, checkout: true },

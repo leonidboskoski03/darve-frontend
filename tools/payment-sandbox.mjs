@@ -5,10 +5,15 @@ import { mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
 import { chromium } from '@playwright/test';
 import { createServer } from 'vite';
 import { startLocalApi } from './local-api.mjs';
+import { observeSandboxChallenge } from './payment-sandbox-observation.mjs';
 const selectedProvider = process.argv[2],
   approval = process.argv[3];
 const origin = 'http://127.0.0.1:4175';
 const currency = selectedProvider === 'paypal' ? 'USD' : 'EUR';
+const funded = approval === 'F10-03';
+const task = funded ? 'f10-03-sandbox' : 'f06-04';
+const taskId = funded ? 'F10-03' : 'F06-04';
+const directory = 'artifacts.local/' + task + '-' + selectedProvider;
 const operatorDeadline = Date.now() + 1800000;
 let api,
   vite,
@@ -18,7 +23,8 @@ try {
   api = await startLocalApi({
     backend: process.argv[4] ?? '../tmp/backend-f06-readiness',
     origins: [origin],
-    task: 'f06-04',
+    task,
+    overlay: funded,
     collection: true,
     review: true,
     sandboxPayment: {
@@ -130,7 +136,7 @@ try {
           analysisRunId: item.analysisRunId,
           resultVersion: suggestions.resultVersion,
           snapshotVersion: item.snapshotVersion,
-          goal: { amountMinor: '100000', currency },
+          goal: { amountMinor: funded ? '1000' : '100000', currency },
           fundingDurationSeconds: seconds,
         },
       },
@@ -140,14 +146,13 @@ try {
   }
   stage = 'verify original sandbox receiving binding';
   await api.sandboxFixture.configure(creator.userId, creator.secret, session.csrfToken);
-  const directory = 'artifacts.local/f06-04-' + selectedProvider;
   mkdirSync(directory, { recursive: true });
   if (api.sandboxFixture.requiresSetup) {
     writeFileSync(
       directory + '/status.json',
       JSON.stringify(
         {
-          task: 'F06-04',
+          task: taskId,
           runId: api.runId,
           source: api.source,
           provider: selectedProvider,
@@ -174,9 +179,14 @@ try {
   }
   const challenge = await accepted(1800);
   const { publicId } = await api.sandboxFixture.bindChallenge(challenge.id);
-  await owner.close();
-  await browser.close();
-  browser = undefined;
+  stage = 'same challenge OBS and QR';
+  const observation = funded
+    ? await observeSandboxChallenge({ browser, owner, origin, get, challenge, publicId })
+    : null;
+  if (!observation) {
+    await browser.close();
+    browser = undefined;
+  }
   const frontendSource = {
     revision: execFileSync('git', ['rev-parse', 'HEAD'], {
       encoding: 'utf8',
@@ -189,6 +199,7 @@ try {
     files: Object.fromEntries(
       [
         'tools/payment-sandbox.mjs',
+        'tools/payment-sandbox-observation.mjs',
         'tools/payment-sandbox-config.mjs',
         'tools/payment-sandbox-fixture.mjs',
         'tools/paypal-payment-sandbox.mjs',
@@ -209,7 +220,7 @@ try {
       statusFile,
       JSON.stringify(
         {
-          task: 'F06-04',
+          task: taskId,
           runId: api.runId,
           source: api.source,
           frontendSource,
@@ -222,6 +233,9 @@ try {
           newAccountsAllowed: false,
           syntheticSourceAndAgreement: true,
           actualProviderAndReceiving: true,
+          ...(api.paypalSandboxIngress
+            ? { verifiedPayPalIngress: api.paypalSandboxIngress() }
+            : {}),
           ...(await api.sandboxFixture.audit()),
         },
         null,
@@ -267,10 +281,18 @@ try {
         assert.equal(audit.expectedAmountAndFee, true);
         assert.equal(audit.expectedPaymentAmount, true);
         assert.equal(audit.accountCreationCalls, 0);
-        if (selectedProvider === 'paypal') assert.equal(audit.captureCalls, 1);
+        if (selectedProvider === 'paypal') {
+          assert.equal(audit.captureCalls, 1);
+          if (funded) {
+            assert.equal(audit.paypalTimingConfirmations, 1);
+            assert.ok(api.paypalSandboxIngress() >= 1);
+          }
+        }
         assert.equal(audit.guestIssues, 1);
         assert.ok(audit.resumeCalls >= 1);
         assert.ok(audit.verifiedReceiptReads >= 2);
+        stage = 'same challenge funding, OBS and reviewed declaration';
+        const observationResult = await observation?.finish();
         const result = {
           ...audit,
           runId: api.runId,
@@ -285,6 +307,10 @@ try {
           newAccountCreation: false,
           persistentDataChanged: false,
           tracesOrScreenshots: false,
+          ...(api.paypalSandboxIngress
+            ? { verifiedPayPalIngress: api.paypalSandboxIngress() }
+            : {}),
+          ...(observationResult ?? {}),
         };
         writeFileSync(directory + '/acceptance.json', JSON.stringify(result, null, 2));
         await status('passed');
@@ -301,13 +327,12 @@ try {
   }
 } catch (error) {
   if (api?.sandboxFixture && ['stripe', 'paypal'].includes(selectedProvider)) {
-    const directory = 'artifacts.local/f06-04-' + selectedProvider;
     mkdirSync(directory, { recursive: true });
     writeFileSync(
       directory + '/status.json',
       JSON.stringify(
         {
-          task: 'F06-04',
+          task: taskId,
           runId: api.runId,
           source: api.source,
           provider: selectedProvider,
