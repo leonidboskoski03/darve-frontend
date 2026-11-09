@@ -1,4 +1,4 @@
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
@@ -55,7 +55,8 @@ export async function startLocalApi({
   const walkthrough = task === 'f01-05';
   const handoff = task === 'f06-06' || walkthrough;
   const seller = task === 'f06-06-seller';
-  const fundedLifecycle = task === 'f10-03';
+  const staffLifecycle = task === 'f10-04';
+  const fundedLifecycle = task === 'f10-03' || staffLifecycle;
   const fundedSandbox = task === 'f10-03-sandbox';
   if (
     (handoff || seller || sellerObservation !== undefined) &&
@@ -128,6 +129,7 @@ export async function startLocalApi({
       coins,
     });
   if (
+    !staffLifecycle &&
     (coins ||
       ['f09-02', 'f09-g01', 'f09-03', 'f09-04', 'f09-05', 'f09-06', 'f09-07'].includes(task)) &&
     (!coins ||
@@ -184,11 +186,13 @@ export async function startLocalApi({
       'f09-07',
       'f10-02',
       'f10-03',
+      'f10-04',
       'f10-03-sandbox',
     ].includes(task)
   )
     throw new Error('Invalid local task identity.');
   if (
+    !staffLifecycle &&
     (support ||
       ['f08-04', 'f08-05', 'f08-06', 'f08-07', 'f08-08', 'f09-06', 'f09-07'].includes(task)) &&
     (!support ||
@@ -241,6 +245,7 @@ export async function startLocalApi({
       'f09-07',
       'f10-02',
       'f10-03',
+      'f10-04',
       'f10-03-sandbox',
     ].includes(task)
   )
@@ -261,6 +266,7 @@ export async function startLocalApi({
       'f09-07',
       'f10-02',
       'f10-03',
+      'f10-04',
       'f10-03-sandbox',
     ].includes(task) ||
       !collection)
@@ -381,6 +387,16 @@ export async function startLocalApi({
       for (const id of containers.splice(0)) {
         try {
           if (!owned(id)) throw new Error('Container ownership could not be verified.');
+          if (staffLifecycle) {
+            const log = spawnSync('docker', ['logs', id], { encoding: 'utf8', windowsHide: true });
+            // Diagnostics expose capability names only, never statements, arguments or provider data.
+            const missing = new Set(
+              (log.stdout + log.stderr).match(
+                /permission denied for (?:table|view|function|sequence) [a-z_0-9]+/gi,
+              ),
+            );
+            for (const capability of missing) console.error('Disposable lifecycle ' + capability);
+          }
           run('docker', ['rm', '-f', id]);
         } catch {
           errors.push('Labelled container cleanup failed; inspect this run before removal.');
@@ -531,6 +547,15 @@ export async function startLocalApi({
               },
               minimumFundingSeconds: 1,
               maximumFundingSeconds: 3600,
+              ...(staffLifecycle
+                ? {
+                    extensionPolicy: {
+                      version: 'support-extension-v1',
+                      disclosure:
+                        'An authorized deadline extension committed before funding closes changes the cutoff for all contributions, including payments already started. Payment eligibility uses verified provider timing against the effective deadline.',
+                    },
+                  }
+                : {}),
             }),
           }
         : {}),
@@ -555,7 +580,9 @@ export async function startLocalApi({
         ? {
             OVERLAY_PRESENTATION_BASE_URL:
               origins[0] +
-              (['f01-05', 'f07', 'f09-05', 'f09-07', 'f10-03', 'f10-03-sandbox'].includes(task)
+              (['f01-05', 'f07', 'f09-05', 'f09-07', 'f10-03', 'f10-04', 'f10-03-sandbox'].includes(
+                task,
+              )
                 ? '/overlay/'
                 : '/tests/fixtures/realtime.html/'),
             OVERLAY_GRANT_EPOCH: randomUUID(),
@@ -652,6 +679,7 @@ export async function startLocalApi({
           await import('./local-collection-fixture.mjs')
         ).createLocalCollectionFixture(backend, deps.database, config, {
           coinActivity: ['f09-03', 'f09-05', 'f09-07'].includes(task),
+          continuedLifecycle: staffLifecycle,
           allProviderIdeas: task === 'f10-02' || fundedLifecycle,
           receivingReadiness:
             fundedLifecycle || fundedSandbox ? paymentReadiness : receivingReadiness,
@@ -661,12 +689,18 @@ export async function startLocalApi({
       ? await (
           await import('./local-coin-fixture.mjs')
         ).createLocalCoinFixture(backend, databaseUrl, deps.database, {
-          linuxJournal: ['f09-g01', 'f09-03', 'f09-04', 'f09-05', 'f09-06', 'f09-07'].includes(
-            task,
-          ),
+          linuxJournal: [
+            'f09-g01',
+            'f09-03',
+            'f09-04',
+            'f09-05',
+            'f09-06',
+            'f09-07',
+            'f10-04',
+          ].includes(task),
           task,
           runId,
-          staffAuthority: ['f09-06', 'f09-07'].includes(task)
+          staffAuthority: ['f09-06', 'f09-07', 'f10-04'].includes(task)
             ? supportFixture?.coinAuthority
             : null,
         })
@@ -847,14 +881,18 @@ export async function startLocalApi({
       coinFixture,
       createStaffWorkbench: async () => {
         if (
-          !['f08-05', 'f08-06', 'f08-07', 'f08-08', 'f09-06', 'f09-07'].includes(task) ||
+          !['f08-05', 'f08-06', 'f08-07', 'f08-08', 'f09-06', 'f09-07', 'f10-04'].includes(task) ||
           !supportFixture
         )
           throw new Error('Staff workbench requires F08-05 disposable composition.');
         return supportFixture.workbench(deps.redis, {
-          administration: ['f08-06', 'f08-07', 'f08-08', 'f09-06', 'f09-07'].includes(task),
-          coinWorkbench: ['f09-06', 'f09-07'].includes(task) ? coinFixture?.staffWorkbench : null,
-          recovery: ['f08-07', 'f08-08'].includes(task),
+          administration: ['f08-06', 'f08-07', 'f08-08', 'f09-06', 'f09-07', 'f10-04'].includes(
+            task,
+          ),
+          coinWorkbench: ['f09-06', 'f09-07', 'f10-04'].includes(task)
+            ? coinFixture?.staffWorkbench
+            : null,
+          recovery: ['f08-07', 'f08-08', 'f10-04'].includes(task),
         });
       },
       seedStaffInspection: async (creator, options = {}) => {
@@ -908,7 +946,9 @@ export async function startLocalApi({
       } = {}) {
         if (
           coinOwner &&
-          (!['f09-g01', 'f09-03', 'f09-04', 'f09-05', 'f09-06', 'f09-07'].includes(task) ||
+          (!['f09-g01', 'f09-03', 'f09-04', 'f09-05', 'f09-06', 'f09-07', 'f10-04'].includes(
+            task,
+          ) ||
             !coinFixture?.durability)
         )
           throw new Error('Existing coin owner requires the exact journal acceptance fixture.');

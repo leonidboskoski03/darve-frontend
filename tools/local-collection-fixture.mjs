@@ -7,7 +7,12 @@ export async function createLocalCollectionFixture(
   backend,
   database,
   config,
-  { coinActivity = false, allProviderIdeas = false, receivingReadiness } = {},
+  {
+    coinActivity = false,
+    allProviderIdeas = false,
+    receivingReadiness,
+    continuedLifecycle = false,
+  } = {},
 ) {
   const db = await import(
     pathToFileURL(path.join(backend, 'packages/database/dist/index.js')).href
@@ -18,6 +23,7 @@ export async function createLocalCollectionFixture(
   const cipher = config.credentialCipher;
   const readers = new Map();
   let streamChanged = false;
+  let observedBroadcastId;
   let capacity = 'busy',
     funding = 'ready';
   const now = async () =>
@@ -28,7 +34,7 @@ export async function createLocalCollectionFixture(
       include: { identity: true, channels: true },
     });
     const broadcast = await database.broadcast.findFirstOrThrow({
-      where: { connectionId: connection.id, userId: owner.userId },
+      where: { id: observedBroadcastId, connectionId: connection.id, userId: owner.userId },
     });
     return {
       kind: 'observed',
@@ -140,6 +146,11 @@ export async function createLocalCollectionFixture(
       await fixture.admitIdeas(actor.userId, id, texts, authors);
       await lifecycle.stop(actor, id, current.facts.round.version);
       return id;
+    },
+    observeReplacement(id) {
+      if (!continuedLifecycle || typeof id !== 'string')
+        throw new Error('Replacement observation requires the isolated continued lifecycle');
+      observedBroadcastId = id;
     },
     streamChanged(value) {
       if (typeof value !== 'boolean') throw new Error('Invalid controlled stream state');

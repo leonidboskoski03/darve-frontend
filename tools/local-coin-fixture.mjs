@@ -37,7 +37,7 @@ export async function createLocalCoinFixture(
     await sql.connect();
     try {
       // Staff coin modes compose after support has installed the shared B13 roles.
-      const grantFiles = ['f09-06', 'f09-07'].includes(task)
+      const grantFiles = ['f09-06', 'f09-07', 'f10-04'].includes(task)
         ? ['b15-runtime-grants.sql']
         : ['b13-runtime-grants.sql', 'b15-runtime-grants.sql'];
       for (const file of grantFiles)
@@ -48,11 +48,11 @@ export async function createLocalCoinFixture(
         GRANT SELECT ON darve_users,external_identities,darve_sessions TO darve_public_runtime;
         GRANT UPDATE(id) ON darve_users TO darve_public_runtime;
         GRANT UPDATE ON darve_sessions TO darve_public_runtime;`);
-      if (['f09-03', 'f09-05', 'f09-07'].includes(task))
+      if (['f09-03', 'f09-05', 'f09-07', 'f10-04'].includes(task))
         await sql.query(
           'GRANT SELECT,INSERT ON terms_documents,terms_acceptances TO darve_public_runtime',
         );
-      if (['f09-05', 'f09-07'].includes(task))
+      if (['f09-05', 'f09-07', 'f10-04'].includes(task))
         await sql.query(`
         GRANT SELECT ON overlay_displays,overlay_grants,overlay_preferences,collection_rounds,provider_connections,collection_snapshot_access,analysis_runs,analysis_snapshots,analysis_profiles,analysis_processing_jobs,analysis_processing_results,accepted_challenges,challenge_public_links,challenge_completion_declarations,challenge_funding,challenge_funding_events,payment_checkout_attempts,financial_payments,financial_adjustment_evidence,funding_reviews TO darve_public_runtime;
         GRANT UPDATE("snapshotId") ON collection_snapshot_access TO darve_public_runtime;
@@ -62,6 +62,33 @@ export async function createLocalCoinFixture(
         GRANT INSERT ON outbox_events,challenge_funding_events TO darve_public_runtime;
         GRANT SELECT ON outbox_events TO darve_public_runtime;
         GRANT EXECUTE ON FUNCTION challenge_recovery_projection(uuid),challenge_effective_deadline(uuid) TO darve_public_runtime;`);
+      if (task === 'f10-04')
+        // Disposable product lifecycle only. Coin/admin authority still has no direct coin-table access.
+        await sql.query(`
+          GRANT SELECT ON collection_reservations,owned_channels,broadcasts,provider_credentials,
+            discovery_snapshots,discovery_snapshot_items,discovery_cursors,provider_grant_operations,
+            bot_destination_authorizations,youtube_bot_destination_authorizations,kick_bot_destination_authorizations,
+            collection_contexts,collection_context_changes,collection_demands,collection_notice_pins,
+            ingestion_sessions,provider_subscriptions,coverage_intervals,collection_consumption_progress,
+            analysis_snapshot_members,collection_work_intents,collection_observation_receipts,
+            analysis_suggestion_dispositions,challenge_acceptance_receipts,streamer_restrictions,
+            announcement_dispatches,source_removals,source_removal_retention_reviews,
+            ingestion_checkpoints,collection_chat_choices,collection_observation_sources,
+            ingested_chat_messages,youtube_chat_messages,chat_message_deliveries,youtube_chat_deliveries,kick_chat_deliveries,
+            analysis_processing_calls,analysis_processing_call_attempts,analysis_processing_owners,analysis_processing_pools,
+            analysis_stage_attempts,analysis_stage_members,analysis_embedding_inputs,analysis_embedding_spaces,
+            analysis_embedding_stages,analysis_embedding_vectors TO darve_public_runtime;
+          GRANT SELECT,INSERT,UPDATE ON funding_recovery,funding_attempt_checks TO darve_public_runtime;
+          GRANT SELECT ON stripe_payment_confirmations,paypal_payment_confirmations TO darve_public_runtime;
+          GRANT INSERT,UPDATE ON collection_rounds,collection_reservations,collection_contexts,
+            collection_context_changes,collection_demands,collection_snapshot_access,analysis_snapshots,
+            analysis_snapshot_members,collection_work_intents,collection_observation_receipts,
+            ingestion_sessions,analysis_suggestion_dispositions,challenge_public_links,
+            accepted_challenges,challenge_acceptance_receipts,challenge_completion_declarations,coverage_intervals TO darve_public_runtime;
+          GRANT DELETE ON collection_reservations TO darve_public_runtime;
+          GRANT UPDATE(id) ON provider_connections,broadcasts TO darve_public_runtime;
+          GRANT INSERT,UPDATE ON discovery_snapshots,discovery_snapshot_items,discovery_cursors,broadcasts,owned_channels TO darve_public_runtime;
+        `);
     } finally {
       await sql.end();
     }
@@ -71,13 +98,30 @@ export async function createLocalCoinFixture(
       url.password = 'disposable-coins-only';
       const value = db.createDatabase(url.href, 5000);
       connections.push(value);
-      return value;
+      return task === 'f10-04'
+        ? value.$extends({
+            query: {
+              async $allOperations({ args, query }) {
+                try {
+                  return await query(args);
+                } catch (error) {
+                  const missing = (String(error.message) + JSON.stringify(error.meta)).match(
+                    /permission denied for (?:table|view|function|sequence) ["`]?([a-z_0-9]+)/i,
+                  );
+                  if (missing)
+                    console.error('Disposable lifecycle missing privilege: ' + missing[1]);
+                  throw error;
+                }
+              },
+            },
+          })
+        : value;
     };
     const publicDatabase = connection('f09_public'),
       admin = connection('f09_admin'),
       worker = connection('f09_worker');
     // Scoped tsx resolves the backend test sources' .js -> .ts imports without a global loader.
-    assert.equal(['f09-06', 'f09-07'].includes(task), Boolean(staffAuthority));
+    assert.equal(['f09-06', 'f09-07', 'f10-04'].includes(task), Boolean(staffAuthority));
     const fixture = staffAuthority
       ? await createCombinedCoinSeed(owner, admin, db, domain, staffAuthority)
       : await (
@@ -120,7 +164,7 @@ export async function createLocalCoinFixture(
     const journalReady = await journal.ready();
     // Node-only, task-bound controls install synthetic manifests into this disposable database.
     // No product asset, serving route, real renderer or commercial price is invented here.
-    const assets = ['f09-04', 'f09-05', 'f09-06', 'f09-07'].includes(task)
+    const assets = ['f09-04', 'f09-05', 'f09-06', 'f09-07', 'f10-04'].includes(task)
       ? db.createTemplateAssetRepository(owner)
       : null;
     const templates = assets
@@ -176,7 +220,7 @@ export async function createLocalCoinFixture(
         COIN_CREATOR_CURSOR_KEY_BASE64: cursorKey,
       },
       configure: () => fixture.configure(),
-      staffWorkbench: ['f09-06', 'f09-07'].includes(task)
+      staffWorkbench: ['f09-06', 'f09-07', 'f10-04'].includes(task)
         ? async (adminDatabase, staffCrypto, staffPolicy) => {
             // Fresh disposable program only: align both real consumers with this workbench authority.
             await owner.coinProgram.update({ where: { id: 1 }, data: { staffPolicy } });
@@ -194,8 +238,25 @@ export async function createLocalCoinFixture(
             };
           }
         : null,
+      async lifecycleEvidence() {
+        assert.equal(task, 'f10-04');
+        return {
+          facts: await owner.coinFact.findMany({
+            where: { ownerId: fixture.accountOwner.id },
+            select: { kind: true, sourceId: true, roundId: true },
+          }),
+          claims: await owner.coinClaim.findMany({
+            where: { ownerId: fixture.accountOwner.id },
+            select: { mission: true },
+          }),
+          declarations: await owner.challengeCompletionDeclaration.findMany({
+            where: { userId: fixture.accountOwner.id },
+            select: { id: true, challengeId: true },
+          }),
+        };
+      },
       async staffEvidence(actorId) {
-        assert(['f09-06', 'f09-07'].includes(task));
+        assert(['f09-06', 'f09-07', 'f10-04'].includes(task));
         return {
           audits: await owner.staffAudit.findMany({
             where: { actorId, action: { in: ['coins.configure', 'coins.adjust', 'coins.price'] } },
