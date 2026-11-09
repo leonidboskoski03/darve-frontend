@@ -52,7 +52,8 @@ export async function startLocalApi({
   receiving = false,
   sellerObservation,
 }) {
-  const handoff = task === 'f06-06';
+  const walkthrough = task === 'f01-05';
+  const handoff = task === 'f06-06' || walkthrough;
   const seller = task === 'f06-06-seller';
   if (
     (handoff || seller || sellerObservation !== undefined) &&
@@ -68,9 +69,14 @@ export async function startLocalApi({
       !terms ||
       port !== (handoff ? 3311 : 3310) ||
       origins.length !== 1 ||
-      origins[0] !== (handoff ? 'http://127.0.0.1:4177' : 'http://127.0.0.1:4175') ||
+      origins[0] !==
+        (walkthrough
+          ? 'http://localhost:4177'
+          : handoff
+            ? 'http://127.0.0.1:4177'
+            : 'http://127.0.0.1:4175') ||
       reporting ||
-      overlay ||
+      overlay !== walkthrough ||
       contributionReads ||
       checkout ||
       sandboxPayment !== undefined ||
@@ -79,7 +85,7 @@ export async function startLocalApi({
       support ||
       coins)
   )
-    throw Error('Receiving handoff requires its exact disposable F06-06 composition.');
+    throw Error('Receiving handoff requires its exact disposable F06-06 or F01-05 composition.');
   if (
     !handoff &&
     (receiving || task === 'f03-04') &&
@@ -147,6 +153,7 @@ export async function startLocalApi({
     throw new Error('Mobile QR origin requires its explicit F07 HTTPS test.');
   if (
     ![
+      'f01-05',
       'f02-02',
       'f02-03',
       'f03',
@@ -213,6 +220,7 @@ export async function startLocalApi({
   if (
     collection &&
     ![
+      'f01-05',
       'f04-02',
       'f04-03',
       'f05',
@@ -231,6 +239,7 @@ export async function startLocalApi({
   if (
     review &&
     (![
+      'f01-05',
       'f04-03',
       'f05',
       'f06',
@@ -280,6 +289,7 @@ export async function startLocalApi({
       origins[0] !== 'http://127.0.0.1:4175')
   )
     throw new Error('OBS acceptance requires its isolated read-only overlay/review composition.');
+  const apiOrigin = `http://${walkthrough ? 'localhost' : '127.0.0.1'}:${port}`;
   backend = path.resolve(backend);
   const provenance = JSON.parse(
     readFileSync(path.join(root, 'vendor/contracts/provenance.json'), 'utf8'),
@@ -467,10 +477,7 @@ export async function startLocalApi({
         }
       : null;
     const receivingFixture = receiving
-      ? (await import('./local-receiving-fixture.mjs')).localReceivingFixture(
-          origins[0],
-          'http://127.0.0.1:' + port,
-        )
+      ? (await import('./local-receiving-fixture.mjs')).localReceivingFixture(origins[0], apiOrigin)
       : null;
     const runtimeInput = {
       NODE_ENV: 'development',
@@ -521,12 +528,15 @@ export async function startLocalApi({
           }
         : {}),
       ...providerEnvironment,
+      ...(walkthrough
+        ? { OAUTH_FRONTEND_ORIGIN: origins[0], OAUTH_BACKEND_ORIGIN: apiOrigin }
+        : {}),
       ...(terms ? { TERMS_POLICY_FILE: termsFile } : {}),
       ...(overlay
         ? {
             OVERLAY_PRESENTATION_BASE_URL:
               origins[0] +
-              (['f07', 'f09-05', 'f09-07'].includes(task)
+              (['f01-05', 'f07', 'f09-05', 'f09-07'].includes(task)
                 ? '/overlay/'
                 : '/tests/fixtures/realtime.html/'),
             OVERLAY_GRANT_EPOCH: randomUUID(),
@@ -620,6 +630,9 @@ export async function startLocalApi({
           await import('./local-review-fixture.mjs')
         ).createLocalReviewFixture(backend, deps.database)
       : null;
+    const walkthroughIdentity = walkthrough
+      ? (await import('./local-walkthrough-identity.mjs')).walkthroughTwitch
+      : null;
     const reportingFixture = reporting
       ? await (
           await import('./local-reporting-fixture.mjs')
@@ -650,6 +663,14 @@ export async function startLocalApi({
           ...sandboxFixture?.dependencies,
           ...receivingFixture?.dependencies,
           ...sellerFixture?.dependencies,
+          ...(walkthroughIdentity
+            ? {
+                oauthProviders: {
+                  ...collectionFixture.dependencies.oauthProviders,
+                  TWITCH: walkthroughIdentity,
+                },
+              }
+            : {}),
           ...(receivingReadiness
             ? {
                 checkoutExposure: {
@@ -668,7 +689,7 @@ export async function startLocalApi({
       .$queryRaw`SELECT count(*)::int AS count FROM _prisma_migrations WHERE finished_at IS NOT NULL`;
     const state = {
       runId,
-      apiOrigin: `http://127.0.0.1:${port}`,
+      apiOrigin,
       pid: process.pid,
       containers: [...containers],
       postgresPort: dbPort,
