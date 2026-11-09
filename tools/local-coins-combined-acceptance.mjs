@@ -9,9 +9,18 @@ import { chromium, devices, expect } from '@playwright/test';
 import jsQR from 'jsqr';
 import { startLocalApi } from './local-api.mjs';
 import { verifyTemplateAsset } from './template-assets.mjs';
+import {
+  collectLifecycle,
+  attachLifecycle,
+  recoverLifecycle,
+  fundAndDeclareLifecycle,
+} from './local-staff-lifecycle-steps.mjs';
 
-// Exact F09-07 only. Real product entries/API/SQL/SSE/journal, synthetic providers and staff identity.
-const directory = resolve('artifacts.local/f09-07'),
+const lifecycle = process.argv.includes('--lifecycle');
+const task = lifecycle ? 'f10-04' : 'f09-07';
+
+// Exact F09-07 or F10-04. Real product entries/API/SQL/SSE/journal, controlled external facts.
+const directory = resolve('artifacts.local/' + task),
   publicOrigin = 'http://127.0.0.1:4175',
   staffOrigin = 'http://localhost:4176',
   adminOrigin = 'http://localhost:3320';
@@ -77,7 +86,8 @@ try {
   );
   api = await startLocalApi({
     backend: process.argv[2] ?? '../tmp/backend-f06-checkout',
-    task: 'f09-07',
+    task,
+    checkout: lifecycle,
     coins: true,
     support: true,
     collection: true,
@@ -239,7 +249,7 @@ try {
       creatorPage.getByText('Template selection verified.', { exact: true }),
     ).toBeVisible();
   };
-  let challenge, grant, display, displayContext, bindingBefore, layoutBefore, ticketId;
+  let challenge, grant, display, displayContext, bindingBefore, layoutBefore, ticketId, adjustment;
   await check(
     'unconfigured creator state and independent Owner setup through actual product UI',
     async () => {
@@ -252,8 +262,8 @@ try {
       await ownerPage.goto(staffOrigin + '/coins');
       const fields = {
         'First successful collection reward': '20',
-        'First funded goal reward': '0',
-        'First completion declaration reward': '0',
+        'First funded goal reward': lifecycle ? '40' : '0',
+        'First completion declaration reward': lifecycle ? '60' : '0',
         '10 qualifying suggestions reward': '0',
         '100 qualifying suggestions reward': '0',
         '1000 qualifying suggestions reward': '0',
@@ -269,7 +279,16 @@ try {
   await check(
     'canonical collection earning remains unspendable after real journal append loss and restart',
     async () => {
-      challenge = await api.prepareTemplateOverlay(creator.secret);
+      challenge = lifecycle
+        ? await collectLifecycle({
+            api,
+            creator,
+            page: creatorPage,
+            context: creatorContext,
+            origin: publicOrigin,
+          })
+        : await api.prepareTemplateOverlay(creator.secret);
+      await creatorPage.goto(publicOrigin + '/coins');
       await refreshCoins();
       await expect(creatorPage.getByText('Verification pending', { exact: true })).toBeVisible();
       let failed = false;
@@ -479,7 +498,13 @@ try {
           name: 'I reviewed this exact target, values, reason and revision.',
         })
         .check();
+      const adjustmentRequest = lifecycle
+        ? ownerPage.waitForRequest(
+            (request) => request.method() === 'POST' && request.url().endsWith('/adjustments'),
+          )
+        : null;
       await ownerPage.getByRole('button', { name: 'Confirm coin change', exact: true }).click();
+      if (adjustmentRequest) adjustment = (await adjustmentRequest).postDataJSON();
       await expect(ownerPage.locator('.staff-coins-command').getByRole('status')).toContainText(
         'Synchronization is pending',
       );
@@ -509,6 +534,7 @@ try {
       await creatorPage.getByRole('button', { name: 'Create ticket', exact: true }).click();
       await expect(creatorPage).toHaveURL(/\/support\/[0-9a-f-]{36}$/i);
       ticketId = new URL(creatorPage.url()).pathname.split('/').at(-1);
+      if (lifecycle) await attachLifecycle({ page: creatorPage, challenge });
       for (const [identity, context] of [
         [first, supportContext],
         [second, nextSupport],
@@ -545,8 +571,85 @@ try {
         (await supportContext.request.get(adminOrigin + '/admin/v1/coins/configuration')).status(),
         403,
       );
+      if (lifecycle) {
+        const denied = await supportContext.request.post(
+          adminOrigin + '/admin/v1/coins/accounts/' + creator.userId + '/adjustments',
+          { headers: staffHeaders(first), data: adjustment },
+        );
+        assert.equal(denied.status(), 403);
+        assert.equal((await creatorRead('/api/coins/account')).balance, '13');
+      }
     },
   );
+  if (lifecycle) {
+    const recovery = await recoverLifecycle({
+      runtime,
+      challenge,
+      ticketId,
+      ownerContext,
+      ownerPage,
+      support: first,
+      supportContext,
+      staffOrigin,
+      adminOrigin,
+      check,
+    });
+    await fundAndDeclareLifecycle({
+      api,
+      runtime,
+      creator,
+      challenge,
+      ticketId,
+      creatorContext,
+      creatorPage,
+      ownerPage,
+      origin: publicOrigin,
+      staffOrigin,
+      browser,
+      d,
+      creatorRead,
+      check,
+    });
+    await check(
+      'expired recent staff assurance cannot extend this challenge and reload never replays a recovery',
+      async () => {
+        await runtime.ageIdentity(owner.id);
+        const before = await runtime.recoveryEvidence(challenge.challengeId);
+        const denied = await ownerContext.request.post(
+          adminOrigin + recovery.path + '/extensions',
+          { headers: staffHeaders(owner), data: recovery.reviewed },
+        );
+        assert.equal(denied.status(), 403);
+        await ownerPage.reload();
+        assert.deepEqual(
+          (await runtime.recoveryEvidence(challenge.challengeId)).actions,
+          before.actions,
+        );
+        const sources = await fixture.lifecycleEvidence();
+        assert.equal(sources.facts.length, 3);
+        assert.equal(
+          sources.facts.find((row) => row.kind === 'collection').roundId,
+          challenge.roundId,
+        );
+        assert.equal(
+          sources.facts.find((row) => row.kind === 'funding').sourceId,
+          challenge.challengeId,
+        );
+        assert.equal(
+          sources.facts.find((row) => row.kind === 'completion').sourceId,
+          sources.declarations[0].id,
+        );
+        assert.equal(sources.declarations[0].challengeId, challenge.challengeId);
+        assert.deepEqual(sources.claims.map((row) => row.mission).sort(), [
+          'collection.first_success',
+          'completion.first_declaration',
+          'funding.first_goal',
+        ]);
+      },
+    );
+  }
+  const finalBalance = lifecycle ? '113' : '13';
+  const finalLedger = lifecycle ? 5 : 3;
   await check(
     'reassignment removes the mounted coin/template context and authorizes only the current assignee',
     async () => {
@@ -563,14 +666,11 @@ try {
         ).status(),
         404,
       );
-      assert.equal(
-        (
-          await nextSupport.request.get(
-            adminOrigin + '/admin/v1/support/tickets/' + ticketId + '/coins',
-          )
-        ).status(),
-        200,
+      const { data } = await staffRead(
+        '/admin/v1/support/tickets/' + ticketId + '/coins',
+        nextSupport,
       );
+      assert.equal(data.balance, finalBalance);
       assert.equal((await fixture.staffEvidence(first.id)).audits.length, 0);
     },
   );
@@ -596,7 +696,7 @@ try {
       await pick('Standalone');
       await expect(display.locator('.obs-stage')).toHaveAttribute('data-template', 'standalone');
       await expect(display.locator('.obs-card')).toBeVisible();
-      assert.equal((await creatorRead('/api/coins/account')).balance, '13');
+      assert.equal((await creatorRead('/api/coins/account')).balance, finalBalance);
       assert.deepEqual(await t.inspect(), { redemptions: 1, entitlements: 1, debits: 1 });
     },
   );
@@ -614,8 +714,8 @@ try {
       await fixture.unavailable(false);
       await refreshCoins();
       await expect(creatorPage.locator('.coins-balances').getByRole('definition')).toHaveText([
-        '13 coins',
-        '13 coins',
+        finalBalance + ' coins',
+        finalBalance + ' coins',
       ]);
     },
   );
@@ -636,11 +736,11 @@ try {
       await expect.poll(() => api.revoked(creator.sessionId)).toBe(true);
       await expect(creatorPage.locator('.coins-balances')).toHaveCount(0);
       const current = await staffRead('/admin/v1/coins/accounts/' + creator.userId);
-      assert.equal(current.balance, '13');
+      assert.equal(current.balance, finalBalance);
       const facts = await d.inspect();
-      assert.equal(facts.ledger, 3);
-      assert.equal(facts.seals, 3);
-      assert.equal((await d.journal.read()).length, 3);
+      assert.equal(facts.ledger, finalLedger);
+      assert.equal(facts.seals, finalLedger);
+      assert.equal((await d.journal.read()).length, finalLedger);
       const audits = await fixture.staffEvidence(owner.id);
       assert.equal(audits.audits.length, 4);
     },
@@ -662,8 +762,10 @@ try {
       'F09-05 OBS and F07 physical QR evidence retained; no new native/phone observation',
     actualProductBrowserHTTP_SQL_SSE_Journal: true,
     syntheticProvidersModelsRewardsPricesIdentity: true,
-    finalBalance: '13',
-    finalLedger: 3,
+    task,
+    connectedLifecycle: lifecycle,
+    finalBalance,
+    finalLedger,
     network,
     createdAt: new Date().toISOString(),
   };
@@ -675,9 +777,12 @@ try {
         phase,
         name: error.name,
         detail: String(error.message)
-          .replace(/#grant=[^\s]+/g, '[private grant]')
+          .replace(/#grant(?:Id)?=[^\s]+/g, '[private grant]')
           .replace(/[A-Za-z0-9_+/=-]{32,}/g, '[redacted]'),
-        location: error.stack?.split('\n').slice(1, 4),
+        location: error.stack
+          ?.split('\n')
+          .filter((line) => /^\s+at /.test(line))
+          .slice(0, 3),
         checks,
       },
       null,

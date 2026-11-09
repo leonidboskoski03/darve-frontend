@@ -12,6 +12,14 @@ const selected = {
   origins: ['http://127.0.0.1:4175'],
 };
 
+test('staff lifecycle journal custody requires its own exact task and run labels', () => {
+  const run = randomUUID();
+  const labels = { 'darve.frontend.task': 'f10-04', 'darve.frontend.run': run };
+  assert.doesNotThrow(() => assertJournalOwnership({ Labels: labels }, run, 'f10-04'));
+  assert.throws(() => assertJournalOwnership({ Labels: labels }, run, 'f09-07'));
+  assert.throws(() => assertJournalOwnership({ Labels: labels }, randomUUID(), 'f10-04'));
+});
+
 test('combined coin acceptance requires exactly its local creator/staff/OBS capabilities and journal ownership', async () => {
   const input = {
     ...selected,

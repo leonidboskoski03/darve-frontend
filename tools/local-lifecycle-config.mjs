@@ -16,7 +16,8 @@ export function assertLifecycleComposition({
   support = false,
   coins = false,
 }) {
-  const funded = task === 'f10-03';
+  const staff = task === 'f10-04';
+  const funded = task === 'f10-03' || staff;
   if (
     (!funded && task !== 'f10-02') ||
     port !== 3310 ||
@@ -27,12 +28,14 @@ export function assertLifecycleComposition({
     reporting !== !funded ||
     overlay !== funded ||
     checkout !== funded ||
-    [contributionReads, support, coins].some((value) => value !== false) ||
+    contributionReads !== false ||
+    support !== staff ||
+    coins !== staff ||
     sandboxPayment !== undefined ||
     operatorOAuth !== undefined ||
     qrPublicOrigin !== undefined
   )
     throw new Error(
-      'Creator lifecycle requires its exact controlled F10-02 or F10-03 composition.',
+      'Creator lifecycle requires its exact controlled F10-02, F10-03 or F10-04 composition.',
     );
 }

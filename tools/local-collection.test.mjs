@@ -149,6 +149,35 @@ test('funded lifecycle requires controlled checkout and OBS without direct repor
     await assert.rejects(startLocalApi({ ...funded, ...change }), /Creator lifecycle/);
 });
 
+test('staff lifecycle admits its controlled capability set and rejects external or partial composition before runtime access', async () => {
+  const staff = {
+    ...lifecycle,
+    task: 'f10-04',
+    reporting: false,
+    overlay: true,
+    checkout: true,
+    support: true,
+    coins: true,
+  };
+  assert.doesNotThrow(() => assertLifecycleComposition(staff));
+  for (const change of [
+    ...['collection', 'review', 'terms', 'overlay', 'checkout', 'support', 'coins'].map((key) => ({
+      [key]: false,
+    })),
+    { support: 1 },
+    { coins: 1 },
+    { reporting: true },
+    { contributionReads: true },
+    { sandboxPayment: {} },
+    { sandboxPayment: null },
+    { operatorOAuth: {} },
+    { qrPublicOrigin: 'https://external.example.test' },
+    { port: 3000 },
+    { origins: ['http://localhost:4175'] },
+  ])
+    await assert.rejects(startLocalApi({ ...staff, ...change }), /Creator lifecycle/);
+});
+
 for (const task of ['f08-04', 'f08-05', 'f08-06', 'f08-07', 'f08-08'])
   test(
     task + ' support qualification cannot enable unrelated controlled or external services',
