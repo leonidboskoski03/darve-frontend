@@ -55,6 +55,7 @@ export async function startLocalApi({
   const walkthrough = task === 'f01-05';
   const handoff = task === 'f06-06' || walkthrough;
   const seller = task === 'f06-06-seller';
+  const fundedLifecycle = task === 'f10-03';
   if (
     (handoff || seller || sellerObservation !== undefined) &&
     ((!handoff && !seller) ||
@@ -107,7 +108,7 @@ export async function startLocalApi({
       coins)
   )
     throw Error('Receiving qualification requires its exact disposable provider-free composition.');
-  if (task === 'f10-02')
+  if (task === 'f10-02' || fundedLifecycle)
     assertLifecycleComposition({
       task,
       port,
@@ -181,6 +182,7 @@ export async function startLocalApi({
       'f09-06',
       'f09-07',
       'f10-02',
+      'f10-03',
     ].includes(task)
   )
     throw new Error('Invalid local task identity.');
@@ -233,6 +235,7 @@ export async function startLocalApi({
       'f09-05',
       'f09-07',
       'f10-02',
+      'f10-03',
     ].includes(task)
   )
     throw new Error('Controlled collection ports require their explicit disposable task.');
@@ -251,6 +254,7 @@ export async function startLocalApi({
       'f09-05',
       'f09-07',
       'f10-02',
+      'f10-03',
     ].includes(task) ||
       !collection)
   )
@@ -261,7 +265,7 @@ export async function startLocalApi({
     throw new Error('Controlled receipt reads require their explicit disposable review task.');
   if (
     checkout &&
-    (task !== 'f06-03' ||
+    ((!fundedLifecycle && task !== 'f06-03') ||
       !collection ||
       !review ||
       contributionReads ||
@@ -536,7 +540,7 @@ export async function startLocalApi({
         ? {
             OVERLAY_PRESENTATION_BASE_URL:
               origins[0] +
-              (['f01-05', 'f07', 'f09-05', 'f09-07'].includes(task)
+              (['f01-05', 'f07', 'f09-05', 'f09-07', 'f10-03'].includes(task)
                 ? '/overlay/'
                 : '/tests/fixtures/realtime.html/'),
             OVERLAY_GRANT_EPOCH: randomUUID(),
@@ -601,13 +605,20 @@ export async function startLocalApi({
         ).readiness,
       ]);
     }
+    const checkoutFixture = checkout
+      ? await (
+          await import('./local-checkout-fixture.mjs')
+        ).createLocalCheckoutFixture(backend, deps.database, config)
+      : null;
     const collectionFixture = collection
       ? await (
           await import('./local-collection-fixture.mjs')
         ).createLocalCollectionFixture(backend, deps.database, config, {
           coinActivity: ['f09-03', 'f09-05', 'f09-07'].includes(task),
-          allProviderIdeas: task === 'f10-02',
-          receivingReadiness,
+          allProviderIdeas: task === 'f10-02' || fundedLifecycle,
+          receivingReadiness: fundedLifecycle
+            ? checkoutFixture.dependencies.checkoutExposure.readiness
+            : receivingReadiness,
         })
       : null;
     coinFixture = coins
@@ -642,11 +653,6 @@ export async function startLocalApi({
       ? await (
           await import('./local-contribution-fixture.mjs')
         ).createLocalContributionFixture(backend, deps.database)
-      : null;
-    const checkoutFixture = checkout
-      ? await (
-          await import('./local-checkout-fixture.mjs')
-        ).createLocalCheckoutFixture(backend, deps.database, config)
       : null;
     const sandboxFixture = sandboxConfiguration
       ? await (

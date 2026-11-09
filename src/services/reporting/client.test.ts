@@ -82,10 +82,30 @@ it('sends civil dates/timezone unchanged for a daylight-saving interval', async 
 });
 it('rejects another reporting selection in an otherwise valid response', async () => {
   const { client, send } = await setup();
-  send.mockResolvedValueOnce(json(envelope(dashboardFixture())));
+  const data = dashboardFixture();
+  data.currentStream = { ...data.currentStream, selection: 'selected', broadcastId: ids.other };
+  send.mockResolvedValueOnce(json(envelope(data)));
   await expect(
     client.summary({ timeZone: 'UTC', broadcastId: ids.broadcast }, new AbortController().signal),
   ).rejects.toBeInstanceOf(ReportingError);
+});
+it('accepts the server-selected OBS broadcast when no broadcast filter is requested', async () => {
+  const { client, send } = await setup();
+  const data = dashboardFixture();
+  data.currentStream = {
+    ...data.currentStream,
+    selection: 'selected',
+    broadcastId: ids.broadcast,
+    provider: 'TWITCH',
+    state: 'unavailable',
+    reason: 'observation_stale',
+  };
+  send.mockResolvedValueOnce(json(envelope(data)));
+  const result = await client.summary({ timeZone: 'UTC' }, new AbortController().signal);
+  expect(result.data.currentStream.broadcastId).toBe(ids.broadcast);
+  expect(send.mock.calls[1]![0]).toBe(
+    'https://api.example.test/api/dashboard/summary?timeZone=UTC',
+  );
 });
 it('rejects invalid opaque cursor and malformed IDs before reads', async () => {
   const { client, send } = await setup();

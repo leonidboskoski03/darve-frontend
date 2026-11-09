@@ -231,6 +231,39 @@ export async function createLocalCheckoutFixture(backend, database, config) {
     unknownCapture: () => {
       captureUnknown = true;
     },
+    async observeStripe(id, includeTiming) {
+      const attempt = await repository.checkoutContext(id);
+      const object = objects.get(attempt.externalObjectId);
+      if (!object || attempt.paymentProvider !== 'stripe')
+        throw new Error('No controlled Stripe session');
+      const suffix = id.replaceAll('-', '');
+      const paymentIntentId = 'pi_' + suffix;
+      const [{ clock }] =
+        await database.$queryRaw`SELECT date_trunc('second', clock_timestamp()) AS clock`;
+      objects.set(object.id, {
+        ...object,
+        url: null,
+        paymentIntentId,
+        success: {
+          attemptId: attempt.id,
+          paymentProvider: 'stripe',
+          environment: 'test',
+          platformAccountId: attempt.platformAccountId,
+          accountId: attempt.accountId,
+          checkoutObjectId: object.id,
+          monetaryObjectId: 'ch_' + suffix,
+          amountMinor: attempt.amountMinor,
+          currency: attempt.currency,
+          darveFeeMinor: attempt.darveFeeMinor,
+          paidAt: null,
+          ...(includeTiming
+            ? {
+                stripeConfirmation: { eventId: 'evt_' + suffix, paymentIntentId, createdAt: clock },
+              }
+            : {}),
+        },
+      });
+    },
     async approve(id) {
       const context = await repository.checkoutContext(id);
       const object = objects.get(context.externalObjectId);
@@ -261,6 +294,9 @@ export async function createLocalCheckoutFixture(backend, database, config) {
         attempts: await database.paymentCheckoutAttempt.count(),
         payments: await database.financialPayment.count(),
       };
+    },
+    declarationCount(userId) {
+      return database.challengeCompletionDeclaration.count({ where: { userId } });
     },
   };
 }

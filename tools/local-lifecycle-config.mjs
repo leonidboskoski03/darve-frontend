@@ -1,4 +1,4 @@
-/** Only the F10-02 local creator journey. Validate before reading source, secrets or Docker. */
+/** Exact controlled lifecycle compositions. Validate before reading source, secrets or Docker. */
 export function assertLifecycleComposition({
   task,
   port,
@@ -16,17 +16,23 @@ export function assertLifecycleComposition({
   support = false,
   coins = false,
 }) {
+  const funded = task === 'f10-03';
   if (
-    task !== 'f10-02' ||
+    (!funded && task !== 'f10-02') ||
     port !== 3310 ||
     !Array.isArray(origins) ||
     origins.length !== 1 ||
     origins[0] !== 'http://127.0.0.1:4175' ||
-    [collection, review, reporting, terms].some((value) => value !== true) ||
-    [overlay, contributionReads, checkout, support, coins].some((value) => value !== false) ||
+    [collection, review, terms].some((value) => value !== true) ||
+    reporting !== !funded ||
+    overlay !== funded ||
+    checkout !== funded ||
+    [contributionReads, support, coins].some((value) => value !== false) ||
     sandboxPayment !== undefined ||
     operatorOAuth !== undefined ||
     qrPublicOrigin !== undefined
   )
-    throw new Error('Creator lifecycle requires its exact provider-free F10-02 composition.');
+    throw new Error(
+      'Creator lifecycle requires its exact controlled F10-02 or F10-03 composition.',
+    );
 }
