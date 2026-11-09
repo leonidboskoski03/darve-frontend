@@ -37,6 +37,7 @@ export async function startLocalApi({
   port = 3310,
   build = true,
   task = 'f02-02',
+  qualityRun = false,
   overlay = false,
   terms = false,
   operatorOAuth,
@@ -56,6 +57,9 @@ export async function startLocalApi({
   const handoff = task === 'f06-06' || walkthrough;
   const seller = task === 'f06-06-seller';
   const staffLifecycle = task === 'f10-04';
+  if (qualityRun !== false && (qualityRun !== true || !staffLifecycle))
+    throw new Error('F10-05 requires the guarded disposable staff lifecycle.');
+  const evidenceTask = qualityRun ? 'f10-05' : task;
   const fundedLifecycle = task === 'f10-03' || staffLifecycle;
   const fundedSandbox = task === 'f10-03-sandbox';
   if (
@@ -487,7 +491,7 @@ export async function startLocalApi({
       pathToFileURL(path.join(backend, 'apps/api/dist/logging/logger.js')).href
     );
     let termsRevision = 1;
-    const termsFile = path.join(root, `artifacts.local/${task}/terms-${runId}.json`);
+    const termsFile = path.join(root, `artifacts.local/${evidenceTask}/terms-${runId}.json`);
     const writeTermsFixture = () => {
       const content = `Development acceptance fixture. Not a public policy.\n\nDocument synthetic-v${termsRevision}.\nAcknowledgement is used only to test exact version/hash handling in a disposable local database.\n\nLiteral markup: <b>plain text only</b>.`;
       mkdirSync(path.dirname(termsFile), { recursive: true });
@@ -709,7 +713,7 @@ export async function startLocalApi({
     const reviewFixture = review
       ? await (
           await import('./local-review-fixture.mjs')
-        ).createLocalReviewFixture(backend, deps.database)
+        ).createLocalReviewFixture(backend, deps.database, { sourceRemoval: qualityRun })
       : null;
     const walkthroughIdentity = walkthrough
       ? (await import('./local-walkthrough-identity.mjs')).walkthroughTwitch
@@ -768,9 +772,9 @@ export async function startLocalApi({
       migrations: migrationRows[0].count,
       source: provenance.sourceRevision,
     };
-    mkdirSync(path.join(root, `artifacts.local/${task}`), { recursive: true });
+    mkdirSync(path.join(root, `artifacts.local/${evidenceTask}`), { recursive: true });
     writeFileSync(
-      path.join(root, `artifacts.local/${task}/runtime.json`),
+      path.join(root, `artifacts.local/${evidenceTask}/runtime.json`),
       JSON.stringify(state, null, 2),
     );
     const { sessionCsrfProof } = await import(

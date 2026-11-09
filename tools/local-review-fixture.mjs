@@ -1,7 +1,10 @@
 import { pathToFileURL } from 'node:url';
+import { randomBytes, randomUUID } from 'node:crypto';
+import { mkdtemp, readdir, rmdir, unlink } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 /** Actual snapshot/processing repositories with explicitly synthetic evaluation model ports. */
-export async function createLocalReviewFixture(backend, database) {
+export async function createLocalReviewFixture(backend, database, { sourceRemoval = false } = {}) {
   const db = await import(
     pathToFileURL(path.join(backend, 'packages/database/dist/index.js')).href
   );
@@ -117,6 +120,46 @@ export async function createLocalReviewFixture(backend, database) {
       }),
   };
   return {
+    async removeClosedSource(userId, roundId) {
+      if (!sourceRemoval) throw new Error('Source removal requires the disposable staff lifecycle');
+      const { broadcastId, connectionId, provider, channelId } =
+        await database.collectionRound.findFirstOrThrow({
+          where: { id: roundId, userId, state: 'closed' },
+          select: { broadcastId: true, connectionId: true, provider: true, channelId: true },
+        });
+      const { createSourceErasureJournal } = await import(
+        pathToFileURL(path.join(backend, 'packages/integrations/dist/index.js')).href
+      );
+      const directory = await mkdtemp(path.join(tmpdir(), 'darve-f10-erasure-'));
+      const { journal, fingerprint } = createSourceErasureJournal(
+        directory,
+        'fixture',
+        new Map([['fixture', randomBytes(32)]]),
+      );
+      const id = randomUUID();
+      try {
+        const service = domain.createSourceRemovalService(
+          db.createSourceRemovalRepository(database),
+          fingerprint,
+          journal,
+        );
+        const result = await service.request({
+          id,
+          requestedAt: new Date().toISOString(),
+          scope: { userId, broadcastId, connectionId, provider, channelId },
+          kind: 'privacy_erasure',
+          target: 'context',
+          identity: broadcastId,
+          authorizationEvidenceHash: randomBytes(32).toString('hex'),
+          policyVersion: 'synthetic-f10-v1',
+        });
+        return { state: result.state, journalRecords: (await journal.read()).length };
+      } finally {
+        // Only remove the known file from the fresh directory allocated above.
+        for (const file of await readdir(directory)) await unlink(path.join(directory, file));
+        await rmdir(directory);
+      }
+    },
     async publish(userId, roundId) {
       await database.collectionRound.findFirstOrThrow({
         where: { id: roundId, userId, state: 'closed' },

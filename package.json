@@ -72,7 +72,8 @@
     "test:coins:combined": "node tools/local-coins-combined-acceptance.mjs ../tmp/backend-f06-checkout",
     "test:lifecycle:local": "node tools/local-creator-lifecycle-acceptance.mjs ../tmp/backend-f06-checkout",
     "test:funded-lifecycle:local": "node tools/local-funded-lifecycle-acceptance.mjs ../tmp/backend-f06-checkout",
-    "test:staff-lifecycle:local": "node tools/local-coins-combined-acceptance.mjs ../tmp/backend-f06-checkout --lifecycle"
+    "test:staff-lifecycle:local": "node tools/local-coins-combined-acceptance.mjs ../tmp/backend-f06-checkout --lifecycle",
+    "test:lifecycle-quality:local": "node tools/local-coins-combined-acceptance.mjs --quality"
   },
   "dependencies": {
     "@darve/contracts": "file:vendor/contracts/darve-contracts-0ac317d952ca621f164f33c12c423659623f6019.tgz",
