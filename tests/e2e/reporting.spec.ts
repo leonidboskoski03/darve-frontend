@@ -255,6 +255,21 @@ async function openDeclaration(page: Page) {
   ).toBeVisible();
 }
 const consent = 'I confirm I completed this challenge on its original or authorized stream.';
+test('synthetic owner public handoff stays on the product route and is withdrawn when source content is restricted', async ({
+  page,
+}) => {
+  const state = await scenario(page);
+  state.challenge.allowedActions = ['view_public'];
+  state.challenge.contributionUrl =
+    'https://untrusted.example/contribute/' + state.challenge.publicId;
+  await page.goto(fixture('challenge'));
+  const link = page.getByRole('link', { name: 'Open public contribution page' });
+  await expect(link).toHaveAttribute('href', '/contribute/' + state.challenge.publicId);
+  state.challenge.contentAvailability = 'unavailable';
+  await page.getByRole('button', { name: 'Refresh challenge details' }).click();
+  await expect(page.getByRole('heading', { name: 'Challenge content unavailable' })).toBeVisible();
+  await expect(link).toHaveCount(0);
+});
 test('synthetic operational home keeps round, overlapping windows and explicit OBS selection independent and read-only', async ({
   page,
 }) => {

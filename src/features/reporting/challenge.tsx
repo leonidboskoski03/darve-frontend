@@ -107,6 +107,12 @@ export function ChallengeDetail({
                 : 'Challenge content unavailable'}
             </h2>
             <p>{performanceLabel(value.performance.state)}</p>
+            {!query.isFetching &&
+            value.contentAvailability === 'available' &&
+            value.contributionUrl &&
+            value.allowedActions.includes('view_public') ? (
+              <a href={'/contribute/' + value.publicId}>Open public contribution page</a>
+            ) : null}
             <dl className="report-details">
               <div>
                 <dt>Accepted goal</dt>
