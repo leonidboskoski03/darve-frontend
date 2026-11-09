@@ -15,13 +15,19 @@ export function isDocumentationOnly(paths) {
   );
 }
 
-export function developmentScope(cwd = process.cwd(), base = 'HEAD^', head = 'HEAD') {
+export function developmentScope(
+  cwd = process.cwd(),
+  base = 'HEAD^',
+  head = 'HEAD',
+  env = process.env,
+) {
   // The checked-out PR merge commit's first parent is the target branch.
   // --no-renames includes both sides so code renamed to Markdown cannot skip code checks.
   let output;
   try {
     output = execFileSync('git', ['diff', '--name-only', '--no-renames', '-z', base, head, '--'], {
       cwd,
+      env,
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe'],
     });

@@ -195,9 +195,10 @@ try {
     assert.equal(result.status(), 201);
     return { id: (await result.json()).data.id, roundId };
   }
-  stage = 'actual owner controls';
+  stage = 'create accepted challenge for owner controls';
   const challenge = await accepted(),
     detail = await get('/api/challenges/' + challenge.id);
+  stage = 'load actual OBS owner controls';
   const creatorPage = await owner.newPage();
   creatorPage.on('pageerror', (error) => errors.push(error.name));
   await creatorPage.goto(origin + '/obs', { waitUntil: 'domcontentloaded' });
@@ -205,6 +206,7 @@ try {
     creatorPage.getByRole('heading', { name: 'OBS display', exact: true }),
   ).toBeVisible();
   await expect(creatorPage.getByRole('button', { name: 'Create private OBS link' })).toBeDisabled();
+  stage = 'issue reviewed private OBS link';
   await creatorPage.getByRole('checkbox', { name: /I understand this read-only link/ }).check();
   await creatorPage.getByRole('button', { name: 'Create private OBS link' }).click();
   const privateInput = creatorPage.getByLabel('Private browser-source URL');
@@ -215,6 +217,7 @@ try {
   checks.push(
     'actual creator session/terms/CSRF issues one original private link only after explicit review',
   );
+  stage = 'select accepted challenge for actual OBS display';
   await creatorPage.getByRole('button', { name: 'Review for display' }).first().click();
   await creatorPage.getByRole('checkbox', { name: /Show this selection/ }).check();
   await creatorPage.getByRole('button', { name: 'Confirm display selection' }).click();
@@ -228,6 +231,7 @@ try {
     'actual explicit owner selection binds exact accepted round/challenge without changing immutable challenge or money',
   );
   if (!process.argv.includes('--observe')) {
+    stage = 'read actual display from dashboard';
     const href = await creatorPage
       .getByRole('link', { name: 'View this display on the dashboard' })
       .getAttribute('href');

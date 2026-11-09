@@ -25,6 +25,7 @@ test('F06-06 isolates controlled readiness from existing seller verification and
   };
   for (const change of [
     { checkout: true },
+    { overlay: true },
     { operatorOAuth: {} },
     { collection: false },
     { sellerObservation: {} },
@@ -38,6 +39,21 @@ test('F06-06 isolates controlled readiness from existing seller verification and
     { port: 3000 },
   ])
     await assert.rejects(startLocalApi({ ...seller, ...change }), /exact disposable F06-06/);
+  const walkthrough = {
+    ...controlled,
+    task: 'f01-05',
+    origins: ['http://localhost:4177'],
+    overlay: true,
+  };
+  for (const change of [
+    { overlay: false },
+    { checkout: true },
+    { operatorOAuth: {} },
+    { sellerObservation: seller.sellerObservation },
+    { sandboxPayment: {} },
+    { port: 3000 },
+  ])
+    await assert.rejects(startLocalApi({ ...walkthrough, ...change }), /F01-05 composition/);
 });
 
 test('receiving fixture rejects unreviewed origins, ports and combined capabilities before startup', async () => {

@@ -10,6 +10,17 @@ import {
   runPolicy,
 } from './ci-policy.mjs';
 
+// A hook in a linked worktree exports repository-local Git variables. A
+// different cwd alone cannot keep those variables out of a fixture repository.
+const fixtureEnv = { ...process.env };
+for (const name of execFileSync('git', ['rev-parse', '--local-env-vars'], {
+  encoding: 'utf8',
+})
+  .trim()
+  .split(/\s+/)) {
+  delete fixtureEnv[name];
+}
+
 function removeFixture(root, parent) {
   const resolved = path.resolve(root);
   if (!resolved.startsWith(`${parent}${path.sep}ci-policy-`)) {
@@ -25,6 +36,7 @@ function fixture(run) {
   const git = (...args) =>
     execFileSync('git', ['-c', 'core.hooksPath=.fixture-hooks', ...args], {
       cwd: root,
+      env: fixtureEnv,
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe'],
     }).trim();
@@ -50,7 +62,13 @@ function fixture(run) {
     write('README.md');
     write('src/app/main.ts', 'export const value = 1;\n');
     commit();
-    run({ root, git, write, commit });
+    run({
+      root,
+      git,
+      write,
+      commit,
+      scope: (base) => developmentScope(root, base, 'HEAD', fixtureEnv),
+    });
   } finally {
     removeFixture(root, parent);
   }
@@ -74,7 +92,7 @@ test('prose allowlist is narrow and empty diffs are not docs-only', () => {
     assert(!isDocumentationOnly(paths));
 });
 test('real Git complete PR merge diff includes earlier code commits', () =>
-  fixture(({ git, write, commit, root }) => {
+  fixture(({ git, write, commit, scope }) => {
     git('switch', '-c', 'feat/sample');
     write('src/app/main.ts', 'export const value = 2;\n');
     commit();
@@ -83,32 +101,32 @@ test('real Git complete PR merge diff includes earlier code commits', () =>
     git('switch', 'dev');
     git('merge', '--no-ff', '--no-commit', 'feat/sample');
     commit();
-    assert.equal(developmentScope(root).docsOnly, false);
+    assert.equal(scope().docsOnly, false);
   }));
 test('real Git accepts prose-only changes and deletion', () =>
-  fixture(({ write, commit, root }) => {
+  fixture(({ write, commit, root, scope }) => {
     write('docs/file with spaces.md');
     commit();
-    assert.equal(developmentScope(root).docsOnly, true);
+    assert.equal(scope().docsOnly, true);
     rmSync(path.join(root, 'docs/file with spaces.md'));
     commit();
-    assert.equal(developmentScope(root).docsOnly, true);
+    assert.equal(scope().docsOnly, true);
   }));
 test('renaming code to Markdown retains the removed code path', () =>
-  fixture(({ root, commit }) => {
+  fixture(({ root, commit, scope }) => {
     renameSync(path.join(root, 'src/app/main.ts'), path.join(root, 'migration.md'));
     commit();
-    assert.equal(developmentScope(root).docsOnly, false);
+    assert.equal(scope().docsOnly, false);
   }));
 test('renaming Markdown to code selects code validation', () =>
-  fixture(({ root, commit }) => {
+  fixture(({ root, commit, scope }) => {
     renameSync(path.join(root, 'README.md'), path.join(root, 'src/app/new.ts'));
     commit();
-    assert.equal(developmentScope(root).docsOnly, false);
+    assert.equal(scope().docsOnly, false);
   }));
 test('missing Git base fails closed', () =>
-  fixture(({ root }) => {
-    assert.throws(() => developmentScope(root, 'missing-ref'), /Cannot determine/);
+  fixture(({ scope }) => {
+    assert.throws(() => scope('missing-ref'), /Cannot determine/);
   }));
 const repository = 'owner/darve-frontend';
 const pull = (source, headRepository = repository, base = 'main') => ({
@@ -154,7 +172,7 @@ test('stable recording requires main push and records exact Git source', () =>
     const script = path.resolve('tools/ci-policy.mjs');
     const summary = path.join(root, 'summary.txt');
     const env = {
-      ...process.env,
+      ...fixtureEnv,
       GITHUB_EVENT_NAME: 'push',
       GITHUB_REF_NAME: 'main',
       GITHUB_STEP_SUMMARY: summary,
