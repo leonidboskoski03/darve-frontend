@@ -2,7 +2,7 @@
 
 Start with [CURRENT_STATE](CURRENT_STATE.md), the relevant [task tracker](FRONTEND_TASK_TRACKER.md) row and [ARCHITECTURE](ARCHITECTURE.md). Follow [WORKFLOW](WORKFLOW.md). Use the table below to read only the owning documents for the authorized work. Historical test counts and reference folders do not establish current functionality.
 
-Current correction priority: [F01-04 product-coverage reconciliation](F01_REFERENCE_AND_COMPONENT_AUDIT.md#f01-04-product-coverage-reconciliation). Use its original-batch owners and the tracker before resuming F10-03.
+Use the [F10-06 handoff](F10_JOINT_ACCEPTANCE_IMPLEMENTATION.md#f10-06-local-qualification-and-f11-handoff) to distinguish qualified local journeys from the outstanding genuine and hosted work. The [F01-04 product matrix](F01_REFERENCE_AND_COMPONENT_AUDIT.md#f01-04-product-coverage-reconciliation) retains ownership of remaining legacy coverage decisions.
 
 ## Task routing
 
