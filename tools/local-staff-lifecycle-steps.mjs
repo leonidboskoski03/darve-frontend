@@ -205,6 +205,7 @@ export async function fundAndDeclareLifecycle({
   d,
   creatorRead,
   check,
+  inspectReceipt,
 }) {
   const challengePath = '/api/challenges/' + challenge.challengeId;
   await check(
@@ -249,6 +250,7 @@ export async function fundAndDeclareLifecycle({
       assert.equal((await creatorRead('/api/coins/account')).spendableBalance, '53');
       assert.equal((await d.inspect()).account.claims.length, 2);
       assert.equal(await api.checkoutFixture.declarationCount(creator.userId), 0);
+      await inspectReceipt?.({ guestContext, page, checkoutId: id });
       await guestContext.close();
     },
   );

@@ -76,9 +76,11 @@ export function ChallengeDetail({
         <a href="/challenges">Back to challenge history</a>
         <Button
           tone="secondary"
-          busy={query.isFetching}
+          aria-busy={query.isFetching || undefined}
+          aria-disabled={query.isFetching || undefined}
           disabled={!!selected}
           onClick={() => {
+            if (query.isFetching) return;
             setProblem(null);
             void query.refetch();
           }}

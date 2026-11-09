@@ -15,12 +15,21 @@ import {
   recoverLifecycle,
   fundAndDeclareLifecycle,
 } from './local-staff-lifecycle-steps.mjs';
+import {
+  auditMobile,
+  createQualityProbe,
+  inspectPrivateReceipt,
+  inspectReaderReplay,
+  installReaderReplay,
+  reconnectReader,
+} from './local-lifecycle-quality.mjs';
 
-const lifecycle = process.argv.includes('--lifecycle');
+const quality = process.argv.includes('--quality');
+const lifecycle = quality || process.argv.includes('--lifecycle');
 const task = lifecycle ? 'f10-04' : 'f09-07';
 
 // Exact F09-07 or F10-04. Real product entries/API/SQL/SSE/journal, controlled external facts.
-const directory = resolve('artifacts.local/' + task),
+const directory = resolve('artifacts.local/' + (quality ? 'f10-05' : task)),
   publicOrigin = 'http://127.0.0.1:4175',
   staffOrigin = 'http://localhost:4176',
   adminOrigin = 'http://localhost:3320';
@@ -51,6 +60,7 @@ let api,
   publicSite,
   staffSite,
   browser,
+  probe,
   phase = 'setup',
   result;
 const check = async (name, action) => {
@@ -85,8 +95,10 @@ try {
     asset,
   );
   api = await startLocalApi({
-    backend: process.argv[2] ?? '../tmp/backend-f06-checkout',
+    backend:
+      process.argv.slice(2).find((arg) => !arg.startsWith('--')) ?? '../tmp/backend-f06-checkout',
     task,
+    qualityRun: quality,
     checkout: lifecycle,
     coins: true,
     support: true,
@@ -152,6 +164,7 @@ try {
     preview: { host: 'localhost', port: 4176, strictPort: true },
   });
   browser = await chromium.launch();
+  probe = quality ? createQualityProbe(browser) : null;
   const owner = await runtime.seed('OWNER_ADMIN'),
     first = await runtime.seed(),
     second = await runtime.seed();
@@ -415,6 +428,7 @@ try {
       assert.equal(selected.status(), 200);
       displayContext = await browser.newContext({ viewport: { width: 1920, height: 1080 } });
       display = await displayContext.newPage();
+      if (quality) await installReaderReplay(display);
       await display.goto(grant.presentationUrl);
       await expect(display.locator('.obs-stage')).toHaveAttribute('data-template', 'standalone');
       bindingBefore = await creatorRead('/api/overlay-displays/' + grant.displayId);
@@ -609,7 +623,30 @@ try {
       d,
       creatorRead,
       check,
+      inspectReceipt: quality
+        ? async (receipt) => {
+            await check(
+              'real OBS funding stream ignores duplicate and delayed versions without reviving the QR',
+              () => inspectReaderReplay(display),
+            );
+            await inspectPrivateReceipt({ api, probe, check, ...receipt });
+          }
+        : undefined,
     });
+    if (quality) {
+      await check(
+        'OBS socket loss hides the display and cursor reconnect restores the declared challenge',
+        async () => {
+          await expect(
+            display.getByText('Streamer declared complete', { exact: true }),
+          ).toBeVisible();
+          await reconnectReader({ api, page: display, displayId: grant.displayId });
+          await probe.measure('obs-reader', displayContext, display.url(), (page) =>
+            page.locator('.obs-card'),
+          );
+        },
+      );
+    }
     await check(
       'expired recent staff assurance cannot extend this challenge and reload never replays a recovery',
       async () => {
@@ -719,6 +756,99 @@ try {
       ]);
     },
   );
+  if (quality) {
+    await check(
+      'connected creator, viewer and assigned staff routes meet mobile and local performance budgets',
+      async () => {
+        const challengePath = publicOrigin + '/challenges/' + challenge.challengeId;
+        const ticketPath = staffOrigin + '/tickets/' + ticketId;
+        const detail = (page) =>
+          page.getByRole('heading', { name: challenge.terms.text, exact: true });
+        const summary = (page) =>
+          page.getByRole('heading', { name: 'Creator coin context', exact: true });
+        await probe.measure('creator-challenge', creatorContext, challengePath, detail);
+        const viewer = await browser.newContext(devices['Pixel 7']);
+        await probe.measure('public-challenge', viewer, challenge.publicUrl, detail);
+        const guestPage = await viewer.newPage();
+        await guestPage.goto(challenge.publicUrl);
+        await expect(detail(guestPage)).toBeVisible();
+        await auditMobile(guestPage);
+        await creatorPage.goto(challengePath);
+        await expect(detail(creatorPage)).toBeVisible();
+        await auditMobile(creatorPage);
+        const refresh = creatorPage.getByRole('button', { name: 'Refresh challenge details' });
+        await refresh.focus();
+        const canonicalRead = creatorPage.waitForResponse(
+          (response) =>
+            response.url() === api.apiOrigin + '/api/challenges/' + challenge.challengeId &&
+            response.request().method() === 'GET',
+        );
+        await creatorPage.keyboard.press('Enter');
+        assert.equal((await canonicalRead).status(), 200);
+        await expect(refresh).toBeFocused();
+        const staff = await nextSupport.newPage();
+        await staff.goto(ticketPath);
+        await expect(summary(staff)).toBeVisible();
+        await auditMobile(staff);
+        await probe.measure('assigned-staff-ticket', nextSupport, ticketPath, summary);
+        await runtime.expire(second.id);
+        await staff.reload();
+        await expect(summary(staff)).toHaveCount(0);
+        await expect(staff.getByText('113 coins', { exact: true })).toHaveCount(0);
+        const expired = await nextSupport.request.get(
+          adminOrigin + '/admin/v1/support/tickets/' + ticketId + '/coins',
+        );
+        assert.equal(expired.status(), 403);
+        await viewer.close();
+      },
+    );
+    await check(
+      'source removal withdraws creator, public and OBS content while preserving money, declaration and coins',
+      async () => {
+        const creatorPath = '/api/challenges/' + challenge.challengeId;
+        const before = await creatorRead(creatorPath);
+        const financial = await api.checkoutFixture.audit();
+        const guest = await browser.newContext();
+        const page = await guest.newPage();
+        await page.goto(challenge.publicUrl);
+        const text = (target) =>
+          target.getByRole('heading', { name: challenge.terms.text, exact: true });
+        await expect(text(page)).toBeVisible();
+        const path =
+          '/api/public/challenges/' + new URL(challenge.publicUrl).pathname.split('/').at(-1);
+        const endpoint = api.apiOrigin + path;
+        const refresh = page.getByRole('button', { name: 'Refresh challenge', exact: true });
+        await page.route(endpoint, (route) => route.abort('internetdisconnected'));
+        await refresh.click();
+        await expect(page.getByRole('alert')).toBeVisible();
+        await expect(text(page)).toHaveCount(0);
+        await page.unroute(endpoint);
+        await refresh.click();
+        await expect(text(page)).toBeVisible();
+        assert.deepEqual(
+          await api.reviewFixture.removeClosedSource(creator.userId, challenge.roundId),
+          { state: 'restricted', journalRecords: 1 },
+        );
+        await refresh.click();
+        await expect(text(page)).toHaveCount(0);
+        await expect(page.getByRole('button', { name: 'Prepare checkout' })).toHaveCount(0);
+        await expect(display.locator('.obs-card')).toHaveCount(0);
+        await creatorPage.reload();
+        await expect(
+          creatorPage.getByRole('heading', { name: 'Challenge content unavailable' }),
+        ).toBeVisible();
+        await expect(text(creatorPage)).toHaveCount(0);
+        const after = await creatorRead(creatorPath);
+        assert.notEqual(after.contentAvailability, 'available');
+        assert.equal(after.funding.eligibleGross, before.funding.eligibleGross);
+        assert.equal(after.performance.verification, before.performance.verification);
+        assert.equal((await creatorRead('/api/coins/account')).balance, finalBalance);
+        assert.equal((await api.checkoutFixture.audit()).payments, financial.payments);
+        await guest.close();
+        await creatorPage.goto(publicOrigin + '/coins');
+      },
+    );
+  }
   await check(
     'reader revocation and independent sign-out clear private presentation without altering coin records',
     async () => {
@@ -732,6 +862,7 @@ try {
       );
       await display.reload();
       await expect(display.locator('.obs-card')).toHaveCount(0);
+      if (quality) await expect(display.locator('[data-obs-phase="denied"]')).toBeAttached();
       await creatorPage.getByRole('button', { name: 'Sign out', exact: true }).click();
       await expect.poll(() => api.revoked(creator.sessionId)).toBe(true);
       await expect(creatorPage.locator('.coins-balances')).toHaveCount(0);
@@ -767,6 +898,7 @@ try {
     finalBalance,
     finalLedger,
     network,
+    ...(quality ? { performance: probe.report(), qualification: 'f10-05' } : {}),
     createdAt: new Date().toISOString(),
   };
 } catch (error) {
@@ -784,6 +916,7 @@ try {
           .filter((line) => /^\s+at /.test(line))
           .slice(0, 3),
         checks,
+        performance: probe?.report(),
       },
       null,
       2,

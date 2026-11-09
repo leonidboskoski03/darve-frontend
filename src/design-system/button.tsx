@@ -18,7 +18,7 @@ export function Button({
       type={type}
       className={controlStyles(tone, className)}
       disabled={disabled || busy}
-      aria-busy={busy || undefined}
+      aria-busy={busy || props['aria-busy']}
     >
       {busy ? <span className="ds-spinner" aria-hidden="true" /> : null}
       {children}

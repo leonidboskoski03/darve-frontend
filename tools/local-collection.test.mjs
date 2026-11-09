@@ -3,6 +3,13 @@ import test from 'node:test';
 import { startLocalApi } from './local-api.mjs';
 import { assertLifecycleComposition } from './local-lifecycle-config.mjs';
 
+test('source removal quality mode requires its disposable staff lifecycle', async () => {
+  await assert.rejects(
+    startLocalApi({ backend: 'must-not-be-read', task: 'f10-03', qualityRun: true }),
+    /F10-05 requires the guarded disposable staff lifecycle/,
+  );
+});
+
 test('F06-06 isolates controlled readiness from existing seller verification and checkout', async () => {
   const base = { backend: 'must-not-be-read', origins: ['http://127.0.0.1:4175'], terms: true };
   const controlled = {
