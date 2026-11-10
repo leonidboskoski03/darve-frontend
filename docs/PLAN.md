@@ -33,7 +33,7 @@ F01 and F02 establish the basis for visible feature slices. F05–F07 can be ord
 
 ## Next step
 
-Current priority is the F01-04 coverage reconciliation and original-batch corrections below; F10-03 has a sequencing hold. The tracker and CURRENT_STATE identify completed work, prerequisite findings and the next action. See [CURRENT_STATE](CURRENT_STATE.md) for the current checkpoint. Do not start every batch merely because it appears in this plan.
+Current priority (2026-11-10) is F04-G04 preparation with backend B05-08: qualify 1,000 admitted source submissions first, then 10,000, through offline measurement, bounded processing and later separately coordinated native-model/product acceptance. A small connectivity smoke cannot establish the larger capacity. F02 foundation acceptance is reconciled; F10-03 is qualified within its recorded scope. The historical coverage correction sequence below retains its dated context. See [CURRENT_STATE](CURRENT_STATE.md) and the tracker for current priorities and remaining owners; a planned row is not authorization to start every batch.
 
 ## F07 mobile QR acceptance extension
 

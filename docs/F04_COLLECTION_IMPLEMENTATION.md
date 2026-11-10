@@ -211,3 +211,19 @@ This task starts on `feat/f04-04-collection-resume` from frontend dev `9506a906d
 All 102 desktop/mobile Chromium regressions across collection, review, reporting and creator entry passed. They include unavailable owner lookup, recovery from a reservation conflict, an empty exact lookup, the held key after a failed retry, and canonical Stop/version handling. Genuine provider collection and seller acceptance retain their separate owners.
 
 The first pre-push gate identified the prior source revision in the machine-readable route map. The final map records the two recovery operations and the changed collection source fingerprints. Exact browser artifact verification passes against that map.
+
+## F04-G04 scale and genuine pipeline handoff
+
+Preparation started 2026-11-10 from frontend dev `524aa87b67ad43bcb9367ba05808cf66e10d9ff2`, inspecting backend `0ac317d952ca621f164f33c12c423659623f6019`. The founder requested 1,000 admitted source submissions per round first, then 10,000. The previous 20-source configuration is B05-07's qualified narrow pilot; it is not the newly requested capacity. Counts of raw chat, admitted submissions, distinct inputs and resulting idea groups must remain separate.
+
+Backend [B05-08 assessment and acceptance](https://github.com/leonidboskoski03/darve-backend/blob/dev/docs/B05_08_SCALING_ASSESSMENT.md) owns the larger processing design and measurement. Inspection found source-count admission, direct-review/SQL bounds, encoded request/output limits, cross-batch grouping work, complete single-request ranking and finite call/budget/deadline limits. Six offline schema probes confirm configuration envelopes only. No larger processing profile or actual 1,000/10,000 run is qualified. Do not bypass the limits or silently analyze only the first submissions.
+
+The selected sequence is backend offline fixtures/measurement → bounded design → actual isolated 1,000 qualification → 10,000 qualification → separately coordinated native-model and product/live acceptance. Preserve all admitted source memberships, author credits, safety classifications, cross-batch equivalent ideas, the complete eligible result set and canonical publication. A proposed ranking redesign must resolve its contract/quality implications before adoption.
+
+F04-G04 remains incomplete until the product uses the qualified profile and permitted actual reader/model/receiving configuration to collect from an agreed stream, freeze, analyze, review/paginate complete results, shortlist and perform version-confirmed acceptance. Reload/recovery must preserve canonical state; late-page authors and source withdrawal must remain correct. Record actual provider, dataset shape, admitted/distinct/group counts, latency, calls/cost and concurrency rather than a generic claim of full integration. Twitch-only proof cannot establish YouTube/Kick reader acceptance.
+
+A smaller genuine connectivity smoke may happen first with an explicitly agreed scope and budget, labelled with its actual count. It does not satisfy the requested larger capacity or close B05-08. The earlier 20-message/US$1 question was unanswered and is superseded for planning; no spend, live stream, chat posting or provider consent follows from this assessment. No frontend screen or API behavior changed here.
+
+### Current restart state
+
+Markdown-only preparation shares branch `docs/f02-closure-and-live-preflight` with the F02 acceptance reconciliation. Existing application builds retain their prior qualification; no fresh runtime test is claimed. Original checkout dirty files and persistent data are preserved. No owned runtime was started. Documentation formatting/link/diff verification and exact-head PR checks precede integration. Next implementation work is B05-08's offline baseline and measurement, which needs no founder-operated provider screen. Coordinate a fresh stream/model window only when dependent processing/configuration is concrete and reviewable.
