@@ -4,6 +4,8 @@ Start with [CURRENT_STATE](CURRENT_STATE.md), the relevant [task tracker](FRONTE
 
 Use the [F10-06 handoff](F10_JOINT_ACCEPTANCE_IMPLEMENTATION.md#f10-06-local-qualification-and-f11-handoff) to distinguish qualified local journeys from the outstanding genuine and hosted work. The [F01-04 product matrix](F01_REFERENCE_AND_COMPONENT_AUDIT.md#f01-04-product-coverage-reconciliation) retains ownership of remaining legacy coverage decisions.
 
+The [cross-repository release readiness audit](https://github.com/leonidboskoski03/darve-backend/blob/dev/docs/RELEASE_READINESS.md) summarizes measured limits, feature activation gates and the proposed development sequence.
+
 ## Task routing
 
 | Work                                           | Owning records                                                                                                                                                                                                                                 |
