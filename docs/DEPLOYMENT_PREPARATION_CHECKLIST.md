@@ -2,6 +2,8 @@
 
 This record owns the deferred checklist moved from OPERATIONS; backend security, identity, financial and release owners remain authoritative. Local implementation does not close these gates. Current statuses belong to [FRONTEND_TASK_TRACKER](FRONTEND_TASK_TRACKER.md).
 
+Use the [cross-repository release readiness audit](https://github.com/leonidboskoski03/darve-backend/blob/dev/docs/RELEASE_READINESS.md) to select the first launch scope and sequence the open engineering, hosted and activation work.
+
 ## Deferred deployment-preparation checklist
 
 The founder explicitly deferred these prerequisites while local frontend/API integration proceeds. Resend is selected for staff email. Open items retain backend owners; they are not closed by a frontend skeleton.
