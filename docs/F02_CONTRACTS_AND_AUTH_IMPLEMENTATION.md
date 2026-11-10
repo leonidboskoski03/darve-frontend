@@ -169,6 +169,6 @@ Reviewed 2026-11-10 against [PLAN](PLAN.md), the [coverage matrix](F01_REFERENCE
 
 ### Reconciliation restart state
 
-Task branch `docs/f02-closure-and-live-preflight` starts from the integrated candidate above. The original frontend checkout retains its unrelated `.gitignore` edit; original backend changes and persistent data are untouched. This task changes Markdown only. Existing application builds/tests retain their dated owners; run changed-document formatting, documentation links and diff checks, with installed hooks/current-head hosted CI still required for integration. No server, browser, tunnel, container or paid call was started for this reconciliation.
+Task branch `docs/f02-closure-and-live-preflight` starts from the integrated candidate above. The original frontend checkout retains its unrelated `.gitignore` edit; original backend changes and persistent data are untouched. This task changes Markdown only. Existing application builds/tests retain their dated owners. Changed-document formatting, 501 local documentation links and diff checks pass; installed hooks/current-head hosted CI remain required for integration. No server, browser, tunnel, container or paid call was started for this reconciliation.
 
 Next is F04-G04 preparation linked to backend B05-08: assess and qualify 1,000 admitted submissions first, then 10,000. [F04's scaling handoff](F04_COLLECTION_IMPLEMENTATION.md#f04-g04-scale-and-genuine-pipeline-handoff) records the frontend acceptance boundary. A small genuine connectivity check cannot establish the requested capacity.
