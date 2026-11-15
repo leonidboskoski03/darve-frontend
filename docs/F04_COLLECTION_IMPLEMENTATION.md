@@ -214,13 +214,15 @@ The first pre-push gate identified the prior source revision in the machine-read
 
 ### F04-06 live analysis preview and published top ten
 
-Started 2026-11-15 on `feat/f04-live-analysis-preview` from frontend dev `67280bc`. Contracts and the route map are pinned to backend dev `7cbe43a74446d4361057045a50677006b9efa35a` (B05-09 Phase 4, PR #123). That revision adds the creator-only `GET /api/rounds/:id/analysis/events` stream and `AnalysisLiveEventSchema`.
+Started 2026-11-15 on `feat/f04-live-analysis-preview` from frontend dev `67280bc`. Contracts and the route map are pinned to backend dev `68d96d9bda70573ef55b977d51731579b0d91aa8`. That revision includes the creator-only `GET /api/rounds/:id/analysis/events` stream and `AnalysisLiveEventSchema` (B05-09 Phase 4, PR #123), admission totals on `round-state` (Phase 6, PR #124) and the lock-free live read (PR #125).
 
 While collecting, the round view shows **Top ideas right now**: up to ten safety-checked ideas with supporter counts, labelled "Live preview, not final", with no reasons or viewer identities. At close it shows the closing state, then replaces the preview with the published top ten and their reasons. Supporter counts update in fixed order during settlement, provisional results are marked, and a link opens review for acceptance. A failed round clears visible ideas. Viewer text renders as text. `services/realtime` owns the stream client: cookie credentials, schema and round validation, Last-Event-ID resume across the server's two-minute rotation, bounded backoff, and a stop once the result settles or the round fails.
 
-Verified locally: typecheck, lint of `src`, format, docs, contract artifact and route map, architecture, build, and 458 unit/component tests including 18 new stream, state and panel cases.
+Verified locally: typecheck, lint, format, docs, contract artifact and route map, architecture, build, CI-policy and operator checks, and 458 unit/component tests including 18 new stream, state and panel cases.
 
-**Open: connected acceptance.** `test:collection:local` against backend `7cbe43a` passes all 13 checks with the panel disabled. With the panel enabled it fails at varying later steps (resume, payout settings) because creator requests slow down. Each open stream re-reads the round every one to two seconds in a transaction that locks the creator row (`FOR UPDATE`), and the API pool has five connections. This is handed to backend B05-09 for a lighter live read. Do not merge this task until the connected run passes with the panel enabled.
+Connected acceptance: `test:collection:local` against backend `68d96d9` passed all 13 production-browser checks with the panel enabled, with no page errors (real PostgreSQL/Redis, 66 migrations). Against `7cbe43a` the same run had passed only with the panel disabled. With it enabled, each open stream re-read the round every one to two seconds while locking the creator row, which slowed the creator's other requests. Backend PR #125 removed that lock, shared reads per round and moved to wake-driven refresh. Two runs against its head and one against the merged dev passed.
+
+Limits: the local run uses a controlled reader without the analysis worker, so it proves connection, resume and coexistence with the round flow, not a populated preview. Populated preview, published and settlement rendering are covered by component tests with recorded stream frames. Genuine stream and model acceptance stays with F04-G04.
 
 ## F04-G04 scale and genuine pipeline handoff
 

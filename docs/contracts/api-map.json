@@ -1,5 +1,5 @@
 {
-  "sourceRevision": "7cbe43a74446d4361057045a50677006b9efa35a",
+  "sourceRevision": "68d96d9bda70573ef55b977d51731579b0d91aa8",
   "status": "B15/F09-02 aligns coin/template request revision limits and exports the strict existing history query; existing F08 recovery and authority handoffs retained. Ordinary activation remains separate.",
   "operations": [
     {
@@ -67,7 +67,7 @@
       ],
       "source": {
         "file": "apps/api/src/modules/analysis/analysis.routes.ts",
-        "line": 10,
+        "line": 11,
         "handler": "controller.disposition",
         "sha256": "20ba1d313af3331e67a2ed82391fcc571b7a09caffe728fa1f08a1f5f6847332"
       },
@@ -2939,8 +2939,8 @@
     "apps/admin-api/src/security/cookies.ts": "3d89106ebc53da73efc7f22f20e9c0754a16ebe3dd555d8ccc236ab7cdefb1e5",
     "apps/api/src/app.ts": "138192a8264c1dc17f91d92e694a3133abc035e231867ea1e2a2163cb1496b26",
     "apps/api/src/composition/broadcast-discovery.ts": "6a3ce2d33045c7f33bb7b4e9af5d1f5d27efde1dd60964f61207847967d8822d",
-    "apps/api/src/composition/collection.ts": "0a71046a02bc2ceedda1cfc85d55eade71e00ba6070c4cc36229e332b5bafb95",
-    "apps/api/src/composition/http-modules.ts": "3e90b08b0579971897776fed8c1594a2cd14985678af172227d41b6d8b1c4739",
+    "apps/api/src/composition/collection.ts": "b8bad356dcabb95af813cadb33ac41281141a6e486941a3399350f30546756fc",
+    "apps/api/src/composition/http-modules.ts": "ba2cae39fc96f4a5c9599270113e792bee883963b8cdc91756a7a5aabc234ab8",
     "apps/api/src/composition/identity-access.ts": "288b6c373ee4713f00c74051876715d37e0f0b8f57544b4bda5aa70af18913d9",
     "apps/api/src/composition/kick-webhook.ts": "11f97fa8f2b58145a43e0aa595bfd20229ff9b2d1aa6e31c31c41b23ae7c5390",
     "apps/api/src/composition/oauth-protocol.ts": "e7638e390059926acd897e9222875b35abe2ed5f9a67b55b8f425ce74cb575b5",
@@ -2953,13 +2953,13 @@
     "apps/api/src/composition/stripe-receiving.ts": "d63bdbd4e697eecd50d603ed3a5c8f3c707fdbb5b27a4a420ce43964d05cacb3",
     "apps/api/src/composition/support.ts": "f635627647e8721446036a64732d09d6bb4d133844c57b55c430d88f0d4f00bb",
     "apps/api/src/composition/templates.ts": "bcc201285404616a6a26d310566f251c2c0f26a03cf1ad9a5d64aac89065e894",
-    "apps/api/src/config/environment.ts": "45f5c336341820ac69a017afb40c22b5b390fbbead103eeabd7cd502827bae6a",
+    "apps/api/src/config/environment.ts": "bb7170ee0a64edc560a4a99d51743050e6c716b95a47d9b721923ed8b5cff7e1",
     "apps/api/src/config/oauth.ts": "eac1ad3c4b1e7a6f0494223e839c45b33b13a0202cee8dfa11872cbf78ac2fe7",
     "apps/api/src/config/terms.ts": "59e2df75f7ac664dac1067fe500798de31bdf9c66db7804afbe5a0fc7be76a42",
     "apps/api/src/index.ts": "6c5d0cd5d7b520744117313410c36de055993e94eec8700753d7a984462cf9fc",
     "apps/api/src/logging/logger.ts": "1f9732fd66414edbe9db21a567e58288ef4b7458632ee25436da69117ec842b7",
     "apps/api/src/middleware/errors.ts": "51ca427ea1325a4c090f0d23aa6391fcc2a4c9df4066621f01a28eb779a3f425",
-    "apps/api/src/modules/analysis/analysis-live.controller.ts": "86fd46c9b6d1333bff844eecfe2b11db6b15c95222a621e64009241ec73454ef",
+    "apps/api/src/modules/analysis/analysis-live.controller.ts": "e99684069e4960c7b8739af8ca6a9863b690c75adac6beadeab225fa7e34b2df",
     "apps/api/src/modules/analysis/analysis.controller.ts": "bb5929f9268b8c7d67587ac4a0458bebc60be424cf4a08a2e9677b1fb3f10454",
     "apps/api/src/modules/analysis/analysis.mapper.ts": "6a91682204dc02a453c755a423d20ed3b8fa3eb105cd6fe9146be18f651538d8",
     "apps/api/src/modules/analysis/analysis.routes.ts": "20ba1d313af3331e67a2ed82391fcc571b7a09caffe728fa1f08a1f5f6847332",
@@ -2982,7 +2982,7 @@
     "apps/api/src/modules/collection/collection-chat.controller.ts": "a7b9cae1e5216e3fe1462e171fb92cc687267092f56f899a90655dedaa709db4",
     "apps/api/src/modules/collection/collection-chat.mapper.ts": "14445bc3bfa9243859bea0c3f5ab9720912c51b64c8b17e23371de3b8cab50ec",
     "apps/api/src/modules/collection/collection.controller.ts": "1082e47e3ee679ea8113cd8c80ee7059a97706c7b11411fd8779d606ceffd4d6",
-    "apps/api/src/modules/collection/collection.mapper.ts": "e5864cc9590f0c6160ce30b32f4b331e059ec82ddce0e0ada089f715ec38d93a",
+    "apps/api/src/modules/collection/collection.mapper.ts": "37cd81681a099871cc8966d1bbbcc60adc07195c040890e6db612933c66ca80e",
     "apps/api/src/modules/collection/collection.routes.ts": "2672d8684ecfdb14c5d77df53e270a840244285aa031d7b73e97e2513d0d4848",
     "apps/api/src/modules/connections/broadcasts.mapper.ts": "8ec337952b3ce3821463fcfdfab1793dbce0e97493fdd6c04f885fdae13acaab",
     "apps/api/src/modules/connections/connections.controller.ts": "75d962751d123959e2c224d0815ff303263ee6a78ca3ccc76db82c378c76eaf1",
