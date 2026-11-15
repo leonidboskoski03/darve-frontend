@@ -16,6 +16,7 @@ import {
 import type { CreatorSnapshot } from '@/services/creator-session/index';
 import { CollectionProblem } from './error';
 import { useDisplayClock } from './use-display-clock';
+import { CollectionLiveIdeas } from './live-ideas';
 
 const title = (round: RoundDto) =>
   round.closeReason === 'PREPARATION_CANCELLED'
@@ -30,10 +31,12 @@ export function CollectionRound({
   client,
   snapshot,
   roundId,
+  origin,
 }: {
   client: CollectionClient;
   snapshot: CreatorSnapshot;
   roundId: string;
+  origin?: string | undefined;
 }) {
   const key = snapshot.scope.key(['collection-round', roundId]);
   const cache = snapshot.scope.queryClient;
@@ -272,6 +275,9 @@ export function CollectionRound({
           </div>
         </aside>
       </div>
+      {origin && (round.state === 'collecting' || round.state === 'closed') ? (
+        <CollectionLiveIdeas origin={origin} scope={snapshot.scope} roundId={round.id} />
+      ) : null}
       <div className="collection-bottom">
         <a href="/collection">Back to collection setup</a>
         <a href="/challenges">Challenge history</a>

@@ -79,6 +79,8 @@ export {
   type DashboardTotalsDto,
   type SuggestionDto,
   type AcceptSuggestionInput,
+  AnalysisLiveEventSchema,
+  type AnalysisLiveEvent,
   OverlayParamsSchema,
   OverlayBootstrapInputSchema,
   OverlayBootstrapResponseSchema,

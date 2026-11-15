@@ -81,7 +81,13 @@ export function Collection({
 }) {
   const client = useMemo(() => createCollectionClient(session), [session]);
   return roundId ? (
-    <CollectionRound key={roundId} client={client} snapshot={snapshot} roundId={roundId} />
+    <CollectionRound
+      key={roundId}
+      client={client}
+      snapshot={snapshot}
+      roundId={roundId}
+      origin={session.origin}
+    />
   ) : (
     <CollectionEntry client={client} snapshot={snapshot} onStarted={onStarted} />
   );

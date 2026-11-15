@@ -212,6 +212,16 @@ All 102 desktop/mobile Chromium regressions across collection, review, reporting
 
 The first pre-push gate identified the prior source revision in the machine-readable route map. The final map records the two recovery operations and the changed collection source fingerprints. Exact browser artifact verification passes against that map.
 
+### F04-06 live analysis preview and published top ten
+
+Started 2026-11-15 on `feat/f04-live-analysis-preview` from frontend dev `67280bc`. Contracts and the route map are pinned to backend dev `7cbe43a74446d4361057045a50677006b9efa35a` (B05-09 Phase 4, PR #123). That revision adds the creator-only `GET /api/rounds/:id/analysis/events` stream and `AnalysisLiveEventSchema`.
+
+While collecting, the round view shows **Top ideas right now**: up to ten safety-checked ideas with supporter counts, labelled "Live preview, not final", with no reasons or viewer identities. At close it shows the closing state, then replaces the preview with the published top ten and their reasons. Supporter counts update in fixed order during settlement, provisional results are marked, and a link opens review for acceptance. A failed round clears visible ideas. Viewer text renders as text. `services/realtime` owns the stream client: cookie credentials, schema and round validation, Last-Event-ID resume across the server's two-minute rotation, bounded backoff, and a stop once the result settles or the round fails.
+
+Verified locally: typecheck, lint of `src`, format, docs, contract artifact and route map, architecture, build, and 458 unit/component tests including 18 new stream, state and panel cases.
+
+**Open: connected acceptance.** `test:collection:local` against backend `7cbe43a` passes all 13 checks with the panel disabled. With the panel enabled it fails at varying later steps (resume, payout settings) because creator requests slow down. Each open stream re-reads the round every one to two seconds in a transaction that locks the creator row (`FOR UPDATE`), and the API pool has five connections. This is handed to backend B05-09 for a lighter live read. Do not merge this task until the connected run passes with the panel enabled.
+
 ## F04-G04 scale and genuine pipeline handoff
 
 Preparation started 2026-11-10 from frontend dev `524aa87b67ad43bcb9367ba05808cf66e10d9ff2`, inspecting backend `0ac317d952ca621f164f33c12c423659623f6019`. The founder requested 1,000 admitted source submissions per round first, then 10,000. The previous 20-source configuration is B05-07's qualified narrow pilot; it is not the newly requested capacity. Counts of raw chat, admitted submissions, distinct inputs and resulting idea groups must remain separate.

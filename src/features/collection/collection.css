@@ -312,3 +312,87 @@
     flex-direction: column;
   }
 }
+
+/* Live analysis: preview during the countdown, then the published top ten. */
+.collection-ideas {
+  margin-top: var(--space-6);
+  display: grid;
+  gap: var(--space-3);
+}
+.collection-ideas__heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.collection-panel .collection-ideas__heading h2 {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+}
+.collection-ideas__badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-pill);
+  color: var(--color-info);
+  background: var(--color-info-surface);
+}
+.collection-ideas__badge--provisional {
+  color: var(--color-warning);
+  background: var(--color-warning-surface);
+}
+.collection-ideas__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+.collection-idea {
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-medium);
+  background: var(--color-raised);
+}
+.collection-idea__rank {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-brand-readable);
+  text-align: center;
+  line-height: 1.5;
+}
+.collection-idea__body {
+  min-width: 0;
+}
+.collection-idea__title {
+  margin: 0;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.collection-idea__reason {
+  margin: var(--space-1) 0 0;
+  color: var(--color-muted);
+  font-size: var(--font-size-small);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.collection-idea__support {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-muted);
+  line-height: 1.5;
+}
+.collection-ideas__review {
+  justify-self: start;
+  font-weight: 600;
+}
