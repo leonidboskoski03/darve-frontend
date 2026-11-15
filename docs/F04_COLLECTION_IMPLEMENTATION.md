@@ -212,6 +212,18 @@ All 102 desktop/mobile Chromium regressions across collection, review, reporting
 
 The first pre-push gate identified the prior source revision in the machine-readable route map. The final map records the two recovery operations and the changed collection source fingerprints. Exact browser artifact verification passes against that map.
 
+### F04-06 live analysis preview and published top ten
+
+Started 2026-11-15 on `feat/f04-live-analysis-preview` from frontend dev `67280bc`. Contracts and the route map are pinned to backend dev `68d96d9bda70573ef55b977d51731579b0d91aa8`. That revision includes the creator-only `GET /api/rounds/:id/analysis/events` stream and `AnalysisLiveEventSchema` (B05-09 Phase 4, PR #123), admission totals on `round-state` (Phase 6, PR #124) and the lock-free live read (PR #125).
+
+While collecting, the round view shows **Top ideas right now**: up to ten safety-checked ideas with supporter counts, labelled "Live preview, not final", with no reasons or viewer identities. At close it shows the closing state, then replaces the preview with the published top ten and their reasons. Supporter counts update in fixed order during settlement, provisional results are marked, and a link opens review for acceptance. A failed round clears visible ideas. Viewer text renders as text. `services/realtime` owns the stream client: cookie credentials, schema and round validation, Last-Event-ID resume across the server's two-minute rotation, bounded backoff, and a stop once the result settles or the round fails.
+
+Verified locally: typecheck, lint, format, docs, contract artifact and route map, architecture, build, CI-policy and operator checks, and 458 unit/component tests including 18 new stream, state and panel cases.
+
+Connected acceptance: `test:collection:local` against backend `68d96d9` passed all 13 production-browser checks with the panel enabled, with no page errors (real PostgreSQL/Redis, 66 migrations). Against `7cbe43a` the same run had passed only with the panel disabled. With it enabled, each open stream re-read the round every one to two seconds while locking the creator row, which slowed the creator's other requests. Backend PR #125 removed that lock, shared reads per round and moved to wake-driven refresh. Two runs against its head and one against the merged dev passed.
+
+Limits: the local run uses a controlled reader without the analysis worker, so it proves connection, resume and coexistence with the round flow, not a populated preview. Populated preview, published and settlement rendering are covered by component tests with recorded stream frames. Genuine stream and model acceptance stays with F04-G04.
+
 ## F04-G04 scale and genuine pipeline handoff
 
 Preparation started 2026-11-10 from frontend dev `524aa87b67ad43bcb9367ba05808cf66e10d9ff2`, inspecting backend `0ac317d952ca621f164f33c12c423659623f6019`. The founder requested 1,000 admitted source submissions per round first, then 10,000. The previous 20-source configuration is B05-07's qualified narrow pilot; it is not the newly requested capacity. Counts of raw chat, admitted submissions, distinct inputs and resulting idea groups must remain separate.
