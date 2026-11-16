@@ -54,6 +54,7 @@ export {
   RoundParamsSchema,
   RoundResponseSchema,
   RoundRecoveryResponseSchema,
+  CollectionChatResponseSchema,
   type StartRoundInput,
   type RoundDto,
   SuggestionParamsSchema,

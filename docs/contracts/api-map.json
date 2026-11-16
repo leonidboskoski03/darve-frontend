@@ -1,5 +1,5 @@
 {
-  "sourceRevision": "68d96d9bda70573ef55b977d51731579b0d91aa8",
+  "sourceRevision": "04ce39d67f6eadc5caa565c43218419df2bb710f",
   "status": "B15/F09-02 aligns coin/template request revision limits and exports the strict existing history query; existing F08 recovery and authority handoffs retained. Ordinary activation remains separate.",
   "operations": [
     {
@@ -125,7 +125,7 @@
       "idempotency": "AcceptSuggestionIdempotencyKeySchema",
       "request": "AcceptSuggestionInputSchema; AcceptSuggestionParamsSchema",
       "query": "empty",
-      "response": "AcceptSuggestionResponseSchema",
+      "response": "AcceptSuggestionResponseSchema with optional OBS selection and chat dispatch outcomes",
       "successStatuses": [200, 201],
       "publicExports": [
         "AcceptSuggestionInputSchema",
