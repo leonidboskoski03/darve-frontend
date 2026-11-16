@@ -32,6 +32,9 @@
     "src/services/templates/fixture.test-helper.ts",
     "src/entities/overlay-template/index.ts",
     "src/entities/overlay-template/registry.ts",
-    "src/entities/overlay-template/verified-asset.ts"
+    "src/entities/overlay-template/verified-asset.ts",
+    "vite.design.config.ts",
+    "tools/design",
+    "src/services/realtime/analysis-live.test-support.ts"
   ]
 }

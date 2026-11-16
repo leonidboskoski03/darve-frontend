@@ -33,6 +33,7 @@ function rewrite(
   next();
 }
 export default defineConfig(({ mode }) => {
+  if (mode === 'design') throw new Error('Design mode is unavailable in the staff application.');
   const envDir = fileURLToPath(new URL('./env/staff', import.meta.url));
   const env = loadEnv(mode, envDir, 'STAFF_PUBLIC_');
   const api = process.env.STAFF_PUBLIC_API_ORIGIN ?? env.STAFF_PUBLIC_API_ORIGIN;
