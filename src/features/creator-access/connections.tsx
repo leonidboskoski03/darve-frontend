@@ -43,22 +43,66 @@ const purposeCopy = {
       'This ends the provider connection and may sign you out. Related content can become unavailable. This action does not confirm a refund or transfer funding.',
   },
 };
-const reasonLabel = (value: Connection['capabilities']['chatRead']) =>
+type Capability = Connection['capabilities']['chatRead'];
+type ReasonCode = NonNullable<Capability['reasonCode']>;
+
+// Codes meaning the creator still has to grant or renew access. Every other
+// unavailable code means access is granted and Darve is waiting on the stream.
+const accessNeeded = new Set<ReasonCode>([
+  'PROVIDER_UNCONFIGURED',
+  'PERMISSION_REQUIRED',
+  'REAUTHORIZATION_REQUIRED',
+  'GRANT_MISSING',
+  'TOKEN_REVOKED',
+  'TOKEN_EXPIRED',
+  'CONNECTION_UNLINKED',
+  'NOT_IMPLEMENTED',
+]);
+const waitingForStream = new Set<ReasonCode>([
+  'NOT_STARTED',
+  'OFFLINE',
+  'LIVE_CONTEXT_UNAVAILABLE',
+  'COLLECTOR_NOT_STARTED',
+]);
+const hasAccess = (value: Capability) =>
+  value.available || !value.reasonCode || !accessNeeded.has(value.reasonCode);
+
+const reasonLabels: Partial<Record<ReasonCode, string>> = {
+  PROVIDER_UNCONFIGURED: 'Provider not configured',
+  PERMISSION_REQUIRED: 'Permission needed',
+  REAUTHORIZATION_REQUIRED: 'Reconnect needed',
+  TOKEN_REVOKED: 'Reconnect needed',
+  TOKEN_EXPIRED: 'Reconnect needed',
+  GRANT_MISSING: 'Permission missing',
+  GRANT_REFRESHING: 'Refreshing permission',
+  BOT_UNCONFIGURED: 'DarveBot not configured',
+  BOT_REAUTHORIZATION_REQUIRED: 'DarveBot needs reconnecting',
+  BOT_DESTINATION_DENIED: 'Channel permission needed',
+  NOT_IMPLEMENTED: 'Unavailable',
+  NOT_STARTED: 'Checked when you go live',
+  OFFLINE: 'Channel is offline',
+  LIVE_CONTEXT_UNAVAILABLE: 'Checked when you go live',
+  COLLECTOR_NOT_STARTED: 'Checked when collection starts',
+  COLLECTOR_CONNECTING: 'Connecting to chat',
+  COLLECTOR_DISCONNECTED: 'Reconnecting to chat',
+  CONTEXT_STALE: 'Checking your stream',
+  CONTEXT_AMBIGUOUS: 'Checking your stream',
+  PROVIDER_UNAVAILABLE: 'Provider temporarily unavailable',
+  PROVIDER_RATE_LIMITED: 'Provider busy, retrying',
+};
+const reasonLabel = (value: Capability) =>
   value.available
     ? 'Available'
-    : ((
-        {
-          PROVIDER_UNCONFIGURED: 'Provider not configured',
-          PERMISSION_REQUIRED: 'Permission needed',
-          REAUTHORIZATION_REQUIRED: 'Reconnect needed',
-          BOT_UNCONFIGURED: 'DarveBot not configured',
-          BOT_DESTINATION_DENIED: 'Channel permission needed',
-          COLLECTOR_NOT_STARTED: 'Not checked until collection starts',
-          GRANT_MISSING: 'Permission missing',
-          NOT_IMPLEMENTED: 'Unavailable',
-          OFFLINE: 'Channel is offline',
-        } as Partial<Record<NonNullable<typeof value.reasonCode>, string>>
-      )[value.reasonCode] ?? 'Currently unavailable');
+    : ((value.reasonCode ? reasonLabels[value.reasonCode] : undefined) ?? 'Currently unavailable');
+// Chat reading: once access is granted, say so instead of a bare "unavailable".
+const chatReadLabel = (value: Capability) =>
+  value.available
+    ? 'Ready'
+    : hasAccess(value) && value.reasonCode && waitingForStream.has(value.reasonCode)
+      ? 'Allowed · starts when you go live'
+      : hasAccess(value)
+        ? `Allowed · ${reasonLabel(value).toLowerCase()}`
+        : reasonLabel(value);
 
 function ActionConfirmation({
   action,
@@ -251,7 +295,7 @@ export function Connections({
                         </StatusBadge>
                         <dl className="creator-capabilities">
                           <dt>Chat reading</dt>
-                          <dd>{reasonLabel(connection.capabilities.chatRead)}</dd>
+                          <dd>{chatReadLabel(connection.capabilities.chatRead)}</dd>
                           <dt>DarveBot posting</dt>
                           <dd>{reasonLabel(connection.capabilities.chatWrite)}</dd>
                           <dt>Live context</dt>
@@ -265,13 +309,15 @@ export function Connections({
                           >
                             Reconnect account
                           </Button>
-                          <Button
-                            tone="secondary"
-                            disabled={pending}
-                            onClick={() => selectAction({ connection, kind: 'streaming' })}
-                          >
-                            Allow chat reading
-                          </Button>
+                          {hasAccess(connection.capabilities.chatRead) ? null : (
+                            <Button
+                              tone="secondary"
+                              disabled={pending}
+                              onClick={() => selectAction({ connection, kind: 'streaming' })}
+                            >
+                              Allow chat reading
+                            </Button>
+                          )}
                           {provider.id === 'twitch' ? (
                             <Button
                               tone="secondary"
