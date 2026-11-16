@@ -7,6 +7,7 @@ import {
   SuggestionResponseSchema,
   AcceptSuggestionInputSchema,
   AcceptSuggestionResponseSchema,
+  CollectionChatResponseSchema,
   ChallengeResponseSchema,
   ChallengeAcceptancePolicyResponseSchema,
   contributionAmountMinor,
@@ -85,6 +86,17 @@ export function createSuggestionClient(session: CreatorSession) {
   };
   return {
     scope,
+    async chatStatus(roundId: string, signal: AbortSignal) {
+      if (!RoundParamsSchema.safeParse({ id: roundId }).success) invalid();
+      const { data } = await request({
+        path: `/api/rounds/${roundId}/chat`,
+        schema: CollectionChatResponseSchema,
+        success: [200],
+        signal,
+      });
+      if (data.roundId !== roundId) mismatch();
+      return data;
+    },
     async acceptancePolicy(signal: AbortSignal) {
       return (
         await request({

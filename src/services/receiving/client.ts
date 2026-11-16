@@ -249,27 +249,27 @@ export function createReceivingClient(session: CreatorSession) {
             })
           ).data,
       ),
-    revokeStripe: (expectedVersion: number) =>
+    revokeStripe: (expectedVersion: number, reconcile = false) =>
       mutate(async () => {
         const input = StripeReceivingRevokeInputSchema.safeParse({ expectedVersion });
         if (!input.success) return invalid();
         const result = await request({
-          path: base + 'stripe',
-          method: 'DELETE',
+          path: base + (reconcile ? 'stripe/reconcile' : 'stripe'),
+          method: reconcile ? 'POST' : 'DELETE',
           body: input.data,
           schema: StripeReceivingResponseSchema,
           success: [204],
         });
         if (result.kind !== 'empty') invalidHandoff();
       }),
-    revokePayPal: (expectedVersion: number) =>
+    revokePayPal: (expectedVersion: number, reconcile = false) =>
       mutate(async () => {
         const input = PayPalReceivingRevokeInputSchema.safeParse({ expectedVersion });
         if (!input.success) return invalid();
         return (
           await read({
-            path: base + 'paypal',
-            method: 'DELETE',
+            path: base + (reconcile ? 'paypal/reconcile' : 'paypal'),
+            method: reconcile ? 'POST' : 'DELETE',
             body: input.data,
             schema: PayPalReceivingResponseSchema,
             success: [200],

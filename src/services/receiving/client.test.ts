@@ -49,6 +49,19 @@ afterEach(() => {
   sessions.splice(0).forEach((session) => session.stop());
 });
 
+it('checks a stuck setup through the reconcile route without issuing Disconnect', async () => {
+  const { client, send } = await setup();
+  send
+    .mockResolvedValueOnce(new Response(null, { status: 204 }))
+    .mockResolvedValueOnce(json(envelope(paypal)));
+  await expect(client.revokeStripe(3, true)).resolves.toBeUndefined();
+  expect((await client.revokePayPal(4, true)).data.state).toBe('not_connected');
+  expect(send.mock.calls.slice(1).map(([url, req]) => [url, req?.method, req?.body])).toEqual([
+    [origin + '/api/payment-accounts/stripe/reconcile', 'POST', '{"expectedVersion":3}'],
+    [origin + '/api/payment-accounts/paypal/reconcile', 'POST', '{"expectedVersion":4}'],
+  ]);
+});
+
 it('keeps provider statuses distinct and parses the exact revocation responses', async () => {
   const { client, send } = await setup();
   const revoked = { ...paypal, state: 'revoked', version: 8 };

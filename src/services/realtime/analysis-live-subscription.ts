@@ -241,6 +241,16 @@ export function createAnalysisLiveSubscription(options: {
       };
     },
     start() {
+      // React StrictMode repeats effect setup after cleanup for the same scope.
+      // A new epoch fences the old reader and clears its private snapshot.
+      if (closed && phase === 'stopped' && !scope.signal.aborted) {
+        closed = false;
+        state = createAnalysisLiveState(roundId);
+        cursor = null;
+        attempts = 0;
+        error = null;
+        phase = 'idle';
+      }
       if (closed || running) return;
       if (scope.signal.aborted) {
         terminate('stopped');

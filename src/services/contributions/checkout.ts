@@ -272,7 +272,8 @@ export function createCheckoutCommands({
             if (
               receipt.paymentProvider !== 'stripe' ||
               target.hostname !== 'checkout.stripe.com' ||
-              !/^\/c\/pay\/cs_[A-Za-z0-9_]+$/.test(target.pathname)
+              // Stripe-hosted Checkout uses /c/pay/ or (newer) /g/pay/.
+              !/^\/[cg]\/pay\/cs_[A-Za-z0-9_]+$/.test(target.pathname)
             )
               reject('INVALID_CHECKOUT_DESTINATION', 'protocol');
           } else if (

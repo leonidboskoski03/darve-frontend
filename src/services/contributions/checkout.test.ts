@@ -178,10 +178,21 @@ describe('explicit guest checkout commands', () => {
       expect(() => f.commands.follow(result)).toThrow();
     },
   );
+  it('accepts the newer /g/pay/ Stripe-hosted Checkout path', async () => {
+    const value = wire();
+    value.data.nextAction = {
+      type: 'redirect',
+      url: 'https://checkout.stripe.com/g/pay/cs_test_SYNTHETIC#synthetic-provider-configuration',
+    };
+    const f = setup(vi.fn<typeof fetch>().mockResolvedValue(response(value)));
+    expect((await f.commands.resume(receipt())).available).toBe(true);
+  });
   it.each([
     'https://evil.test/c/pay/cs_test_a',
     'http://checkout.stripe.com/c/pay/cs_test_a',
     'https://user@checkout.stripe.com/c/pay/cs_test_a',
+    'https://checkout.stripe.com/x/pay/cs_test_a',
+    'https://evil.test/g/pay/cs_test_a',
   ])('rejects unsafe provider continuation %s', async (url) => {
     const value = wire();
     value.data.nextAction = { type: 'redirect', url };

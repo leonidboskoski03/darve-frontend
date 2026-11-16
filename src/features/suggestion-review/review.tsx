@@ -13,6 +13,7 @@ import {
 import { Credits } from './credits';
 import { AcceptDialog } from './accept-dialog';
 import { ChallengeStatus } from './challenge';
+import { AcceptanceStatus } from './acceptance-status';
 import './review.css';
 export type ReviewFilter = 'all' | 'recommended' | 'pinned' | 'dismissed';
 const states: Record<string, string> = {
@@ -40,7 +41,10 @@ export function SuggestionReview({
   const key = snapshot.scope.key(['suggestions', roundId]);
   const cache = snapshot.scope.queryClient;
   const [selected, setSelected] = useState<{ item: Suggestion; page: ReviewPage } | null>(null);
-  const [accepted, setAccepted] = useState<{ id: string; suggestionId: string } | null>(null);
+  const [accepted, setAccepted] = useState<Pick<
+    AcceptedChallenge,
+    'id' | 'roundId' | 'suggestionId' | 'display' | 'chat'
+  > | null>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   const triggers = useRef(new Map<string, HTMLButtonElement>());
   const returnFocus = useRef<string | null>(null);
@@ -115,7 +119,7 @@ export function SuggestionReview({
           : item.dismissed),
   );
   const onAccepted = (result: AcceptedChallenge) => {
-    setAccepted({ id: result.id, suggestionId: result.suggestionId });
+    setAccepted(result);
     setSelected(null);
     void query.refetch();
   };
@@ -230,7 +234,11 @@ export function SuggestionReview({
                       <Button
                         tone="secondary"
                         onClick={() =>
-                          setAccepted({ id: item.selectedChallengeId!, suggestionId: item.id })
+                          setAccepted((previous) =>
+                            previous?.id === item.selectedChallengeId
+                              ? previous
+                              : { id: item.selectedChallengeId!, roundId, suggestionId: item.id },
+                          )
                         }
                       >
                         View accepted challenge
@@ -297,6 +305,9 @@ export function SuggestionReview({
             )}
           </section>
         </>
+      )}
+      {accepted && (
+        <AcceptanceStatus key={accepted.id} accepted={accepted} client={client} session={session} />
       )}
       {accepted && available && (
         <ChallengeStatus
