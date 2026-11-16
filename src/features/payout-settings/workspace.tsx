@@ -27,7 +27,7 @@ type Setup = {
   version: number | null;
   state: Receiving['data']['state'];
 };
-type Target = { version: number; country: string | null };
+type Target = { version: number; country: string | null; reconcile: boolean };
 const formatter = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' });
 
 function ProviderCard({
@@ -65,6 +65,10 @@ function ProviderCard({
   const canVerify =
     account && !['unconfigured', 'not_connected', 'revoked'].includes(account.state);
   const canDisconnect = canVerify && account.version !== null;
+  const canStartOver =
+    provider === 'stripe'
+      ? account?.state === 'reconciliation_required'
+      : account?.state === 'pending';
   const reviewed =
     !!target &&
     !!canDisconnect &&
@@ -81,14 +85,16 @@ function ProviderCard({
         if (provider === 'stripe') await client.refreshStripe();
         else await client.refreshPayPal();
       } else if (target) {
-        if (provider === 'stripe') await client.revokeStripe(target.version);
-        else await client.revokePayPal(target.version);
+        if (provider === 'stripe') await client.revokeStripe(target.version, target.reconcile);
+        else await client.revokePayPal(target.version, target.reconcile);
       }
       if (!client.scope.signal.aborted)
         setNotice(
           kind === 'verify'
             ? 'Provider verification completed. Check the status above.'
-            : 'Disconnect request completed. Check the status above.',
+            : target?.reconcile
+              ? 'Setup check completed. Check the status above before starting a new setup.'
+              : 'Disconnect request completed. Check the status above.',
         );
     } catch (error) {
       if (!client.scope.signal.aborted) setProblem(receivingMessage(error));
@@ -209,18 +215,26 @@ function ProviderCard({
             tone="quiet"
             onClick={() => {
               setConfirmed(false);
-              setTarget({ version: account.version!, country: account.country });
+              setTarget({
+                version: account.version!,
+                country: account.country,
+                reconcile: canStartOver,
+              });
             }}
           >
-            Disconnect {name}
+            {canStartOver ? 'Start over' : 'Disconnect'} {name}
           </Button>
         ) : null}
       </div>
       {target ? (
         <Dialog
           open
-          title={'Disconnect ' + name}
-          description="Darve will stop using this connection for receiving. Review the connection before you confirm."
+          title={(target.reconcile ? 'Start over with ' : 'Disconnect ') + name}
+          description={
+            target.reconcile
+              ? 'Darve will check the setup with the provider. If the provider confirms the account, Darve will finish connecting it. Otherwise, an unbound setup can be closed so you can start again.'
+              : 'Darve will stop using this connection for receiving. Review the connection before you confirm.'
+          }
           onDismiss={() => {
             if (!busy) setTarget(null);
           }}
@@ -237,7 +251,11 @@ function ProviderCard({
                 disabled={busy || !reviewed}
                 onChange={(event) => setConfirmed(event.target.checked)}
               />{' '}
-              <span>I want to disconnect this receiving account.</span>
+              <span>
+                {target.reconcile
+                  ? 'I want Darve to check this setup before starting over.'
+                  : 'I want to disconnect this receiving account.'}
+              </span>
             </label>
             <div className="payout-actions">
               <Button
@@ -246,10 +264,10 @@ function ProviderCard({
                 disabled={!reviewed || !confirmed}
                 onClick={() => void command('revoke')}
               >
-                Confirm disconnect
+                {target.reconcile ? 'Check setup' : 'Confirm disconnect'}
               </Button>
               <Button tone="quiet" disabled={busy} onClick={() => setTarget(null)}>
-                Keep account
+                {target.reconcile ? 'Cancel' : 'Keep account'}
               </Button>
             </div>
           </div>
