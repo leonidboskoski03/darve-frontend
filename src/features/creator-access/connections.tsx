@@ -75,7 +75,7 @@ const reasonLabels: Partial<Record<ReasonCode, string>> = {
   TOKEN_EXPIRED: 'Reconnect needed',
   GRANT_MISSING: 'Permission missing',
   GRANT_REFRESHING: 'Refreshing permission',
-  BOT_UNCONFIGURED: 'DarveBot not configured',
+  BOT_UNCONFIGURED: 'Not active yet · Darve is still setting up DarveBot',
   BOT_REAUTHORIZATION_REQUIRED: 'DarveBot needs reconnecting',
   BOT_DESTINATION_DENIED: 'Channel permission needed',
   NOT_IMPLEMENTED: 'Unavailable',
