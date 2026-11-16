@@ -117,3 +117,34 @@ it('clears visible ideas when the round fails', async () => {
   expect(screen.queryByRole('list')).toBeNull();
   expect(screen.getByRole('status')).toHaveTextContent('Analysis could not finish');
 });
+it('renders preview after StrictMode repeats effect setup', async () => {
+  const { StrictMode } = await import('react');
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(() =>
+      Promise.resolve(
+        new Response(
+          new ReadableStream({
+            start(controller) {
+              controller.enqueue(
+                encoder.encode(
+                  wire(state('open')) + wire(preview(idea(1, 2, 'StrictMode preview'))),
+                ),
+              );
+            },
+          }),
+          { headers: { 'content-type': 'text/event-stream' } },
+        ),
+      ),
+    ),
+  );
+  const scope = createAuthorityScope('creator');
+  scopes.push(scope);
+  render(
+    <StrictMode>
+      <CollectionLiveIdeas origin="https://api.example.test" scope={scope} roundId={roundId} />
+    </StrictMode>,
+  );
+  expect(await screen.findByText('StrictMode preview')).toBeVisible();
+  expect(screen.getByRole('list', { name: 'Live preview of top ideas' })).toBeVisible();
+});
