@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { UseQueryResult } from '@tanstack/react-query';
 import { FlaskConical, Wallet } from 'lucide-react';
 import { Button } from '@/design-system/button';
@@ -286,6 +286,18 @@ export function PayoutSettings({ session }: { session: CreatorSession }) {
   const resume = useRef<HTMLButtonElement>(null);
   const stripe = useReceivingStatus(client, 'stripe');
   const paypal = useReceivingStatus(client, 'paypal');
+  const stripeState = stripe.data?.status.state;
+  const stripeIneligible =
+    window.location.hash === '#stripe-account-ineligible' &&
+    stripeState === 'reconciliation_required';
+  useEffect(() => {
+    if (
+      stripeState &&
+      stripeState !== 'reconciliation_required' &&
+      window.location.hash === '#stripe-account-ineligible'
+    )
+      window.history.replaceState(window.history.state, '', window.location.pathname);
+  }, [stripeState]);
   const current = setup && (flowProvider(setup.flow) === 'stripe' ? stripe : paypal);
   const allowed =
     !!current &&
@@ -315,6 +327,12 @@ export function PayoutSettings({ session }: { session: CreatorSession }) {
           <FlaskConical size={16} aria-hidden="true" /> Test environment
         </span>
       </header>
+      {stripeIneligible && (
+        <p role="status">
+          This Stripe account can't accept payments yet. Finish setup in Stripe or connect another
+          account.
+        </p>
+      )}
       <div className="payout-grid">
         <ProviderCard
           provider="stripe"

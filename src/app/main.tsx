@@ -19,7 +19,12 @@ if (
     window.location.search ||
     window.location.hash)
 )
-  window.history.replaceState(null, '', '/account/payments');
+  window.history.replaceState(
+    null,
+    '',
+    '/account/payments' +
+      (window.location.hash === '#stripe-account-ineligible' ? '#stripe-account-ineligible' : ''),
+  );
 const router = createAppRouter();
 
 createRoot(root).render(
