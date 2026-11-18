@@ -286,6 +286,9 @@ export function PayoutSettings({ session }: { session: CreatorSession }) {
   const resume = useRef<HTMLButtonElement>(null);
   const stripe = useReceivingStatus(client, 'stripe');
   const paypal = useReceivingStatus(client, 'paypal');
+  const stripeIneligible =
+    window.location.hash === '#stripe-account-ineligible' &&
+    stripe.data?.status.state === 'reconciliation_required';
   const current = setup && (flowProvider(setup.flow) === 'stripe' ? stripe : paypal);
   const allowed =
     !!current &&
@@ -315,6 +318,12 @@ export function PayoutSettings({ session }: { session: CreatorSession }) {
           <FlaskConical size={16} aria-hidden="true" /> Test environment
         </span>
       </header>
+      {stripeIneligible && (
+        <p role="status">
+          This Stripe account can't accept payments yet. Finish setup in Stripe or connect another
+          account.
+        </p>
+      )}
       <div className="payout-grid">
         <ProviderCard
           provider="stripe"
