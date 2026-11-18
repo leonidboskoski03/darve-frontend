@@ -1,6 +1,12 @@
 # Environments, security and release operations
 
-## Connected local creator workspace
+## Daily local development
+
+Start the canonical `darve-local` stack with `npm run local:up` from the sibling backend checkout. Run `npm run dev` or `npm run dev:staff` from this checkout.
+
+## Legacy connected acceptance harness
+
+`dev:connected` is an alias for the acceptance-only `dev:connected:acceptance` launcher. Its former pinned checkout was retired in M0. The acceptance scripts that still refer to it are tracked for M1-4.
 
 Use `npm.cmd run product:check` to check Docker, ports, the contract source and whether provider client pairs are present. The backend checkout at `../tmp/backend-f06-checkout` must match the frontend contract pin and have its dependencies installed. The launcher builds that checkout and starts the regular frontend and API. It reads only the three OAuth client pairs from `../darve-backend/.env`. A missing pair leaves that provider unavailable. The launcher supplies client credentials only to the API process.
 
