@@ -2,6 +2,7 @@ import { ArrowRight, Coins, MonitorPlay, Users } from 'lucide-react';
 import { ActionLink } from '@/design-system/action-link';
 import { Starfield } from '@/design-system/starfield';
 import { SequenceReveal } from '@/motion/sequence-reveal';
+import { RotatingCopy } from '@/motion/rotating-copy';
 import { DashboardIllustration } from './dashboard-illustration';
 import './landing.css';
 
@@ -14,7 +15,8 @@ export function Landing({ connectHref }: { connectHref: string }) {
           <h1 id="landing-title">
             <span>The Engagement Engine</span>
             <br />
-            for Your Viewers<span className="landing-hero__period">.</span>
+            for <RotatingCopy />
+            <span className="landing-hero__period">.</span>
           </h1>
         </SequenceReveal>
         <p className="landing-hero__description">

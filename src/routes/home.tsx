@@ -16,7 +16,12 @@ function SignedInEntry() {
   const { snapshot } = useCreatorSession();
   const { search } = useLocation();
   const callback = oauthReturnSearch(search);
-  if (snapshot.phase === 'loading') return <LoadingState label="Checking your session" />;
+  if (snapshot.phase === 'loading')
+    return (
+      <div className="message-page">
+        <LoadingState label="Checking your session" />
+      </div>
+    );
   if (snapshot.phase === 'authenticated')
     return <Navigate replace to={{ pathname: '/onboarding', search: callback }} />;
   if (callback) return <Navigate replace to={{ pathname: '/authorize', search: callback }} />;

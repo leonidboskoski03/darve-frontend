@@ -8,6 +8,7 @@ import {
   GuestBoundary,
 } from '@/features/contributions/index';
 import type { ContributionRuntime } from '@/services/contributions/index';
+import { useRouteEntrance } from '@/motion/use-route-entrance';
 
 function Configured({ runtime }: { runtime: ContributionRuntime }) {
   const { publicId, checkoutId } = useParams(),
@@ -19,6 +20,7 @@ function Configured({ runtime }: { runtime: ContributionRuntime }) {
     runtime.getSnapshot,
   );
   const main = useRef<HTMLElement>(null);
+  useRouteEntrance(main, location.pathname);
   useEffect(() => {
     main.current?.focus();
     document.title = (publicId ? 'Support a challenge' : 'Private receipt') + ' — Darve';
@@ -65,6 +67,11 @@ function Configured({ runtime }: { runtime: ContributionRuntime }) {
             }}
           />
         )}
+        <nav aria-label="Public policies" className="contribution-policy-links">
+          <a href="/legal/terms">Terms of Service</a>
+          <a href="/privacy">Privacy Policy</a>
+          <a href="/safety">Safety Guidelines</a>
+        </nav>
       </main>
     </div>
   );

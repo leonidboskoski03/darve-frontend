@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Panel } from '@/design-system/panel';
 import { ActionLink } from '@/design-system/action-link';
 import { Button } from '@/design-system/button';
+import { Disclosure } from '@/design-system/disclosure';
 import { createOverlayOwner } from '@/services/overlay/index';
 import type { CreatorSession, CreatorSnapshot } from '@/services/creator-session/index';
 
@@ -65,19 +66,29 @@ export function DashboardOverlay({
           </p>
         ) : null}
       </div>
-      <ActionLink tone="secondary" href={displayId ? '/obs?displayId=' + displayId : '/obs'}>
-        Open OBS setup
-      </ActionLink>
-      <Button
-        tone="quiet"
-        busy={preferences.isFetching || selection.isFetching}
-        onClick={() => {
-          void preferences.refetch();
-          if (displayId) void selection.refetch();
-        }}
-      >
-        Check OBS settings
-      </Button>
+      <div className="report-actions">
+        <ActionLink tone="secondary" href={displayId ? '/obs?displayId=' + displayId : '/obs'}>
+          Open OBS setup
+        </ActionLink>
+        <Button
+          tone="quiet"
+          busy={preferences.isFetching || selection.isFetching}
+          onClick={() => {
+            void preferences.refetch();
+            if (displayId) void selection.refetch();
+          }}
+        >
+          Check OBS settings
+        </Button>
+      </div>
+      <Disclosure label="OBS / Streamlabs step-by-step">
+        <ol>
+          <li>Open OBS setup and create your private display link.</li>
+          <li>In OBS or Streamlabs, add a Browser Source.</li>
+          <li>Paste the private link into the source URL.</li>
+          <li>Select a challenge in Darve and check the display on your scene.</li>
+        </ol>
+      </Disclosure>
     </Panel>
   );
 }

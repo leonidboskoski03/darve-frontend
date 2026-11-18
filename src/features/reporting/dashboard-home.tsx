@@ -1,6 +1,8 @@
 import { useState, type ReactNode } from 'react';
+import { Clock3 } from 'lucide-react';
 import { Button } from '@/design-system/button';
 import { Panel } from '@/design-system/panel';
+import { Disclosure } from '@/design-system/disclosure';
 import { StatusBadge } from '@/design-system/status-badge';
 import type { CreatorSession, CreatorSnapshot } from '@/services/creator-session/index';
 import {
@@ -38,7 +40,11 @@ function CurrentChallenges({
       ) : query.isPending || query.isRefetching ? (
         <p role="status">Checking current funding windows…</p>
       ) : items.size === 0 ? (
-        <p>No open funding windows were returned.</p>
+        <div className="dashboard-challenges-empty">
+          <Clock3 size={26} aria-hidden="true" />
+          <p>No open funding windows were returned.</p>
+          <span>Start a collection to receive viewer ideas.</span>
+        </div>
       ) : (
         <ul className="dashboard-challenges">
           {[...items.values()].map(({ challenge, serverTime }) => {
@@ -122,41 +128,50 @@ export function DashboardHome({
   receiving: ReactNode;
 }) {
   return (
-    <>
+    <div className="dashboard-home">
       <header className="report-heading">
-        <span>Your stream · Creator workspace</span>
         <h1>Dashboard</h1>
-        <p>
-          Manage your collection, follow accepted challenges, and check the services you use on
-          stream.
-        </p>
       </header>
+      <section className="dashboard-receiving" aria-label="Contribution setup">
+        <div>
+          <strong>Viewer contributions</strong>
+          <p>Manage receiving accounts for your challenges.</p>
+        </div>
+        {receiving}
+        <a href="/account/payments">Payout settings</a>
+      </section>
       <div className="dashboard-workspace">
         <div className="dashboard-workspace__stream">
+          <header className="dashboard-section-heading">
+            <h2>Start collection</h2>
+            <p>Choose a live stream and collect challenge ideas from chat.</p>
+          </header>
           {collection}
-          <CurrentChallenges session={session} scope={scope} />
         </div>
         <div className="dashboard-workspace__setup">
+          <header className="dashboard-section-heading">
+            <h2>Overlay (OBS / Streamlabs)</h2>
+            <p>Add Darve as a Browser Source before going live.</p>
+          </header>
           {obs}
-          <Panel title="Stream setup">
-            <h3>Streaming connections</h3>
-            {connections}
-            <p>
-              <a href="/integrations">Manage connections</a>
-            </p>
-            <h3>Receiving in the test environment</h3>
-            {receiving}
-            <p>
-              <a href="/account/payments">Open payout settings</a>
-            </p>
-            <nav className="dashboard-workspace__links" aria-label="Creator setup shortcuts">
-              <a href="/onboarding">Setup guide</a>
-              <a href="/account">Account settings</a>
-              <a href="/support">Creator support</a>
-            </nav>
-          </Panel>
         </div>
       </div>
-    </>
+      <section className="dashboard-challenge-section" aria-label="Challenges">
+        <header className="dashboard-section-heading dashboard-section-heading--row">
+          <h2>Challenges</h2>
+          <a href="/challenges">Challenge history</a>
+        </header>
+        <CurrentChallenges session={session} scope={scope} />
+      </section>
+      <Disclosure label="Streaming connections and setup">
+        {connections}
+        <nav className="dashboard-workspace__links" aria-label="Creator setup shortcuts">
+          <a href="/integrations">Manage connections</a>
+          <a href="/onboarding">Setup guide</a>
+          <a href="/account">Account settings</a>
+          <a href="/support">Creator support</a>
+        </nav>
+      </Disclosure>
+    </div>
   );
 }

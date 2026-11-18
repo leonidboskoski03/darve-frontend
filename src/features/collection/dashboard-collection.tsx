@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { Radio } from 'lucide-react';
 import { ActionLink } from '@/design-system/action-link';
 import { Button } from '@/design-system/button';
 import { Panel } from '@/design-system/panel';
@@ -87,10 +88,11 @@ export function DashboardCollection({
         ) : current.data ? (
           <CurrentRound id={current.data} client={client} scope={snapshot.scope} />
         ) : (
-          <>
+          <div className="dashboard-collection-empty">
+            <Radio size={28} aria-hidden="true" />
             <p>No active collection. Choose a stream to start collecting ideas.</p>
             <ActionLink href="/collection">Open collection setup</ActionLink>
-          </>
+          </div>
         )}
       </div>
       <Button

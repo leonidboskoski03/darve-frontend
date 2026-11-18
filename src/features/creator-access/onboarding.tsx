@@ -73,9 +73,19 @@ export function ConnectionSummary({
   );
 }
 
-function Step({ number, title, children }: { number: string; title: string; children: ReactNode }) {
+function Step({
+  number,
+  title,
+  children,
+  active,
+}: {
+  number: string;
+  title: string;
+  children: ReactNode;
+  active: boolean;
+}) {
   return (
-    <li>
+    <li hidden={!active}>
       <span className="onboarding-step-number" aria-hidden="true">
         {number}
       </span>
@@ -113,19 +123,17 @@ export function OnboardingGuide({
   collectionLink: ReactNode;
 }) {
   const accepted = terms.status === 'accepted';
+  const [step, setStep] = useState(0);
+  const steps = ['Account terms', 'Streaming connections', 'Viewer contributions', 'OBS display'];
+  const stepLabels = ['Terms', 'Accounts', 'Payouts', 'OBS'];
   return (
     <div className="onboarding-guide">
       <header className="onboarding-intro">
-        <p className="workspace-eyebrow">Creator setup</p>
         <h1>Set up your stream</h1>
-        <p>
-          Review your Darve account, connect the services you use, and get ready to run a challenge.
-        </p>
+        <p>Connect your accounts, add the overlay, and prepare your first challenge.</p>
         {notice ? <p role="status">{notice}</p> : null}
         {accepted ? (
           <div className="onboarding-actions">
-            {dashboardLink}
-            {collectionLink}
             <Button
               tone="quiet"
               onClick={() => {
@@ -137,8 +145,22 @@ export function OnboardingGuide({
           </div>
         ) : null}
       </header>
+      <nav className="onboarding-progress" aria-label="Setup progress">
+        {steps.map((title, index) => (
+          <button
+            type="button"
+            key={title}
+            aria-current={step === index ? 'step' : undefined}
+            aria-label={`Step ${index + 1}: ${title}`}
+            onClick={() => setStep(index)}
+          >
+            <span>{index + 1}</span>
+            {stepLabels[index]}
+          </button>
+        ))}
+      </nav>
       <ol className="onboarding-steps" aria-label="Setup steps">
-        <Step number="01" title="Account terms">
+        <Step number="01" title="Account terms" active={step === 0}>
           {accepted ? (
             <p>
               <StatusBadge tone="success">Accepted</StatusBadge> Version {terms.acceptedVersion}
@@ -153,7 +175,7 @@ export function OnboardingGuide({
           )}
           {termsLink}
         </Step>
-        <Step number="02" title="Streaming connections">
+        <Step number="02" title="Streaming connections" active={step === 1}>
           <p>
             Link your Twitch, YouTube or Kick account and review its chat permissions. Live stream
             checks run in Collection.
@@ -162,12 +184,13 @@ export function OnboardingGuide({
             <>
               <ConnectionSummary session={session} scope={scope} />
               {connectionsLink}
+              <div className="onboarding-actions">{collectionLink}</div>
             </>
           ) : (
             <p>Available after you accept the account terms.</p>
           )}
         </Step>
-        <Step number="03" title="Viewer contributions">
+        <Step number="03" title="Viewer contributions" active={step === 2}>
           <p>
             Connect and verify a receiving account for viewer contributions. These statuses are for
             the test environment.
@@ -181,7 +204,7 @@ export function OnboardingGuide({
             <p>Available after you accept the account terms.</p>
           )}
         </Step>
-        <Step number="04" title="OBS display">
+        <Step number="04" title="OBS display" active={step === 3}>
           <p>
             Open OBS Display for the instructions and private Browser Source link. Preview the
             source in OBS to check that it works.
@@ -189,6 +212,19 @@ export function OnboardingGuide({
           {accepted ? obsLink : <p>Available after you accept the account terms.</p>}
         </Step>
       </ol>
+      <div className="onboarding-pagination">
+        <Button tone="quiet" disabled={step === 0} onClick={() => setStep(step - 1)}>
+          Back
+        </Button>
+        <span>
+          Step {step + 1} of {steps.length}
+        </span>
+        {step < steps.length - 1 ? (
+          <Button onClick={() => setStep(step + 1)}>Continue setup</Button>
+        ) : (
+          dashboardLink
+        )}
+      </div>
     </div>
   );
 }

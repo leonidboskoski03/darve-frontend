@@ -16,7 +16,7 @@
   font-size: 0.75rem;
   letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: #b4aaff;
+  color: var(--color-brand-readable);
   font-weight: 600;
 }
 .collection-setup-grid {
@@ -73,8 +73,8 @@
   cursor: pointer;
 }
 .collection-platform:has(:checked) {
-  background: #21164c;
-  border-color: #a493ff;
+  background: color-mix(in srgb, var(--color-brand) 16%, var(--color-surface));
+  border-color: var(--color-brand-readable);
 }
 .collection-platform:focus-within {
   outline: 2px solid var(--color-focus);
@@ -120,7 +120,7 @@
 .collection-settings input[type='range'] {
   width: 100%;
   min-height: var(--control-height);
-  accent-color: #a493ff;
+  accent-color: var(--color-brand);
   margin: 0;
 }
 .collection-range-labels {
@@ -193,7 +193,7 @@
 .collection-help li:before {
   content: counter(steps, decimal-leading-zero);
   grid-row: span 2;
-  color: #b4aaff;
+  color: var(--color-brand-readable);
   font-variant-numeric: tabular-nums;
 }
 .collection-help strong {
@@ -215,7 +215,7 @@
 .collection-timer {
   width: min(15rem, 100%);
   aspect-ratio: 1;
-  border: 7px solid #6555b4;
+  border: 7px solid var(--color-brand);
   border-radius: 50%;
   margin: var(--space-4) auto var(--space-8);
   display: flex;
@@ -226,7 +226,7 @@
   color: var(--color-muted);
 }
 .collection-timer--collecting {
-  border-color: #a493ff;
+  border-color: var(--color-brand-readable);
 }
 .collection-timer--closed {
   border-color: var(--color-border);

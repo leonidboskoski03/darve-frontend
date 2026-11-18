@@ -19,6 +19,7 @@ import {
 import { Brand } from '@/design-system/brand';
 import { Button } from '@/design-system/button';
 import { Dialog } from '@/design-system/dialog';
+import { useRouteEntrance } from '@/motion/use-route-entrance';
 import './workspace-layout.css';
 
 const navigation = [
@@ -35,10 +36,10 @@ const navigation = [
   { href: '/support', label: 'Support', Icon: MessageSquare },
   { href: '/terms', label: 'Account terms', Icon: FileText },
 ];
-function Navigation({ close }: { close?: () => void }) {
+function Navigation({ close, primary = false }: { close?: () => void; primary?: boolean }) {
   return (
-    <nav className="workspace-navigation" aria-label="Creator workspace">
-      {navigation.map(({ href, label, Icon }) => (
+    <nav className="workspace-navigation" aria-label={primary ? 'Dashboard' : 'Creator workspace'}>
+      {(primary ? navigation.slice(0, 1) : navigation).map(({ href, label, Icon }) => (
         <NavLink key={href} to={href} end={href === '/account'} onClick={close}>
           <Icon size={19} aria-hidden="true" />
           {label}
@@ -50,7 +51,11 @@ function Navigation({ close }: { close?: () => void }) {
 export function Workspace({ children, session }: { children: ReactNode; session: ReactNode }) {
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
+  const title = [...navigation]
+    .reverse()
+    .find(({ href }) => pathname === href || pathname.startsWith(href + '/'))?.label;
   const main = useRef<HTMLElement>(null);
+  useRouteEntrance(main, pathname);
   useEffect(() => {
     main.current?.focus({ preventScroll: true });
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
@@ -62,15 +67,9 @@ export function Workspace({ children, session }: { children: ReactNode; session:
       </a>
       <aside className="workspace-sidebar">
         <Link className="brand-link" to="/" title="Darve home">
-          <Brand /> <span className="alpha-label">ALPHA</span>
+          <Brand />
         </Link>
-        <Navigation />
-        <p className="workspace-sidebar__foot">
-          Built for your live stream.
-          <Link to="/welcome">
-            Public homepage <ArrowUpRight size={15} aria-hidden="true" />
-          </Link>
-        </p>
+        <Navigation primary />
       </aside>
       <div className="workspace-body">
         <header className="workspace-topbar">
@@ -84,7 +83,7 @@ export function Workspace({ children, session }: { children: ReactNode; session:
             >
               <Menu size={20} aria-hidden="true" />
             </Button>
-            <span>Creator workspace</span>
+            <span>{pathname === '/account' ? 'My profile' : (title ?? 'Creator workspace')}</span>
           </div>
           <div className="workspace-session">{session}</div>
         </header>
@@ -99,6 +98,9 @@ export function Workspace({ children, session }: { children: ReactNode; session:
         onDismiss={() => setOpen(false)}
       >
         <Navigation close={() => setOpen(false)} />
+        <Link className="workspace-public-link" to="/welcome" onClick={() => setOpen(false)}>
+          Public homepage <ArrowUpRight size={15} aria-hidden="true" />
+        </Link>
       </Dialog>
     </div>
   );

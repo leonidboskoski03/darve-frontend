@@ -5,7 +5,7 @@ const CreatorBoundary = lazy(loadCreatorBoundary);
 
 export function CreatorRuntime({ origin }: { origin: string | undefined }) {
   return origin ? (
-    <Suspense fallback={<p role="status">Checking connection…</p>}>
+    <Suspense fallback={null}>
       <CreatorBoundary origin={origin}>
         <RootLayout />
       </CreatorBoundary>

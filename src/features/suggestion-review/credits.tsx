@@ -1,14 +1,12 @@
-import { useState } from 'react';
+import { Disclosure } from '@/design-system/disclosure';
 import type { Suggestion } from '@/services/suggestions/index';
 export function Credits({ item }: { item: Suggestion }) {
-  const [open, setOpen] = useState(false);
   return (
-    <details className="review-credits" onToggle={(event) => setOpen(event.currentTarget.open)}>
-      <summary>
-        All {item.authors.length} author credits · {item.sourceSubmissionIds.length} source
-        submissions
-      </summary>
-      {open && (
+    <Disclosure
+      className="review-credits"
+      label={`All ${item.authors.length} author credits · ${item.sourceSubmissionIds.length} source submissions`}
+    >
+      {() => (
         <>
           <ul>
             {item.authors.map((author, index) => (
@@ -25,8 +23,7 @@ export function Credits({ item }: { item: Suggestion }) {
               </li>
             ))}
           </ul>
-          <details>
-            <summary>Full source membership</summary>
+          <Disclosure label="Full source membership">
             <ul>
               {item.sourceSubmissionIds.map((id, i) => (
                 <li key={`${id}:${i}`}>
@@ -34,12 +31,12 @@ export function Credits({ item }: { item: Suggestion }) {
                 </li>
               ))}
             </ul>
-          </details>
+          </Disclosure>
           <p className="review-muted">
             Original message links are not available for these sources.
           </p>
         </>
       )}
-    </details>
+    </Disclosure>
   );
 }

@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation, useMatch } from 'react-router-dom';
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Menu } from 'lucide-react';
 import { Brand } from '@/design-system/brand';
 import { Button } from '@/design-system/button';
@@ -11,23 +11,46 @@ import {
   useCreatorSession,
 } from '@/features/session-status/index';
 import { Workspace } from './workspace-layout';
+import { WorkspaceAccountMenu } from './workspace-account-menu';
+import { useRouteEntrance } from '@/motion/use-route-entrance';
+
+const publicPolicies = [
+  { label: 'Terms of Service', href: '/legal/terms' },
+  { label: 'Privacy Policy', href: '/privacy' },
+  { label: 'Safety Guidelines', href: '/safety' },
+];
+
+function PublicPolicyLinks({ onNavigate }: { onNavigate?: () => void }) {
+  return publicPolicies.map(({ label, href }) => (
+    <a key={href} href={href} onClick={onNavigate}>
+      {label}
+    </a>
+  ));
+}
 
 function SessionLayout() {
   const { snapshot } = useCreatorSession();
-  return <Layout connected signedIn={snapshot.phase === 'authenticated'} />;
+  const showSession = snapshot.phase !== 'loading' && snapshot.phase !== 'signed_out';
+  return (
+    <Layout
+      signedIn={snapshot.phase === 'authenticated'}
+      session={showSession ? <SessionStatus /> : null}
+    />
+  );
 }
 
 export function RootLayout() {
   const creator = useContext(CreatorSessionContext);
-  return creator ? <SessionLayout /> : <Layout connected={false} signedIn={false} />;
+  return creator ? <SessionLayout /> : <Layout signedIn={false} />;
 }
 
-function Layout({ connected, signedIn }: { connected: boolean; signedIn: boolean }) {
+function Layout({ session, signedIn }: { session?: ReactNode; signedIn: boolean }) {
   const { pathname } = useLocation();
   const setupRoute = useMatch('/onboarding');
   const termsRoute = useMatch('/terms');
   const connectionsRoute = useMatch('/integrations');
   const main = useRef<HTMLElement>(null);
+  useRouteEntrance(main, pathname);
   const previous = useRef(pathname);
   const [menuOpen, setMenuOpen] = useState(false);
   useEffect(() => {
@@ -37,22 +60,25 @@ function Layout({ connected, signedIn }: { connected: boolean; signedIn: boolean
     }
   }, [pathname]);
   if (
-    (signedIn && (setupRoute || termsRoute || connectionsRoute)) ||
-    pathname === '/dashboard' ||
-    pathname === '/account' ||
-    pathname === '/account/payments' ||
-    pathname === '/obs' ||
-    pathname === '/coins' ||
-    pathname === '/templates' ||
-    pathname === '/support' ||
-    pathname.startsWith('/support/') ||
-    pathname === '/challenges' ||
-    pathname.startsWith('/challenges/') ||
-    pathname === '/collection' ||
-    pathname.startsWith('/collection/')
+    signedIn &&
+    (setupRoute ||
+      termsRoute ||
+      connectionsRoute ||
+      pathname === '/dashboard' ||
+      pathname === '/account' ||
+      pathname === '/account/payments' ||
+      pathname === '/obs' ||
+      pathname === '/coins' ||
+      pathname === '/templates' ||
+      pathname === '/support' ||
+      pathname.startsWith('/support/') ||
+      pathname === '/challenges' ||
+      pathname.startsWith('/challenges/') ||
+      pathname === '/collection' ||
+      pathname.startsWith('/collection/'))
   )
     return (
-      <Workspace session={connected ? <SessionStatus /> : <span>Server not connected</span>}>
+      <Workspace session={<WorkspaceAccountMenu key={pathname} />}>
         <Outlet />
       </Workspace>
     );
@@ -67,7 +93,7 @@ function Layout({ connected, signedIn }: { connected: boolean; signedIn: boolean
           <span className="alpha-label">ALPHA</span>
         </Link>
         <div className="site-header__actions">
-          {connected ? <SessionStatus /> : null}
+          {session}
           <Button
             tone="quiet"
             className="site-menu-button"
@@ -84,6 +110,10 @@ function Layout({ connected, signedIn }: { connected: boolean; signedIn: boolean
       </main>
       <footer className="site-footer">
         <p>© 2026 Darve. Built for streamers.</p>
+        <nav className="site-footer__links" aria-label="Help and policies">
+          <Link to="/help">Help</Link>
+          <PublicPolicyLinks />
+        </nav>
         <div className="site-socials">
           <a
             href="https://x.com/darveapp"
@@ -161,6 +191,10 @@ function Layout({ connected, signedIn }: { connected: boolean; signedIn: boolean
           <a href="/welcome#how-it-works" onClick={() => setMenuOpen(false)}>
             How it works
           </a>
+          <Link to="/help" onClick={() => setMenuOpen(false)}>
+            Help
+          </Link>
+          <PublicPolicyLinks onNavigate={() => setMenuOpen(false)} />
         </nav>
       </Dialog>
     </div>

@@ -12,6 +12,19 @@
   gap: var(--space-4);
   flex-wrap: wrap;
 }
+.support-page--list {
+  max-width: 37.5rem;
+}
+.support-page--list .support-heading {
+  align-items: flex-start;
+}
+.support-page--list .support-heading p {
+  margin: 0;
+}
+.support-page--list .support-compose {
+  padding: var(--space-8);
+  border-radius: var(--radius-large);
+}
 .support-heading h1 {
   margin: 0 0 var(--space-2);
   font-size: var(--font-size-page);

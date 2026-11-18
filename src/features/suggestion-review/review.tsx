@@ -211,6 +211,9 @@ export function SuggestionReview({
             ) : (
               shown.map((item) => (
                 <article className="review-row" key={item.id} aria-label={`Idea ${item.rank}`}>
+                  <span className="review-avatar" aria-hidden="true">
+                    {item.authors[0]?.displayName?.trim().slice(0, 1).toLocaleUpperCase() || '?'}
+                  </span>
                   <div>
                     <span className="review-eyebrow">
                       Idea {item.rank}

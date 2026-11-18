@@ -1,5 +1,7 @@
 # Current frontend state
 
+The current local worktree applies the founder-selected standalone appearance to the shared creator shell, dashboard, profile, setup, support, collection/review and contribution identity, plus consistent OBS panels, with the [screen comparison](STANDALONE_SCREEN_COMPARISON.md) recording source templates and adaptations. The audit now covers all 40 standalone templates and 43 rendered screen/state variants. Public FAQ and read-only source policies have local routes; authenticated consent remains separate. Account and setup use the existing identity/consent/provider projections. This work is local on `codex/frontend-manual-testing` and retains the backend contract pin.
+
 Checkpoint: 2026-11-10, Europe/Warsaw. F02 foundation acceptance is reconciled and closed; F04-G04 preparation now links to backend scaling work for 1,000 then 10,000 admitted submissions. F01-05 qualifies the connected creator walkthrough and the corrected core screens. F06-06 qualifies creator receiving. F10-03 qualifies the controlled funded lifecycle and fresh Stripe and PayPal sandbox payments through receipt reload, timing, funding, OBS projection and creator declaration. F10-04 qualifies connected staff recovery, support, rewards and template ownership. F10-05 qualifies local failure recovery, keyboard access and route performance. F10-06 reconciles the qualified local candidate and remaining external evidence. Stable deployment and ordinary/live payments remain disabled.
 
 ## Implemented

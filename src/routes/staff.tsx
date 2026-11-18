@@ -1,5 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom';
 import type { StaffAccess } from '@/services/staff-access/index';
+import { StaffLayout } from './staff-layout';
 
 export function createStaffRouter(access: StaffAccess) {
   const lazy = async () => {
@@ -34,36 +35,35 @@ export function createStaffRouter(access: StaffAccess) {
       },
     };
   };
-  return createBrowserRouter(
-    [
-      '/',
-      '/staff/enrol',
-      '/staff/verify-email',
-      '/tickets',
-      '/tickets/:ticketId',
-      '/reviews',
-      '/coins',
-    ].map((path) => ({
-      path,
-      lazy: path.startsWith('/tickets')
-        ? work
-        : path === '/reviews'
-          ? administration
-          : path === '/coins'
-            ? coins
-            : lazy,
-      hydrateFallbackElement: (
-        <main className="staff-shell">
-          <p role="status">Checking staff access…</p>
-        </main>
-      ),
-      errorElement: (
-        <main>
-          <h1>Staff access is unavailable</h1>
-          <p>The staff page could not be loaded.</p>
-          <a href="/">Reload staff access</a>
-        </main>
-      ),
-    })),
-  );
+  const routes = [
+    '/',
+    '/staff/enrol',
+    '/staff/verify-email',
+    '/tickets',
+    '/tickets/:ticketId',
+    '/reviews',
+    '/coins',
+  ].map((path) => ({
+    path,
+    lazy: path.startsWith('/tickets')
+      ? work
+      : path === '/reviews'
+        ? administration
+        : path === '/coins'
+          ? coins
+          : lazy,
+    hydrateFallbackElement: (
+      <main className="staff-shell">
+        <p role="status">Checking staff access…</p>
+      </main>
+    ),
+    errorElement: (
+      <main>
+        <h1>Staff access is unavailable</h1>
+        <p>The staff page could not be loaded.</p>
+        <a href="/">Reload staff access</a>
+      </main>
+    ),
+  }));
+  return createBrowserRouter([{ element: <StaffLayout />, children: routes }]);
 }

@@ -1,5 +1,6 @@
 import { test, expect, type Page, type Route } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import path from 'node:path';
 
 const fixture = 'http://127.0.0.1:4175/tests/fixtures/creator.html';
 const accountId = '11223344-1234-4234-8234-112233445566';
@@ -125,6 +126,11 @@ for (const [provider, label, target] of [
       .waitFor({ state: 'visible' });
     for (const name of ['Twitch', 'YouTube', 'Kick'])
       await expect(page.getByRole('button', { name: 'Continue with ' + name })).toBeEnabled();
+    if (provider === 'twitch' && process.env.F01_CAPTURE_DIR)
+      await page.screenshot({
+        path: path.join(process.env.F01_CAPTURE_DIR, 'login-' + test.info().project.name + '.png'),
+        fullPage: true,
+      });
     await page.getByRole('button', { name: 'Continue with ' + label }).click();
     await expect(
       page.getByRole('heading', { name: 'Synthetic provider destination' }),

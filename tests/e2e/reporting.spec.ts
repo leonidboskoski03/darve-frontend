@@ -16,7 +16,7 @@ import {
 } from '../../src/services/collection/fixture.test-helper';
 const base = 'http://127.0.0.1:4175/tests/fixtures/creator.html';
 const fixture = (view: string, extra = '') =>
-  `${base}?view=${view}&timeZone=UTC&challengeId=${ids.challenge}&roundId=${ids.round}${extra}`;
+  `${base}?view=${view}&reports=open&timeZone=UTC&challengeId=${ids.challenge}&roundId=${ids.round}${extra}`;
 const cors = {
   'access-control-allow-origin': 'http://127.0.0.1:4175',
   'access-control-allow-credentials': 'true',

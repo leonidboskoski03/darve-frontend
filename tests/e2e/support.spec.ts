@@ -1,5 +1,6 @@
 import { test, expect, type Page, type Route } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import path from 'node:path';
 import {
   ids,
   ticket,
@@ -181,6 +182,22 @@ async function openThread(page: Page) {
   await page.goto(fixture(ids.ticket));
   await expect(page.getByText('Synthetic support reply 2', { exact: true })).toBeVisible();
 }
+test.afterEach(async ({ page }, info) => {
+  if (!process.env.F01_CAPTURE_DIR || info.status !== 'passed') return;
+  const name = info.title.startsWith('support remains available')
+    ? 'support'
+    : info.title.startsWith('creates a durable ticket')
+      ? 'support-thread'
+      : null;
+  if (name) {
+    await page.keyboard.press('Escape');
+    await page.screenshot({
+      path: path.join(process.env.F01_CAPTURE_DIR, name + '-' + info.project.name + '.png'),
+      fullPage: true,
+    });
+  }
+});
+
 test('support remains available before terms acceptance and uses creator navigation', async ({
   page,
 }) => {

@@ -1,15 +1,17 @@
 .onboarding-guide {
   display: grid;
   gap: var(--space-6);
-  max-width: 56rem;
+  max-width: 37.5rem;
   margin-inline: auto;
 }
 .onboarding-intro {
-  padding-block-end: var(--space-5);
-  border-bottom: 1px solid var(--color-border);
+  padding: var(--space-8);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-large);
 }
 .onboarding-intro h1 {
-  margin: var(--space-2) 0 0;
+  margin: 0;
   font-size: var(--font-size-page);
   text-wrap: balance;
 }
@@ -29,19 +31,60 @@
 }
 .onboarding-steps {
   display: grid;
-  gap: var(--space-3);
+  gap: 0;
   margin: 0;
   padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-large);
+  background: var(--color-surface);
 }
 .onboarding-steps > li {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   gap: clamp(0.75rem, 3vw, 1.5rem);
-  padding: clamp(0.875rem, 3vw, 1.5rem);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-large);
+  padding: clamp(1rem, 3vw, 2rem);
   overflow-wrap: anywhere;
+}
+.onboarding-steps > li[hidden] {
+  display: none;
+}
+.onboarding-progress {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+.onboarding-progress button {
+  display: grid;
+  justify-items: start;
+  align-content: start;
+  gap: var(--space-2);
+  padding: var(--space-3) 0;
+  border: 0;
+  border-top: 2px solid var(--color-border);
+  background: transparent;
+  color: var(--color-muted);
+  font: inherit;
+  font-size: 0.75rem;
+  text-align: start;
+  cursor: pointer;
+}
+.onboarding-progress button[aria-current='step'] {
+  border-color: var(--color-brand);
+  color: var(--color-text);
+}
+.onboarding-progress span {
+  font-weight: var(--font-weight-strong);
+}
+.onboarding-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+.onboarding-pagination > span {
+  color: var(--color-muted);
+  font-size: 0.75rem;
 }
 .onboarding-step-number {
   color: var(--color-brand-readable);

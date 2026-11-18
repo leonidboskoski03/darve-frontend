@@ -4,11 +4,13 @@ import { createCollectionClient } from '@/services/collection/index';
 import type { CreatorSession, CreatorSnapshot } from '@/services/creator-session/index';
 import { Button } from '@/design-system/button';
 export function SourcePicker({
+  active,
   session,
   snapshot,
   value,
   onChange,
 }: {
+  active: boolean;
   session: CreatorSession;
   snapshot: CreatorSnapshot;
   value: string;
@@ -18,6 +20,7 @@ export function SourcePicker({
   const [connectionId, setConnectionId] = useState('');
   const accounts = useInfiniteQuery({
     queryKey: snapshot.scope.key(['creator-connections']),
+    enabled: active,
     initialPageParam: null as string | null,
     queryFn: ({ pageParam, signal }) => client.connections(pageParam, signal),
     getNextPageParam: (page) => page.nextCursor,
@@ -32,7 +35,7 @@ export function SourcePicker({
     rows.find((row) => row.id === connectionId) ?? (rows.length === 1 ? rows[0] : undefined);
   const streams = useInfiniteQuery({
     queryKey: snapshot.scope.key(['collection-streams', selected?.id, selected?.version]),
-    enabled: !!selected && !accounts.hasNextPage && !accounts.isError,
+    enabled: active && !!selected && !accounts.hasNextPage && !accounts.isError,
     initialPageParam: null as string | null,
     queryFn: ({ pageParam, signal }) => client.broadcasts(selected!.id, pageParam, signal),
     getNextPageParam: (page) => page.nextCursor,

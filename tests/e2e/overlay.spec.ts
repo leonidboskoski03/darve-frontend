@@ -195,6 +195,14 @@ test('synthetic OBS bootstrap sanitizes before reads, isolates assets and preser
   ).toBe(true);
   expect(await page.evaluate(() => [localStorage.length, sessionStorage.length])).toEqual([0, 0]);
   await expect(page.getByRole('navigation')).toHaveCount(0);
+  if (process.env.F01_CAPTURE_DIR)
+    await page.locator('.obs-card').screenshot({
+      path: join(
+        process.env.F01_CAPTURE_DIR,
+        'overlay-funded-' + test.info().project.name + '.png',
+      ),
+      omitBackground: true,
+    });
   if (test.info().project.name === 'desktop-chromium')
     await page
       .locator('.obs-card')

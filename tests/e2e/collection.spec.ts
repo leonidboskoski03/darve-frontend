@@ -150,8 +150,7 @@ for (const provider of ['twitch', 'youtube', 'kick'] as const)
     const start = page.getByRole('button', { name: 'Start collection', exact: true });
     await expect(start).toBeEnabled();
     const menu = page.getByRole('button', { name: 'Open workspace navigation' });
-    if (test.info().project.name === 'desktop-chromium') await expect(menu).toBeHidden();
-    else await expect(menu).toBeVisible();
+    await expect(menu).toBeVisible();
     if (provider === 'twitch') await capture(page, 'setup');
     await page.getByLabel('Collection duration').fill('0');
     await expect(start).toBeDisabled();

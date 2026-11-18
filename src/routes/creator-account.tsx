@@ -18,20 +18,14 @@ function Configured({ origin }: { origin: string }) {
   return (
     <AccountSettings
       displayName={user.displayName}
-      terms={user.termsStatus}
-      termsLink={
-        <Link className={controlStyles('secondary')} to="/terms">
-          Review account terms
-        </Link>
-      }
       connectionsLink={
         <Link className={controlStyles('secondary')} to="/integrations">
-          Manage streaming connections
+          Connections
         </Link>
       }
       payoutsLink={
         <Link className={controlStyles('secondary')} to="/account/payments">
-          Open payout settings
+          View payouts
         </Link>
       }
     />

@@ -12,8 +12,17 @@
   padding: clamp(1.5rem, 3vw, 2rem);
 }
 .creator-card--narrow {
-  max-width: 30rem;
+  max-width: 26.25rem;
   margin-inline: auto;
+}
+.creator-card--narrow > .brand {
+  display: flex;
+  justify-content: center;
+}
+.creator-card--narrow > h1,
+.creator-card--narrow > .creator-step,
+.creator-card--narrow > .creator-description {
+  text-align: center;
 }
 .creator-card--terms {
   max-width: 46rem;

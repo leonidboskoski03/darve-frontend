@@ -1,6 +1,6 @@
 .contribution-shell {
   display: grid;
-  grid-template-columns: minmax(17rem, 30%) minmax(0, 1fr);
+  grid-template-columns: min(23.75rem, 35%) minmax(0, 1fr);
   min-height: 100svh;
   background: var(--color-background);
   color: var(--color-text);
@@ -49,13 +49,39 @@
 }
 .contribution-heading {
   margin-bottom: 1.75rem;
+  text-align: center;
 }
 .contribution-heading h1 {
-  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-size: clamp(1.25rem, 3vw, 1.5rem);
   line-height: 1.16;
   letter-spacing: -0.04em;
   overflow-wrap: anywhere;
   margin: 0.6rem 0 1rem;
+}
+.contribution-creator-mark {
+  display: grid;
+  place-items: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  margin: 0 auto 1rem;
+  border-radius: 50%;
+  background: var(--color-brand);
+  color: #fff;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+.contribution-main:has(.contribution-creator-mark) {
+  max-width: 37rem;
+  padding-inline: clamp(1.5rem, 4vw, 3rem);
+}
+.contribution-policy-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 3rem;
+  color: var(--color-muted);
+  font-size: 0.75rem;
 }
 .contribution-heading p,
 .contribution-muted,
@@ -153,11 +179,9 @@
 .contribution-disclosure {
   margin: 1.5rem 0;
 }
-.contribution-disclosure summary,
-.contribution-card summary {
-  cursor: pointer;
+.contribution-disclosure .ds-disclosure__trigger,
+.contribution-card .ds-disclosure__trigger {
   font-size: 0.875rem;
-  font-weight: 600;
 }
 .contribution-card ul {
   padding-left: 1.25rem;
@@ -217,8 +241,7 @@
 }
 .contribution-shell a:focus-visible,
 .contribution-shell button:focus-visible,
-.contribution-shell input:focus-visible,
-.contribution-shell summary:focus-visible {
+.contribution-shell input:focus-visible {
   outline-color: var(--color-focus);
 }
 @media (max-width: 48rem) {

@@ -15,6 +15,7 @@ import {
   type HistoryFilter,
 } from '@/features/reporting/index';
 import { defaultReportingZone, reportingParameters } from '@/services/reporting/index';
+import { Disclosure } from '@/design-system/disclosure';
 function Configured() {
   const { controller, snapshot } = useCreatorSession(),
     { pathname } = useLocation(),
@@ -69,16 +70,30 @@ function Configured() {
         connections={<ConnectionSummary session={controller} scope={snapshot.scope} />}
         receiving={<ReceivingStatusSummary session={controller} />}
       />
-      <Dashboard
-        key={search.toString()}
-        {...runtime}
-        input={input}
-        onApply={(value) => {
-          const next = new URLSearchParams(reportingParameters(value));
-          if (displayId) next.set('displayId', displayId);
-          void setSearch(next);
+      <Disclosure
+        label="Reports and recent activity"
+        expanded={search.get('reports') === 'open'}
+        onExpandedChange={(open) => {
+          const next = new URLSearchParams(search);
+          if (open) next.set('reports', 'open');
+          else next.delete('reports');
+          void setSearch(next, { replace: true, preventScrollReset: true });
         }}
-      />
+      >
+        {() => (
+          <Dashboard
+            key={search.toString()}
+            {...runtime}
+            input={input}
+            onApply={(value) => {
+              const next = new URLSearchParams(reportingParameters(value));
+              next.set('reports', 'open');
+              if (displayId) next.set('displayId', displayId);
+              void setSearch(next);
+            }}
+          />
+        )}
+      </Disclosure>
     </>
   );
 }

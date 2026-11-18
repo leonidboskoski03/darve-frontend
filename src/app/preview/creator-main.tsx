@@ -21,6 +21,7 @@ for (const key of [
   'scope',
   'status',
   'displayId',
+  'reports',
 ]) {
   if (query.has(key)) reportingSearch.set(key, query.get(key)!);
 }

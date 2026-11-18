@@ -1,3 +1,4 @@
+import { Disclosure } from '@/design-system/disclosure';
 import { useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/design-system/button';
@@ -220,8 +221,7 @@ export function PrivateReceipt({
               </dl>
             </section>
           ))}
-          <details className="contribution-disclosure">
-            <summary>Receipt references</summary>
+          <Disclosure className="contribution-disclosure" label="Receipt references">
             <dl className="contribution-details">
               <div>
                 <dt>Checkout</dt>
@@ -233,7 +233,7 @@ export function PrivateReceipt({
               </div>
             </dl>
             <p>These identifiers are not access proofs. Keep the private cookie in this browser.</p>
-          </details>
+          </Disclosure>
         </>
       )}
       <ReceiptActions

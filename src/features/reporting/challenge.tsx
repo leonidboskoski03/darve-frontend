@@ -1,3 +1,4 @@
+import { Disclosure } from '@/design-system/disclosure';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/design-system/button';
@@ -193,14 +194,13 @@ export function ChallengeDetail({
               </p>
             )}
             {value.fundingWindow && (
-              <details>
-                <summary>Funding window policy</summary>
+              <Disclosure label="Funding window policy">
                 <p>{value.fundingWindow.disclosure}</p>
                 <p>
                   Original close: {value.fundingWindow.originalClosesAt}. Additional time:{' '}
                   {value.fundingWindow.cumulativeSeconds} seconds.
                 </p>
-              </details>
+              </Disclosure>
             )}
             {value.performanceAuthority && (
               <p className="report-muted">
@@ -210,8 +210,7 @@ export function ChallengeDetail({
                 : {value.performanceAuthority.broadcastId}
               </p>
             )}
-            <details>
-              <summary>All {value.authors.length} projected author credits</summary>
+            <Disclosure label={`All ${value.authors.length} projected author credits`}>
               <ul>
                 {value.authors.map((author, index) => (
                   <li key={index}>
@@ -219,7 +218,7 @@ export function ChallengeDetail({
                   </li>
                 ))}
               </ul>
-            </details>
+            </Disclosure>
             <div className="report-actions">
               <a href={'/collection/' + value.roundId + '/analytics'}>View round analytics</a>
               <a href={'/collection/' + value.roundId + '/suggestions'}>Review source ideas</a>

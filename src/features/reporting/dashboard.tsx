@@ -1,3 +1,4 @@
+import { Disclosure } from '@/design-system/disclosure';
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/design-system/button';
@@ -44,7 +45,6 @@ export function Dashboard({
     broadcastId: input.broadcastId ?? '',
   });
   const [problem, setProblem] = useState<unknown>(null);
-  const [choosingSource, setChoosingSource] = useState(false);
   const query = useQuery({
     queryKey: snapshot.scope.key(['dashboard', input]),
     enabled: !(validation instanceof ReportingError),
@@ -108,17 +108,17 @@ export function Dashboard({
             Choose both dates or leave both empty for the server's default period. Dates are civil
             days in the chosen timezone.
           </p>
-          <details onToggle={(event) => setChoosingSource(event.currentTarget.open)}>
-            <summary>Choose a broadcast</summary>
-            {choosingSource && (
+          <Disclosure label="Choose a broadcast">
+            {(open) => (
               <SourcePicker
+                active={open}
                 session={session}
                 snapshot={snapshot}
                 value={draft.broadcastId}
                 onChange={(broadcastId) => setDraft({ ...draft, broadcastId })}
               />
             )}
-          </details>
+          </Disclosure>
           <ReportProblem error={problem} />
           <div className="report-actions">
             <Button type="submit">Apply reporting filters</Button>

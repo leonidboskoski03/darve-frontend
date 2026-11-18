@@ -26,11 +26,7 @@ export const createAppRouter = ({
     })),
     {
       element: <CreatorRuntime origin={apiOrigin} />,
-      hydrateFallbackElement: (
-        <p role="status" className="message-page">
-          Opening Darve…
-        </p>
-      ),
+      hydrateFallbackElement: null,
       errorElement: <RouteError />,
       children: [
         { path: '/', lazy: () => import('./home') },
@@ -39,6 +35,11 @@ export const createAppRouter = ({
           lazy: async () => ({ Component: (await import('./home')).PublicHome }),
         },
         { path: '/authorize', lazy: () => import('./creator-connection') },
+        { path: '/help', lazy: () => import('./public-help') },
+        ...['/faq', '/privacy', '/safety', '/legal/terms'].map((path) => ({
+          path,
+          lazy: () => import('./public-policy'),
+        })),
         { path: '/onboarding', lazy: () => import('./onboarding') },
         { path: '/integrations', lazy: () => import('./creator-connection') },
         { path: '/terms', lazy: () => import('./creator-connection') },

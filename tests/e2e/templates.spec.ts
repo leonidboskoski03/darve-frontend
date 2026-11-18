@@ -437,8 +437,7 @@ test('logout removes held private intent', async ({ page }) => {
   await page.goto(base);
   await review(page);
   const logout = page.getByRole('button', { name: 'Sign out', exact: true });
-  if (!(await logout.isVisible()))
-    await page.getByRole('button', { name: 'Open workspace navigation' }).click();
+  await page.getByRole('button', { name: 'Account menu' }).click();
   await logout.click();
   await expect(page.getByRole('heading', { name: 'Review redemption', exact: true })).toHaveCount(
     0,

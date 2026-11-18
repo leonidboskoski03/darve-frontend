@@ -251,6 +251,7 @@ test('logout disposes coin work and no mutation controls are offered', async ({ 
   const state = await scenario(page);
   await page.goto(base);
   await expect(page.getByRole('heading', { name: 'Your balance' })).toBeVisible();
+  await page.getByRole('button', { name: 'Account menu' }).click();
   await page.getByRole('button', { name: 'Sign out', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Your balance' })).toHaveCount(0);
   expect(state.mutations).toEqual([]);

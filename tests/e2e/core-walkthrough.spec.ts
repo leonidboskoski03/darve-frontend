@@ -27,6 +27,45 @@ const terms = {
   content: 'Synthetic local walkthrough terms. No real account or payment.',
 };
 
+test('signed-out Help and published policies are reachable without opening creator terms', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.setViewportSize({ width: 320, height: 851 });
+  await page.goto('/welcome');
+  const footer = page.getByRole('navigation', { name: 'Help and policies' });
+  await page.getByRole('button', { name: 'Open navigation menu' }).press('Enter');
+  const menu = page.getByRole('dialog', { name: 'Explore Darve' });
+  await expect(menu.getByRole('link', { name: 'Account terms' })).toHaveAttribute('href', '/terms');
+  for (const [label, path] of [
+    ['Terms of Service', '/legal/terms'],
+    ['Privacy Policy', '/privacy'],
+    ['Safety Guidelines', '/safety'],
+  ]) {
+    await expect(menu.getByRole('link', { name: label })).toHaveAttribute('href', path);
+  }
+  await menu.getByRole('link', { name: 'Help', exact: true }).press('Enter');
+  await expect(menu).toBeHidden();
+  await expect(page).toHaveURL('/help');
+  await expect(page.getByRole('main')).toBeFocused();
+  await expect(footer.getByRole('link', { name: 'Privacy Policy' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'FAQ for the live darve.gg site' })).toHaveAttribute(
+    'href',
+    '/faq',
+  );
+
+  const connect = page.getByRole('button', { name: 'How do I connect my stream?' });
+  const receipt = page.getByRole('button', { name: 'How do I find my contribution receipt?' });
+  await connect.press('Enter');
+  await expect(connect).toHaveAttribute('aria-expanded', 'true');
+  await receipt.press('Space');
+  await expect(connect).toHaveAttribute('aria-expanded', 'false');
+  await expect(receipt).toHaveAttribute('aria-expanded', 'true');
+  await expect(
+    page.getByRole('main').getByRole('link', { name: 'Connect your stream' }),
+  ).toHaveCount(0);
+});
+
 async function scenario(page: Page, accepted = false) {
   const state = {
     accepted,
@@ -166,17 +205,15 @@ async function navigate(page: Page, label: string, heading: string) {
   });
   await expect(menu).toBeAttached();
   if (await menu.isVisible()) {
-    await menu.focus();
-    await page.keyboard.press('Enter');
+    await menu.press('Enter');
     const dialog = page.getByRole('dialog', { name: 'Creator workspace' });
-    await dialog.getByRole('link', { name: label, exact: true }).focus();
+    await dialog.getByRole('link', { name: label, exact: true }).press('Enter');
   } else {
     await page
       .getByRole('navigation', { name: 'Creator workspace' })
       .getByRole('link', { name: label, exact: true })
-      .focus();
+      .press('Enter');
   }
-  await page.keyboard.press('Enter');
   await expect(page.getByRole('heading', { name: heading, exact: true })).toBeVisible();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(page.getByRole('main')).toBeFocused();
@@ -229,17 +266,77 @@ test('synthetic core walkthrough joins reviewed terms, setup, account and empty 
   ]) {
     await navigate(page, label, heading);
     await audit(page);
+    if (label === 'Account') {
+      const settings = page.getByRole('main');
+      await expect(settings.getByRole('heading', { name: 'Account terms' })).toHaveCount(0);
+      const actions = await Promise.all(
+        ['Connections', 'View payouts'].map((name) =>
+          settings.getByRole('link', { name, exact: true }).boundingBox(),
+        ),
+      );
+      expect(actions[0]).toBeTruthy();
+      for (const action of actions) {
+        expect(action?.width).toBe(actions[0]?.width);
+        expect(action?.height).toBe(actions[0]?.height);
+      }
+    }
     if (label === 'OBS display')
       await expect(page.getByRole('button', { name: 'Create private OBS link' })).toBeDisabled();
     await capture(page, label.toLowerCase().replaceAll(' ', '-'), info.project.name);
+    if (label === 'Dashboard') await capture(page, 'dashboard-overview', info.project.name);
+    if (label === 'Setup guide' && process.env.F01_CAPTURE_DIR) {
+      for (const [number, title] of [
+        [2, 'Streaming connections'],
+        [3, 'Viewer contributions'],
+        [4, 'OBS display'],
+      ] as const) {
+        await page.getByRole('button', { name: `Step ${number}: ${title}`, exact: true }).click();
+        await capture(page, 'onboarding-' + number, info.project.name);
+      }
+    }
   }
+  const accountMenu = page.getByRole('button', { name: 'Account menu' });
+  await accountMenu.press('Enter');
+  const accountLinks = page.getByRole('navigation', { name: 'Account', exact: true });
+  await expect(accountLinks.getByRole('link', { name: 'My profile' })).toHaveAttribute(
+    'href',
+    '/account',
+  );
+  await expect(accountLinks.getByRole('link', { name: 'Support' })).toHaveAttribute(
+    'href',
+    '/support',
+  );
+  if (process.env.F01_CAPTURE_DIR)
+    await page.screenshot({
+      path: join(process.env.F01_CAPTURE_DIR, 'account-menu-' + info.project.name + '.png'),
+      fullPage: true,
+    });
+  await accountLinks.getByRole('link', { name: 'My profile' }).press('Escape');
+  await expect(accountMenu).toBeFocused();
+  await expect(accountLinks).toHaveCount(0);
+  await accountMenu.press('Enter');
   await page.getByRole('button', { name: 'Sign out', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Connect your stream to Darve' })).toBeVisible();
+  await expect(page.getByRole('navigation', { name: 'Creator workspace' })).toHaveCount(0);
   await expect(page.getByText('Synthetic reporting creator', { exact: false })).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Challenge history' })).toHaveCount(0);
   expect(state.mutations).toEqual(['POST /api/terms/acceptance', 'POST /api/session/logout']);
   expect(state.unexpected).toEqual([]);
   expect(state.errors).toEqual([]);
+});
+
+test('signed-out dashboard deep link shows sign-in outside the creator workspace', async ({
+  page,
+}) => {
+  const state = await scenario(page);
+  state.signedIn = false;
+  await page.goto('http://127.0.0.1:4175/tests/fixtures/creator.html?view=dashboard');
+  await expect(page).toHaveURL('http://127.0.0.1:4175/dashboard');
+  await expect(page.getByRole('heading', { name: 'Connect your stream to Darve' })).toBeVisible();
+  await expect(page.getByRole('banner').getByText('Signed out', { exact: true })).toHaveCount(0);
+  await expect(page.getByRole('navigation', { name: 'Creator workspace' })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Dashboard', exact: true })).toHaveCount(0);
+  expect(state.unexpected).toEqual([]);
 });
 
 test('synthetic long pages keep navigation in reach and full profile names available', async ({
@@ -256,6 +353,7 @@ test('synthetic long pages keep navigation in reach and full profile names avail
   await audit(page);
   await capture(page, 'account-long-name', info.project.name);
   await navigate(page, 'Dashboard', 'Dashboard');
+  await page.getByRole('button', { name: 'Reports and recent activity' }).click();
   await expect(page.getByRole('heading', { name: 'Recent activity', exact: true })).toBeVisible();
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
   expect(await page.evaluate(() => scrollY)).toBeGreaterThan(0);
@@ -265,9 +363,9 @@ test('synthetic long pages keep navigation in reach and full profile names avail
     const sidebar = page.locator('.workspace-sidebar');
     await expect(sidebar).toBeInViewport();
     expect((await sidebar.boundingBox())!.height).toBeLessThanOrEqual(720);
-    const termsLink = sidebar.getByRole('link', { name: 'Account terms', exact: true });
-    await termsLink.focus();
-    await expect(termsLink).toBeInViewport();
+    const dashboardLink = sidebar.getByRole('link', { name: 'Dashboard', exact: true });
+    await dashboardLink.focus();
+    await expect(dashboardLink).toBeInViewport();
   }
   if (process.env.F01_CAPTURE_DIR)
     await page.screenshot({
@@ -355,6 +453,7 @@ test('synthetic core navigation preserves pending, verified and revoked receivin
   await paypal.getByRole('button', { name: 'Verify PayPal receiving' }).click();
   await expect(paypal.getByText('Receiving verified', { exact: true })).toBeVisible();
   await navigate(page, 'Setup guide', 'Set up your stream');
+  await page.getByRole('button', { name: 'Step 3: Viewer contributions' }).click();
   await expect(
     page.getByRole('list', { name: 'Test receiving status' }).getByText('Receiving verified'),
   ).toBeVisible();

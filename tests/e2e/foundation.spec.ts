@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import path from 'node:path';
 
 test('standalone landing is keyboard reachable, responsive and exposes the real connection entry', async ({
   page,
@@ -43,4 +44,9 @@ test('reduced motion keeps all content visible without moving the heading', asyn
     page.getByRole('link', { name: 'Connect your stream', exact: true }).first(),
   ).toBeVisible();
   await expect(heading.locator('..')).toHaveCSS('transform', 'none');
+  if (process.env.F01_CAPTURE_DIR)
+    await page.screenshot({
+      path: path.join(process.env.F01_CAPTURE_DIR, 'landing-' + test.info().project.name + '.png'),
+      fullPage: true,
+    });
 });

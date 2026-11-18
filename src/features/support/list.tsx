@@ -48,7 +48,7 @@ export function TicketList({
     query.error instanceof SupportError &&
     [401, 403, 404].includes(query.error.problem.status ?? 0);
   return (
-    <div className="support-page">
+    <div className="support-page support-page--list">
       <header className="support-heading">
         <div>
           <h1>Support</h1>

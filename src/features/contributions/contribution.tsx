@@ -1,3 +1,4 @@
+import { Disclosure } from '@/design-system/disclosure';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/design-system/button';
 import {
@@ -47,16 +48,18 @@ export function Contribution({
   return (
     <>
       <header className="contribution-heading">
+        <span className="contribution-creator-mark" aria-hidden="true">
+          {value?.contentAvailability === 'available'
+            ? (value.creator.displayName?.trim().charAt(0).toUpperCase() ?? 'D')
+            : 'D'}
+        </span>
         <span className="contribution-kicker">A challenge worth showing up for</span>
         <h1>
           {value?.contentAvailability === 'available'
             ? 'Support ' + (value.creator.displayName ?? 'this creator')
             : 'Support a challenge'}
         </h1>
-        <p>
-          See the accepted challenge and its current funding status. No Darve account is required to
-          view it.
-        </p>
+        <p>Support a viewer idea. No Darve account needed.</p>
       </header>
       <Button
         tone="secondary"
@@ -122,8 +125,7 @@ export function Contribution({
               </div>
             </dl>
             {value.contentAvailability === 'available' && (
-              <details>
-                <summary>All {value.authors.length} projected author credits</summary>
+              <Disclosure label={`All ${value.authors.length} projected author credits`}>
                 <ul>
                   {value.authors.map((author, index) => (
                     <li key={index}>
@@ -131,7 +133,7 @@ export function Contribution({
                     </li>
                   ))}
                 </ul>
-              </details>
+              </Disclosure>
             )}
           </section>
           <section
@@ -161,8 +163,10 @@ export function Contribution({
               payment.
             </p>
           </section>
-          <details className="contribution-disclosure">
-            <summary>Accepted terms and funding details</summary>
+          <Disclosure
+            className="contribution-disclosure"
+            label="Accepted terms and funding details"
+          >
             <dl className="contribution-details">
               <div>
                 <dt>Accepted</dt>
@@ -214,7 +218,7 @@ export function Contribution({
               Completion is a streamer declaration. Funding, payment timing and performance are
               separate records.
             </p>
-          </details>
+          </Disclosure>
         </>
       )}
       <CheckoutFlow

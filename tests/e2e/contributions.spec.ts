@@ -8,6 +8,20 @@ import {
   privateReceiptFixture,
 } from '../../src/services/contributions/fixture.test-helper';
 const base = 'http://127.0.0.1:4175/tests/fixtures/contribution.html';
+test.afterEach(async ({ page }, info) => {
+  if (!process.env.F06_CAPTURE_DIR || info.status !== 'passed') return;
+  const name = info.title.startsWith('synthetic unavailable source')
+    ? 'public-unavailable'
+    : info.title.startsWith('synthetic deadline_passed')
+      ? 'public-closed'
+      : null;
+  if (name) {
+    await page.screenshot({
+      path: path.join(process.env.F06_CAPTURE_DIR, name + '-' + info.project.name + '.png'),
+      fullPage: true,
+    });
+  }
+});
 const cors = {
   'access-control-allow-origin': 'http://127.0.0.1:4175',
   'access-control-allow-credentials': 'true',

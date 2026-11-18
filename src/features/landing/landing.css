@@ -25,6 +25,26 @@
 .landing-hero__period {
   margin-inline-start: 0.16em;
 }
+.landing-rotating-copy {
+  display: inline-grid;
+  vertical-align: bottom;
+  white-space: nowrap;
+  text-align: start;
+}
+.landing-rotating-copy__measure,
+.landing-rotating-copy__word {
+  grid-area: 1 / 1;
+}
+.landing-rotating-copy__measure {
+  visibility: hidden;
+}
+.landing-rotating-copy__accessible {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
 .landing-hero__description {
   max-width: 62rem;
   margin: var(--space-8) auto 0;
@@ -41,6 +61,15 @@
   border-radius: var(--radius-pill);
   font-size: 0.9375rem;
   gap: var(--space-3);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .landing-hero__connect svg {
+    transition: translate var(--motion-fast) var(--motion-ease-out);
+  }
+
+  .landing-hero__connect:is(:hover, :focus-visible) svg {
+    translate: 0.2rem 0;
+  }
 }
 .landing-hero__providers {
   color: var(--color-muted);

@@ -23,4 +23,8 @@ F00's text mark, system font and simplified foundation layout are temporary engi
 
 ## Product coverage versus selected appearance
 
+The founder now requests the standalone appearance for the rebuilt matching screens. [Screen comparison](STANDALONE_SCREEN_COMPARISON.md) records the exact templates, applied changes and remaining data/interaction differences. This supersedes the earlier F creator appearance choice for these surfaces.
+
+The supplied signed-in darve.gg screenshots match the standalone `app/templates/layout.html` and `app/templates/pages/dashboard.html` structure. The rebuild now uses its Dashboard-only desktop sidebar, page title, compact profile dropdown, collection/overlay columns and full-width Challenges area. Additional rebuilt routes are reachable through the workspace navigation button. The current profile projection supplies a display name, so the dropdown uses an account icon and the profile card uses an initial fallback.
+
 The founder's 2026-11-05 reconciliation makes the standalone page/fragment/flow inventory the historical product-coverage reference, alongside the selected F/M/R/A appearance choices above. Selecting the F dashboard or M/R OBS did not exclude standalone onboarding, private profile/payout setup, operational navigation or public help/policy questions. [F01-04](F01_REFERENCE_AND_COMPONENT_AUDIT.md#f01-04-product-coverage-reconciliation) records each implemented, missing, adapted or contract/input-limited surface and its owner. Current backend rules still supersede obsolete historical authority/financial behavior; this is not a wholesale visual redesign or public-policy approval.
