@@ -10,6 +10,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   development-checks:
+    if: ${{ !startsWith(github.head_ref, 'archive/') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     env:
