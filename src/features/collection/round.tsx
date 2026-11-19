@@ -29,6 +29,12 @@ const title = (round: RoundDto) =>
         closed: 'Collection ended',
         failed: 'Collection could not start',
       }[round.state];
+const retryReasons = {
+  window_passed: 'The 30-minute analysis retry window has closed.',
+  limit_reached: 'This round has used both analysis retries.',
+  budget_exhausted: 'The analysis budget has been reached.',
+} as const;
+
 function awaitsRoundUpdate(round: RoundDto) {
   if (round.reviewState)
     return ['preparing', 'collecting', 'closing', 'analysing', 'delayed'].includes(
@@ -68,6 +74,11 @@ export function CollectionRound({
       void cache.invalidateQueries({ queryKey: key, exact: true });
     },
   });
+  const retryAnalysis = useMutation({
+    mutationFn: (generation: number) => client.retryAnalysis(roundId, generation),
+    retry: false,
+    onSettled: () => cache.invalidateQueries({ queryKey: key, exact: true }),
+  });
   const query = useQuery({
     queryKey: key,
     queryFn: async ({ signal }) => {
@@ -91,7 +102,9 @@ export function CollectionRound({
   const read = rejected ? undefined : query.data;
   const round = read?.round;
   const { now, visible } = useDisplayClock(
-    round?.state === 'preparing' || round?.state === 'collecting',
+    round?.state === 'preparing' ||
+      round?.state === 'collecting' ||
+      round?.analysisRetry?.eligibility === 'available',
   );
   const displayNow = read ? Math.max(now, read.receivedAt) : now;
   const fresh = read && visible && roundIsFresh(read, displayNow) && !query.isError;
@@ -103,6 +116,13 @@ export function CollectionRound({
     !stop.isPending;
   const reviewState =
     round?.reviewState === 'collecting' && seconds === 0 ? 'closing' : round?.reviewState;
+  const retry = round?.analysisRetry;
+  const eligibility =
+    retry?.eligibility === 'available' &&
+    read &&
+    Date.parse(read.serverTime) + displayNow - read.receivedAt >= Date.parse(retry.expiresAt)
+      ? 'window_passed'
+      : retry?.eligibility;
   const changed = confirmation && round && confirmation.version !== round.version;
   if (query.isPending) return <LoadingState label="Loading collection state" />;
   if (!round)
@@ -204,6 +224,18 @@ export function CollectionRound({
               </Button>
             ) : null}
           </div>
+          {retry && eligibility === 'available' ? (
+            <Button
+              busy={retryAnalysis.isPending}
+              disabled={retryAnalysis.isPending || query.isError}
+              onClick={() => retryAnalysis.mutate(retry.failedGeneration)}
+            >
+              Retry analysis
+            </Button>
+          ) : eligibility && eligibility !== 'available' ? (
+            <p className="collection-muted">{retryReasons[eligibility]}</p>
+          ) : null}
+          <CollectionProblem error={retryAnalysis.error} />
           {round.state === 'closed' ? (
             <a href={`/collection/${encodeURIComponent(round.id)}/suggestions`}>
               Review viewer ideas
