@@ -52,6 +52,7 @@ type Options = {
   provider?: 'twitch' | 'youtube' | 'kick';
   start?: (route: Route) => Promise<void>;
   stop?: (route: Route) => Promise<void>;
+  retryAnalysis?: (route: Route) => Promise<void>;
   read?: (route: Route) => Promise<void>;
   current?: (route: Route) => Promise<void>;
   startResult?: (route: Route) => Promise<void>;
@@ -124,6 +125,10 @@ async function scenario(page: Page, options: Options = {}) {
         phase = 'failed';
         await json(route, value(), 202);
       }
+      return;
+    }
+    if (url.pathname.endsWith('/analysis/retry') && options.retryAnalysis) {
+      await options.retryAnalysis(route);
       return;
     }
     if (url.pathname === '/api/rounds/' + ids.round) {
@@ -262,6 +267,62 @@ test('synthetic unavailable lookup blocks Start and a reservation conflict offer
   ).toBeVisible();
   expect(state.starts).toHaveLength(1);
 });
+test('owner retries failed analysis and sees when a subsequent retry is unavailable', async ({
+  page,
+}) => {
+  let status: 'available' | 'analysing' | 'limit_reached' | 'window_passed' = 'available';
+  let requests = 0;
+  await scenario(page, {
+    read: (route) => {
+      const round = roundFixture('closed', Date.now());
+      const live = status === 'analysing';
+      return json(route, {
+        ...round,
+        data: {
+          ...round.data,
+          reviewState: live ? 'analysing' : 'analysis_failed',
+          counts: { admittedSubmissions: 1, distinctSubmitters: 1 },
+          analysis: {
+            ...round.data.analysis,
+            analysisRunId: ids.connection,
+            state: live ? 'queued' : 'failed',
+          },
+          analysisRetry:
+            status === 'analysing'
+              ? undefined
+              : {
+                  eligibility: status,
+                  failedGeneration: 5,
+                  expiresAt: new Date(Date.now() + 60_000).toISOString(),
+                },
+        },
+      });
+    },
+    retryAnalysis: (route) => {
+      requests++;
+      expect(route.request().method()).toBe('POST');
+      expect(route.request().postDataJSON()).toEqual({ failedGeneration: 5 });
+      expect(route.request().headers()).toHaveProperty('x-csrf-token');
+      status = 'analysing';
+      return json(route, envelope({ attempt: 2, acceptedAt: new Date().toISOString() }), 202);
+    },
+  });
+  await page.goto(fixture + '&roundId=' + ids.round);
+  const retry = page.getByRole('button', { name: 'Retry analysis', exact: true });
+  await expect(retry).toBeVisible();
+  await retry.click();
+  await expect(page.getByText('Analysing viewer ideas', { exact: true })).toBeVisible();
+  await expect(retry).toHaveCount(0);
+  expect(requests).toBe(1);
+  status = 'limit_reached';
+  await expect(page.getByText('This round has used both analysis retries.')).toBeVisible();
+  await expect(retry).toHaveCount(0);
+  status = 'window_passed';
+  await page.getByRole('button', { name: 'Check status', exact: true }).click();
+  await expect(page.getByText('The 30-minute analysis retry window has closed.')).toBeVisible();
+  await expect(retry).toHaveCount(0);
+});
+
 test('creator refreshes the server review state after an early close', async ({ page }) => {
   let reviewState: 'collecting' | 'closing' | 'delayed' | 'analysis_failed' | 'ready' =
     'collecting';

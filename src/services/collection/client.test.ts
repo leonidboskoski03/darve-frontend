@@ -156,6 +156,19 @@ it('rejects a Start response for a different selected stream', async () => {
     CollectionError,
   );
 });
+it('binds analysis retry to the failed generation and preserves the server receipt', async () => {
+  const { client, send } = await setup();
+  const time = '2026-11-19T12:00:00.000Z';
+  const data = { attempt: 1, acceptedAt: time };
+  await expect(client.retryAnalysis(ids.round, -1)).rejects.toBeInstanceOf(CollectionError);
+  send.mockResolvedValueOnce(json({ schemaVersion: 1, serverTime: time, data }, 202));
+  await expect(client.retryAnalysis(ids.round, 5)).resolves.toMatchObject({ data });
+  expect(send).toHaveBeenCalledTimes(2);
+  expect(send.mock.calls[1]?.[1]).toMatchObject({
+    method: 'POST',
+    body: JSON.stringify({ failedGeneration: 5 }),
+  });
+});
 it('rejects a fabricated start attempt and invalid Stop path before sending', async () => {
   const { client, send } = await setup();
   await expect(client.start({ ...client.prepareStart(startInput) })).rejects.toBeInstanceOf(

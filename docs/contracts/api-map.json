@@ -1,5 +1,5 @@
 {
-  "sourceRevision": "9522e9324b1be1b2b4b067d2b93ce9f6c19f36c2",
+  "sourceRevision": "1fc22b856b8fb23a64e61b705365a42153dfb75d",
   "status": "B15/F09-02 aligns coin/template request revision limits and exports the strict existing history query; existing F08 recovery and authority handoffs retained. Ordinary activation remains separate.",
   "operations": [
     {
@@ -19,7 +19,32 @@
         "file": "apps/api/src/modules/analysis/analysis.routes.ts",
         "line": 8,
         "handler": "live (createAnalysisLiveHandler)",
-        "sha256": "20ba1d313af3331e67a2ed82391fcc571b7a09caffe728fa1f08a1f5f6847332"
+        "sha256": "1488455b0a677f737f213aeb229347cf522a7df93dda9bd564534e77e4aae83a"
+      },
+      "frontend": "F04"
+    },
+    {
+      "id": "public-api:POST /api/rounds/:id/analysis/retry",
+      "origin": "public-api",
+      "method": "POST",
+      "path": "/api/rounds/:id/analysis/retry",
+      "authority": "creator",
+      "csrf": "Origin + X-CSRF-Token",
+      "idempotency": "one retry per original failed generation",
+      "request": "AnalysisRetryInputSchema; RoundParamsSchema",
+      "query": "empty",
+      "response": "AnalysisRetryResponseSchema",
+      "successStatuses": [202],
+      "publicExports": [
+        "AnalysisRetryInputSchema",
+        "AnalysisRetryResponseSchema",
+        "RoundParamsSchema"
+      ],
+      "source": {
+        "file": "apps/api/src/modules/analysis/analysis.routes.ts",
+        "line": 9,
+        "handler": "controller.retry",
+        "sha256": "1488455b0a677f737f213aeb229347cf522a7df93dda9bd564534e77e4aae83a"
       },
       "frontend": "F04"
     },
@@ -42,9 +67,9 @@
       ],
       "source": {
         "file": "apps/api/src/modules/analysis/analysis.routes.ts",
-        "line": 9,
+        "line": 10,
         "handler": "controller.page",
-        "sha256": "20ba1d313af3331e67a2ed82391fcc571b7a09caffe728fa1f08a1f5f6847332"
+        "sha256": "1488455b0a677f737f213aeb229347cf522a7df93dda9bd564534e77e4aae83a"
       },
       "frontend": "F04"
     },
@@ -67,9 +92,9 @@
       ],
       "source": {
         "file": "apps/api/src/modules/analysis/analysis.routes.ts",
-        "line": 11,
+        "line": 13,
         "handler": "controller.disposition",
-        "sha256": "20ba1d313af3331e67a2ed82391fcc571b7a09caffe728fa1f08a1f5f6847332"
+        "sha256": "1488455b0a677f737f213aeb229347cf522a7df93dda9bd564534e77e4aae83a"
       },
       "frontend": "F04"
     },
@@ -592,10 +617,10 @@
       "csrf": "no mutation CSRF; Origin policy still applies",
       "idempotency": "none",
       "request": "none; RoundParamsSchema",
-      "query": "optional roundReview=1 for the shared server review state",
+      "query": "optional roundReview=1 for the shared server review state; optional analysisRetry=1 for owner retry eligibility",
       "response": "RoundResponseSchema",
       "successStatuses": [200],
-      "publicExports": ["RoundParamsSchema", "RoundResponseSchema"],
+      "publicExports": ["RoundParamsSchema", "RoundResponseSchema", "AnalysisRetryStatusSchema"],
       "source": {
         "file": "apps/api/src/modules/collection/collection.routes.ts",
         "line": 18,
@@ -2940,7 +2965,7 @@
     "apps/api/src/app.ts": "21f39d06c5cbf726c9ed03b34d15511aa87ef9dbd3e6e9d99babb18df29ce1ec",
     "apps/api/src/composition/broadcast-discovery.ts": "6a3ce2d33045c7f33bb7b4e9af5d1f5d27efde1dd60964f61207847967d8822d",
     "apps/api/src/composition/collection.ts": "b8bad356dcabb95af813cadb33ac41281141a6e486941a3399350f30546756fc",
-    "apps/api/src/composition/http-modules.ts": "7c47df59d536fb02a6dacbf12359694ffeae6bf7435e3f85596d6379fc7e5d17",
+    "apps/api/src/composition/http-modules.ts": "c3c2973be505cdf51c50cf35bb5b05f16aa790d2dace07409865b73842856261",
     "apps/api/src/composition/identity-access.ts": "288b6c373ee4713f00c74051876715d37e0f0b8f57544b4bda5aa70af18913d9",
     "apps/api/src/composition/kick-webhook.ts": "11f97fa8f2b58145a43e0aa595bfd20229ff9b2d1aa6e31c31c41b23ae7c5390",
     "apps/api/src/composition/oauth-protocol.ts": "e7638e390059926acd897e9222875b35abe2ed5f9a67b55b8f425ce74cb575b5",
@@ -2960,9 +2985,9 @@
     "apps/api/src/logging/logger.ts": "1f9732fd66414edbe9db21a567e58288ef4b7458632ee25436da69117ec842b7",
     "apps/api/src/middleware/errors.ts": "51ca427ea1325a4c090f0d23aa6391fcc2a4c9df4066621f01a28eb779a3f425",
     "apps/api/src/modules/analysis/analysis-live.controller.ts": "e99684069e4960c7b8739af8ca6a9863b690c75adac6beadeab225fa7e34b2df",
-    "apps/api/src/modules/analysis/analysis.controller.ts": "bb5929f9268b8c7d67587ac4a0458bebc60be424cf4a08a2e9677b1fb3f10454",
+    "apps/api/src/modules/analysis/analysis.controller.ts": "27b1b775a8ac15d405721425e7bab59c5cd2d72e638b53f94581bd6912cfd6ff",
     "apps/api/src/modules/analysis/analysis.mapper.ts": "6a91682204dc02a453c755a423d20ed3b8fa3eb105cd6fe9146be18f651538d8",
-    "apps/api/src/modules/analysis/analysis.routes.ts": "20ba1d313af3331e67a2ed82391fcc571b7a09caffe728fa1f08a1f5f6847332",
+    "apps/api/src/modules/analysis/analysis.routes.ts": "1488455b0a677f737f213aeb229347cf522a7df93dda9bd564534e77e4aae83a",
     "apps/api/src/modules/auth/auth.controller.ts": "9a75a686e7692075d2119b77afe6c8ffb5f7897d1f4dfd22c2b6285111636478",
     "apps/api/src/modules/auth/auth.http-validation.ts": "7126d84341d1e19ac75127629bb32a620e9dc50905fe623dd14728192a8f097a",
     "apps/api/src/modules/auth/auth.mapper.ts": "8871ba2086c2678a19e421e7b572bc8f451c6fb03aacc6e5d6fae19a0102649c",
@@ -2981,8 +3006,8 @@
     "apps/api/src/modules/coins/templates.routes.ts": "cf90674701ace10656b7ead8f8b5699f7d433eaa9f618bdb4d60921495ac1b9a",
     "apps/api/src/modules/collection/collection-chat.controller.ts": "a7b9cae1e5216e3fe1462e171fb92cc687267092f56f899a90655dedaa709db4",
     "apps/api/src/modules/collection/collection-chat.mapper.ts": "ddc7fe7c72a876026a0ac0a830ddc415eb71969b6c9b7fec6ed3b8dba51a3ed5",
-    "apps/api/src/modules/collection/collection.controller.ts": "e52bac708ce1c59b9502ebbb549db10a2e11e27ae81ac05c73ec66f666cda50a",
-    "apps/api/src/modules/collection/collection.mapper.ts": "626e23be614691f857e4ef347da500f3ca63a478c6c4e60dfd509deeb5957473",
+    "apps/api/src/modules/collection/collection.controller.ts": "25c7a03dce03f75cf6e04201ff855496a541421026bfaccba832bd54d159f106",
+    "apps/api/src/modules/collection/collection.mapper.ts": "bae74ec600999a4309e6de16565002cdacbc3ff650031be5dd99b059518c41a4",
     "apps/api/src/modules/collection/collection.routes.ts": "2672d8684ecfdb14c5d77df53e270a840244285aa031d7b73e97e2513d0d4848",
     "apps/api/src/modules/connections/broadcasts.mapper.ts": "8ec337952b3ce3821463fcfdfab1793dbce0e97493fdd6c04f885fdae13acaab",
     "apps/api/src/modules/connections/connections.controller.ts": "75d962751d123959e2c224d0815ff303263ee6a78ca3ccc76db82c378c76eaf1",
