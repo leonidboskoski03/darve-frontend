@@ -11,7 +11,15 @@ import { Connections } from './connections';
 import './creator-access.css';
 
 type Runtime = { origin: string; session: CreatorSession; snapshot: CreatorSnapshot };
-function ConfiguredAccess({ runtime, mode }: { runtime: Runtime; mode: 'connect' | 'terms' }) {
+function ConfiguredAccess({
+  runtime,
+  mode,
+  beforeSignIn,
+}: {
+  runtime: Runtime;
+  mode: 'connect' | 'terms';
+  beforeSignIn?: (() => void) | undefined;
+}) {
   const { origin, session, snapshot } = runtime;
   const client = useMemo(() => createCreatorAccessClient({ origin, session }), [origin, session]);
   if (['loading', 'signing_out'].includes(snapshot.phase))
@@ -57,7 +65,7 @@ function ConfiguredAccess({ runtime, mode }: { runtime: Runtime; mode: 'connect'
             Your session expired. Sign in again to continue.
           </p>
         ) : null}
-        <SignIn client={client} />
+        <SignIn client={client} beforeSignIn={beforeSignIn} />
       </>
     );
   if (mode === 'terms' || snapshot.user?.termsStatus.status !== 'accepted')
@@ -68,10 +76,12 @@ export function CreatorAccess({
   runtime,
   notice,
   mode,
+  beforeSignIn,
 }: {
   runtime: Runtime | null;
   notice: string | null;
   mode: 'connect' | 'terms';
+  beforeSignIn?: (() => void) | undefined;
 }) {
   return (
     <div className="creator-access">
@@ -82,7 +92,7 @@ export function CreatorAccess({
         </p>
       ) : null}
       {runtime ? (
-        <ConfiguredAccess runtime={runtime} mode={mode} />
+        <ConfiguredAccess runtime={runtime} mode={mode} beforeSignIn={beforeSignIn} />
       ) : (
         <SignIn
           client={null}

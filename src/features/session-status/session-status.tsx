@@ -26,7 +26,7 @@ export function SessionStatus() {
           {
             loading: 'Checking your session…',
             signed_out: 'Signed out',
-            expired: 'Your session expired.',
+            expired: 'Signed out',
             unavailable: 'Session unavailable. No action has been confirmed.',
             signing_out: 'Signing out…',
             logout_unconfirmed: 'Sign-out could not be confirmed. Private content is hidden.',

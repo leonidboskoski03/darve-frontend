@@ -9,9 +9,11 @@ import { providers } from './provider-options';
 export function SignIn({
   client,
   disabledReason,
+  beforeSignIn,
 }: {
   client: CreatorAccessClient | null;
   disabledReason?: string;
+  beforeSignIn?: (() => void) | undefined;
 }) {
   const authorization = useMutation({
     mutationFn: (provider: Provider) =>
@@ -40,7 +42,10 @@ export function SignIn({
             busy={authorization.isPending && authorization.variables === provider.id}
             aria-disabled={!client || authorization.isPending || authorization.isSuccess}
             onClick={() => {
-              if (!authorization.isPending) authorization.mutate(provider.id);
+              if (!authorization.isPending) {
+                beforeSignIn?.();
+                authorization.mutate(provider.id);
+              }
             }}
           >
             <ProviderMark provider={provider.id} />

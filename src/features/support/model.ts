@@ -15,7 +15,7 @@ export const ticketLabel = (ticket: SupportTicket) =>
 export function errorCopy(error: unknown) {
   if (!(error instanceof SupportError)) return 'Support is unavailable. Try refreshing this view.';
   if (error.problem.status === 401 || error.problem.category === 'authority')
-    return 'Your session changed. Sign in again to continue.';
+    return 'Darve could not authorize this support action.';
   if (error.problem.status === 403 || error.problem.status === 404)
     return 'This support conversation is unavailable to your account.';
   if (error.problem.status === 409)

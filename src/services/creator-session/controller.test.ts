@@ -89,14 +89,15 @@ describe('creator authority lifecycle', () => {
     expect(session.getSnapshot().scope).toBe(current);
   });
 
-  it('expires locally and rejects further private requests without sending', async () => {
+  it('checks the server at the expiry deadline before clearing the session', async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2029-12-31T23:59:59.000Z'));
     const send = vi.fn<typeof fetch>().mockResolvedValueOnce(json(signedIn));
     const session = setup(send);
     await session.inspect();
     const old = session.getSnapshot().scope;
-    vi.advanceTimersByTime(1100);
+    send.mockResolvedValueOnce(json(signedOut));
+    await vi.advanceTimersByTimeAsync(1100);
     expect(session.getSnapshot().phase).toBe('expired');
     expect(old.signal.aborted).toBe(true);
     expect(
@@ -106,7 +107,7 @@ describe('creator authority lifecycle', () => {
         success: [200],
       }),
     ).toMatchObject({ category: 'authority' });
-    expect(send).toHaveBeenCalledOnce();
+    expect(send).toHaveBeenCalledTimes(2);
   });
 
   it('supersedes an in-flight inspection when another tab confirms sign-out', async () => {
@@ -161,7 +162,53 @@ describe('creator authority lifecycle', () => {
     expect(session.getSnapshot().phase).toBe('signed_out');
   });
 
-  it('clears authority on a real 401 but preserves denied/conflict distinctions', async () => {
+  it.each([
+    { status: 'signed out', response: () => json(signedOut), confirmed: true },
+    { status: 'signed in', response: () => json(signedIn), confirmed: false },
+    {
+      status: 'unavailable',
+      response: () => new Response(null, { status: 503 }),
+      confirmed: false,
+    },
+  ])(
+    'checks the session after a logout 401 when the session endpoint is $status',
+    async ({ response, confirmed }) => {
+      const broadcast = vi.fn();
+      vi.stubGlobal(
+        'BroadcastChannel',
+        class {
+          close = vi.fn();
+          postMessage = broadcast;
+        },
+      );
+      const send = vi
+        .fn<typeof fetch>()
+        .mockResolvedValueOnce(json(signedIn))
+        .mockResolvedValueOnce(new Response(null, { status: 401 }))
+        .mockResolvedValueOnce(response());
+      const session = setup(send);
+      await session.inspect();
+
+      await session.logout();
+
+      expect(send).toHaveBeenCalledTimes(3);
+      expect(send.mock.calls[1]?.[0]).toBe('https://api.example.test/api/session/logout');
+      expect(send.mock.calls[1]?.[1]?.method).toBe('POST');
+      expect(send.mock.calls[2]?.[0]).toBe('https://api.example.test/api/session');
+      expect(send.mock.calls[2]?.[1]?.method).toBe('GET');
+      expect(session.getSnapshot().phase).toBe(confirmed ? 'signed_out' : 'logout_unconfirmed');
+      expect(session.getSnapshot().user).toBeNull();
+      if (confirmed) {
+        expect(broadcast).toHaveBeenCalledExactlyOnceWith('invalidate');
+      } else {
+        expect(broadcast).not.toHaveBeenCalled();
+        await session.inspect();
+        expect(send).toHaveBeenCalledTimes(3);
+      }
+    },
+  );
+
+  it('preserves the creator session on a feature 401 until the session endpoint confirms sign-out', async () => {
     const send = vi.fn<typeof fetch>().mockResolvedValueOnce(json(signedIn));
     const session = setup(send);
     await session.inspect();
@@ -184,12 +231,18 @@ describe('creator authority lifecycle', () => {
         { status: 401, headers: { 'content-type': 'application/json' } },
       ),
     );
+    send.mockResolvedValueOnce(json(signedIn));
     const result = await session.request({
       path: '/api/profile',
       schema: SessionResponseSchema,
       success: [200],
     });
     expect(result).toMatchObject({ status: 401, category: 'http', action: 'sign_in' });
+    await session.recheck();
+    expect(session.getSnapshot().phase).toBe('authenticated');
+    expect(session.getSnapshot().scope).toBe(old);
+    send.mockResolvedValueOnce(json(signedOut));
+    await session.recheck();
     expect(session.getSnapshot().phase).toBe('expired');
     expect(old.signal.aborted).toBe(true);
     expect(JSON.stringify(result)).not.toContain('private-marker');

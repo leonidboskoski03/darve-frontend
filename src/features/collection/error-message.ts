@@ -22,7 +22,7 @@ export function collectionErrorMessage(error: unknown) {
   if (messages[code]) return messages[code];
   if (category === 'configuration') return 'Choose valid collection settings before continuing.';
   if (category === 'authority' || status === 401)
-    return 'Your session changed. Check your account before continuing.';
+    return 'Darve could not authorize this collection action.';
   if (status === 404) return 'This collection or stream could not be found for your account.';
   if (status === 403)
     return 'The server could not authorize this action. Check your session and permissions.';

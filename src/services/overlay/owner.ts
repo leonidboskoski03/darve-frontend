@@ -21,8 +21,7 @@ export function overlayMessage(error: unknown) {
     return 'Overlay information could not be confirmed. Refresh before continuing.';
   if (error.problem.status === 409)
     return 'The display changed. Refresh and review its current selection or settings.';
-  if (error.problem.status === 401)
-    return 'Your session changed. Check your account before continuing.';
+  if (error.problem.status === 401) return 'Darve could not authorize this OBS action.';
   if (error.problem.status === 404) return 'This display or grant is unavailable for your account.';
   return 'The result is unconfirmed. Refresh the current display before another change. A link may have been issued; do not automatically create a replacement.';
 }

@@ -41,9 +41,10 @@ export function receivingMessage(error: unknown, setup = false) {
       return 'The connection or setup has changed. Check current status and review your next action.';
     if (error.problem.code === 'RECONCILIATION_REQUIRED')
       return 'The provider result needs reconciliation. Check current status before proceeding.';
-    if (error.problem.code === 'AUTHORITY_CHANGED' || error.problem.status === 401)
-      return 'Your session changed. Sign in again to manage receiving.';
-    if (error.problem.status === 403) return 'Check your session and current account terms.';
+    if (error.problem.code === 'SETUP_SESSION_MISMATCH')
+      return 'This PayPal setup started in another sign-in session. Use Start over PayPal to check and restart setup.';
+    if (error.problem.status === 401 || error.problem.status === 403)
+      return 'Darve could not authorize this receiving action. Check current status and try again.';
     if (error.problem.status === 429) return 'Too many requests. Wait before trying again.';
   }
   if (receivingUncertain(error))

@@ -77,7 +77,7 @@ export function reportingMessage(error: unknown) {
   if (messages[code]) return messages[code];
   if (status === 404) return 'This resource is unavailable for your account.';
   if (status === 401 || category === 'authority')
-    return 'Your session changed. Check your account before continuing.';
+    return 'Darve could not authorize this reporting action.';
   if (status === 403)
     return 'The server could not authorize this action. Check your session and current terms.';
   if (status === 409) return 'The challenge changed. Refresh and review it before another action.';
