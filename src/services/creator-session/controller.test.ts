@@ -162,6 +162,52 @@ describe('creator authority lifecycle', () => {
     expect(session.getSnapshot().phase).toBe('signed_out');
   });
 
+  it.each([
+    { status: 'signed out', response: () => json(signedOut), confirmed: true },
+    { status: 'signed in', response: () => json(signedIn), confirmed: false },
+    {
+      status: 'unavailable',
+      response: () => new Response(null, { status: 503 }),
+      confirmed: false,
+    },
+  ])(
+    'checks the session after a logout 401 when the session endpoint is $status',
+    async ({ response, confirmed }) => {
+      const broadcast = vi.fn();
+      vi.stubGlobal(
+        'BroadcastChannel',
+        class {
+          close = vi.fn();
+          postMessage = broadcast;
+        },
+      );
+      const send = vi
+        .fn<typeof fetch>()
+        .mockResolvedValueOnce(json(signedIn))
+        .mockResolvedValueOnce(new Response(null, { status: 401 }))
+        .mockResolvedValueOnce(response());
+      const session = setup(send);
+      await session.inspect();
+
+      await session.logout();
+
+      expect(send).toHaveBeenCalledTimes(3);
+      expect(send.mock.calls[1]?.[0]).toBe('https://api.example.test/api/session/logout');
+      expect(send.mock.calls[1]?.[1]?.method).toBe('POST');
+      expect(send.mock.calls[2]?.[0]).toBe('https://api.example.test/api/session');
+      expect(send.mock.calls[2]?.[1]?.method).toBe('GET');
+      expect(session.getSnapshot().phase).toBe(confirmed ? 'signed_out' : 'logout_unconfirmed');
+      expect(session.getSnapshot().user).toBeNull();
+      if (confirmed) {
+        expect(broadcast).toHaveBeenCalledExactlyOnceWith('invalidate');
+      } else {
+        expect(broadcast).not.toHaveBeenCalled();
+        await session.inspect();
+        expect(send).toHaveBeenCalledTimes(3);
+      }
+    },
+  );
+
   it('preserves the creator session on a feature 401 until the session endpoint confirms sign-out', async () => {
     const send = vi.fn<typeof fetch>().mockResolvedValueOnce(json(signedIn));
     const session = setup(send);

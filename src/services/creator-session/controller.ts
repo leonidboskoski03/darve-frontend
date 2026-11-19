@@ -64,6 +64,8 @@ export function createCreatorSession(options: {
       csrf,
       fetcher: options.fetcher,
     });
+  const readSession = (scope: AuthorityScope) =>
+    client(scope)({ path: '/api/session', schema: SessionResponseSchema, success: [200] });
   const expired = () => snapshot.expiresAt !== null && Date.parse(snapshot.expiresAt) <= now();
   async function inspect(quiet = false) {
     if (!options.origin || !running || logoutUncertain || snapshot.phase === 'signing_out') return;
@@ -73,11 +75,7 @@ export function createCreatorSession(options: {
     if (!quiet) rotate('loading');
     const scope = snapshot.scope;
     const task = (async () => {
-      const result = await client(scope)({
-        path: '/api/session',
-        schema: SessionResponseSchema,
-        success: [200],
-      });
+      const result = await readSession(scope);
       if (scope.signal.aborted || !running) return;
       if (result.kind !== 'data') {
         if (quiet && !expired()) return;
@@ -196,7 +194,13 @@ export function createCreatorSession(options: {
         success: [204],
       });
       if (scope.signal.aborted || !running) return;
-      if (result.kind === 'empty') {
+      let confirmed = result.kind === 'empty';
+      if (result.kind === 'error' && result.status === 401) {
+        const status = await readSession(scope);
+        if (scope.signal.aborted || !running) return;
+        confirmed = status.kind === 'data' && !status.data.authenticated;
+      }
+      if (confirmed) {
         logoutUncertain = false;
         rotate('signed_out');
         channel?.postMessage('invalidate');
