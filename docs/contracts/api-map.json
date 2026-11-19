@@ -1,5 +1,5 @@
 {
-  "sourceRevision": "04ce39d67f6eadc5caa565c43218419df2bb710f",
+  "sourceRevision": "9522e9324b1be1b2b4b067d2b93ce9f6c19f36c2",
   "status": "B15/F09-02 aligns coin/template request revision limits and exports the strict existing history query; existing F08 recovery and authority handoffs retained. Ordinary activation remains separate.",
   "operations": [
     {
@@ -458,7 +458,7 @@
       "csrf": "Origin + X-CSRF-Token",
       "idempotency": "none",
       "request": "StopRoundInputSchema; RoundParamsSchema",
-      "query": "empty",
+      "query": "optional roundReview=1 for the shared server review state",
       "response": "RoundResponseSchema",
       "successStatuses": [202],
       "publicExports": ["StopRoundInputSchema", "RoundParamsSchema", "RoundResponseSchema"],
@@ -592,7 +592,7 @@
       "csrf": "no mutation CSRF; Origin policy still applies",
       "idempotency": "none",
       "request": "none; RoundParamsSchema",
-      "query": "empty",
+      "query": "optional roundReview=1 for the shared server review state",
       "response": "RoundResponseSchema",
       "successStatuses": [200],
       "publicExports": ["RoundParamsSchema", "RoundResponseSchema"],
@@ -781,7 +781,7 @@
       "csrf": "no mutation CSRF; Origin policy still applies",
       "idempotency": "none",
       "request": "none; OverlayParamsSchema",
-      "query": "OverlayReaderQuerySchema; Last-Event-ID OverlayEventCursorSchema",
+      "query": "OverlayReaderQuerySchema; Last-Event-ID OverlayEventCursorSchema; optional roundReview=1 with protocolVersion=2",
       "response": "SSE OverlayEventSchema or OverlayEventV2Schema",
       "successStatuses": [200],
       "publicExports": [
@@ -808,7 +808,7 @@
       "csrf": "no mutation CSRF; Origin policy still applies",
       "idempotency": "none",
       "request": "none; OverlayParamsSchema",
-      "query": "OverlayReaderQuerySchema",
+      "query": "OverlayReaderQuerySchema; optional roundReview=1 with protocolVersion=2",
       "response": "OverlaySnapshotResponseSchema or OverlaySnapshotV2ResponseSchema",
       "successStatuses": [200],
       "publicExports": [
@@ -1002,7 +1002,7 @@
         "file": "apps/api/src/modules/payment-accounts/paypal-receiving.routes.ts",
         "line": 7,
         "handler": "controller.status",
-        "sha256": "f4613dfde81aafb7e353b8c3bea032394e0735cb4693d62feb7bd862913e5d8e"
+        "sha256": "c15ba1ce7b248335bec9490c14bcad029dc58f75afc34603cd9eceb01b803158"
       },
       "frontend": "F03"
     },
@@ -1027,7 +1027,7 @@
         "file": "apps/api/src/modules/payment-accounts/paypal-receiving.routes.ts",
         "line": 8,
         "handler": "controller.onboarding",
-        "sha256": "f4613dfde81aafb7e353b8c3bea032394e0735cb4693d62feb7bd862913e5d8e"
+        "sha256": "c15ba1ce7b248335bec9490c14bcad029dc58f75afc34603cd9eceb01b803158"
       },
       "frontend": "F03"
     },
@@ -1048,7 +1048,7 @@
         "file": "apps/api/src/modules/payment-accounts/paypal-receiving.routes.ts",
         "line": 9,
         "handler": "controller.refresh",
-        "sha256": "f4613dfde81aafb7e353b8c3bea032394e0735cb4693d62feb7bd862913e5d8e"
+        "sha256": "c15ba1ce7b248335bec9490c14bcad029dc58f75afc34603cd9eceb01b803158"
       },
       "frontend": "F03"
     },
@@ -1069,7 +1069,7 @@
         "file": "apps/api/src/modules/payment-accounts/paypal-receiving.routes.ts",
         "line": 10,
         "handler": "controller.revoke",
-        "sha256": "f4613dfde81aafb7e353b8c3bea032394e0735cb4693d62feb7bd862913e5d8e"
+        "sha256": "c15ba1ce7b248335bec9490c14bcad029dc58f75afc34603cd9eceb01b803158"
       },
       "frontend": "F03"
     },
@@ -1090,7 +1090,7 @@
         "file": "apps/api/src/modules/payment-accounts/stripe-receiving.routes.ts",
         "line": 8,
         "handler": "c.revoke",
-        "sha256": "1e2591d24e2492ca5b8a0ca535a6cdf5dea5981aa97e76c90ad3ad06a24b3abf"
+        "sha256": "3829f42153292085bb67588a9f7251de50dc2bea7c9f7145902838922335a0d2"
       },
       "frontend": "F03"
     },
@@ -1111,7 +1111,7 @@
         "file": "apps/api/src/modules/payment-accounts/stripe-receiving.routes.ts",
         "line": 8,
         "handler": "c.refresh",
-        "sha256": "1e2591d24e2492ca5b8a0ca535a6cdf5dea5981aa97e76c90ad3ad06a24b3abf"
+        "sha256": "3829f42153292085bb67588a9f7251de50dc2bea7c9f7145902838922335a0d2"
       },
       "frontend": "F03"
     },
@@ -1136,7 +1136,7 @@
         "file": "apps/api/src/modules/payment-accounts/stripe-receiving.routes.ts",
         "line": 8,
         "handler": "c.onboarding",
-        "sha256": "1e2591d24e2492ca5b8a0ca535a6cdf5dea5981aa97e76c90ad3ad06a24b3abf"
+        "sha256": "3829f42153292085bb67588a9f7251de50dc2bea7c9f7145902838922335a0d2"
       },
       "frontend": "F03"
     },
@@ -1157,7 +1157,7 @@
         "file": "apps/api/src/modules/payment-accounts/stripe-receiving.routes.ts",
         "line": 8,
         "handler": "c.status",
-        "sha256": "1e2591d24e2492ca5b8a0ca535a6cdf5dea5981aa97e76c90ad3ad06a24b3abf"
+        "sha256": "3829f42153292085bb67588a9f7251de50dc2bea7c9f7145902838922335a0d2"
       },
       "frontend": "F03"
     },
@@ -1178,7 +1178,7 @@
         "file": "apps/api/src/modules/payment-accounts/stripe-receiving.routes.ts",
         "line": 14,
         "handler": "oauth.callback",
-        "sha256": "1e2591d24e2492ca5b8a0ca535a6cdf5dea5981aa97e76c90ad3ad06a24b3abf"
+        "sha256": "3829f42153292085bb67588a9f7251de50dc2bea7c9f7145902838922335a0d2"
       },
       "frontend": "F03"
     },
@@ -1203,7 +1203,7 @@
         "file": "apps/api/src/modules/payment-accounts/stripe-receiving.routes.ts",
         "line": 14,
         "handler": "oauth.start",
-        "sha256": "1e2591d24e2492ca5b8a0ca535a6cdf5dea5981aa97e76c90ad3ad06a24b3abf"
+        "sha256": "3829f42153292085bb67588a9f7251de50dc2bea7c9f7145902838922335a0d2"
       },
       "frontend": "F03"
     },
@@ -2845,7 +2845,7 @@
         "file": "apps/admin-api/src/app.ts",
         "line": 66,
         "handler": "inline health handler",
-        "sha256": "07720e4dd9a4569a8be39f165dbca2cde5c4f1fabac24bfcda9689bd91978c0d"
+        "sha256": "51bc100e45b2e8ee694f2d737b4e294076c9f7175d1e12cae7b904d1852a3488"
       },
       "frontend": "excluded"
     },
@@ -2866,7 +2866,7 @@
         "file": "apps/admin-api/src/app.ts",
         "line": 69,
         "handler": "inline health handler",
-        "sha256": "07720e4dd9a4569a8be39f165dbca2cde5c4f1fabac24bfcda9689bd91978c0d"
+        "sha256": "51bc100e45b2e8ee694f2d737b4e294076c9f7175d1e12cae7b904d1852a3488"
       },
       "frontend": "excluded"
     },
@@ -2914,11 +2914,11 @@
     }
   ],
   "sourceFiles": {
-    "apps/admin-api/src/app.ts": "07720e4dd9a4569a8be39f165dbca2cde5c4f1fabac24bfcda9689bd91978c0d",
+    "apps/admin-api/src/app.ts": "51bc100e45b2e8ee694f2d737b4e294076c9f7175d1e12cae7b904d1852a3488",
     "apps/admin-api/src/composition/rate-limit-store.ts": "be565584ab12d8b71896e4828eef8f23aa73f3ab560239f476b9b9741627ea18",
-    "apps/admin-api/src/composition/runtime.ts": "d4ce3ff82da8e45b3efd357ae12998d7441eec12c63e43568a1050c990b5dd01",
-    "apps/admin-api/src/config/environment.ts": "f45eb93466413fa69d5fec0a1a3ca144859131e9aee5fcd45fa960df016622eb",
-    "apps/admin-api/src/index.ts": "510472253b2360d3525f7aff317a802cdded9c2f359f60ea7e70589b24ed1f8c",
+    "apps/admin-api/src/composition/runtime.ts": "d90814e4da2d8f3e90d7142265f251167525ba1244a469f73249223ae43c9dfe",
+    "apps/admin-api/src/config/environment.ts": "db3e0e0de903797cfb643e3f30306de4fc0466a0ca12aa8af2130eed9c56d678",
+    "apps/admin-api/src/index.ts": "4fe2f02e11e40cbb97a98c5d77ed61f4c52654935defe56389f81b861ac32a4e",
     "apps/admin-api/src/modules/coins/coins.controller.ts": "04038e2733ec4347bc1c15b41875ca0fa5c01b44c9447039a5da6e0724ce15af",
     "apps/admin-api/src/modules/coins/coins.routes.ts": "30c33c6aa4f8954ae8a3ad7b05447965d302e66f0a9fdd831ab950c2b125fcc5",
     "apps/admin-api/src/modules/coins/templates.controller.ts": "e1ee78e428bb46efc131f19d0c9c80f536906184f7da06d1dae2018749d72bdd",
@@ -2937,26 +2937,26 @@
     "apps/admin-api/src/modules/support/support.mapper.ts": "9a95b246baf9fd0d29460ad35e5d8ed2d11968803c0c242342dcb873650ff8ea",
     "apps/admin-api/src/modules/support/support.routes.ts": "d73d2bac43e5c816964f83b608f00172cab1a251de89a5f2460fd793d722a21e",
     "apps/admin-api/src/security/cookies.ts": "3d89106ebc53da73efc7f22f20e9c0754a16ebe3dd555d8ccc236ab7cdefb1e5",
-    "apps/api/src/app.ts": "138192a8264c1dc17f91d92e694a3133abc035e231867ea1e2a2163cb1496b26",
+    "apps/api/src/app.ts": "21f39d06c5cbf726c9ed03b34d15511aa87ef9dbd3e6e9d99babb18df29ce1ec",
     "apps/api/src/composition/broadcast-discovery.ts": "6a3ce2d33045c7f33bb7b4e9af5d1f5d27efde1dd60964f61207847967d8822d",
     "apps/api/src/composition/collection.ts": "b8bad356dcabb95af813cadb33ac41281141a6e486941a3399350f30546756fc",
-    "apps/api/src/composition/http-modules.ts": "ba2cae39fc96f4a5c9599270113e792bee883963b8cdc91756a7a5aabc234ab8",
+    "apps/api/src/composition/http-modules.ts": "7c47df59d536fb02a6dacbf12359694ffeae6bf7435e3f85596d6379fc7e5d17",
     "apps/api/src/composition/identity-access.ts": "288b6c373ee4713f00c74051876715d37e0f0b8f57544b4bda5aa70af18913d9",
     "apps/api/src/composition/kick-webhook.ts": "11f97fa8f2b58145a43e0aa595bfd20229ff9b2d1aa6e31c31c41b23ae7c5390",
     "apps/api/src/composition/oauth-protocol.ts": "e7638e390059926acd897e9222875b35abe2ed5f9a67b55b8f425ce74cb575b5",
-    "apps/api/src/composition/paypal-receiving.ts": "571fe4380fe54419b0b45fbf593ffe9687e417336741b131b1d3a738fc2bdae0",
+    "apps/api/src/composition/paypal-receiving.ts": "69e06f6ba6cd4a292f47ae3c1098ce67fd88fefcabe871c0531baa9e5fa5d9f7",
     "apps/api/src/composition/paypal-reconciliation.ts": "bf952d1b1697eec3e7e8cb75cc9360fc5953cf4cd4685f661e229f8606e4b1de",
     "apps/api/src/composition/provider-maintenance.ts": "98866b11c193abaec3ea751ccf0bd31bb642509c880715427d7ca1d30b3d73c2",
-    "apps/api/src/composition/runtime.ts": "0ca5465084e712047e37a5ce127564aeaa1409737befd40eace310f01f8b030d",
-    "apps/api/src/composition/stripe-checkout.ts": "369e5e35f27e60d5839545bad68d39234a4e999993db976c35046a61c3346dfa",
-    "apps/api/src/composition/stripe-existing-account.ts": "a46f83c7c068f0b23cadfd2180758c38620d4ff479e711d5450aa63473ec8524",
-    "apps/api/src/composition/stripe-receiving.ts": "d63bdbd4e697eecd50d603ed3a5c8f3c707fdbb5b27a4a420ce43964d05cacb3",
+    "apps/api/src/composition/runtime.ts": "4b95a2ff0f6f23b92316df0df56b960b88cdf91666e4e62e5464950d5ea97914",
+    "apps/api/src/composition/stripe-checkout.ts": "918b694e2d8c415a8b539bcb50b6c1c592bda380122ae921d453a464c99603b1",
+    "apps/api/src/composition/stripe-existing-account.ts": "2ee2663b6475d1de14fcd93a083c139489ee166736f23fcf04092683f2f1d9a1",
+    "apps/api/src/composition/stripe-receiving.ts": "3ad4fcdb98f5d583c8f2f2d2dfc8cf1544868395d269b289571609da23afd5dd",
     "apps/api/src/composition/support.ts": "f635627647e8721446036a64732d09d6bb4d133844c57b55c430d88f0d4f00bb",
     "apps/api/src/composition/templates.ts": "bcc201285404616a6a26d310566f251c2c0f26a03cf1ad9a5d64aac89065e894",
-    "apps/api/src/config/environment.ts": "bb7170ee0a64edc560a4a99d51743050e6c716b95a47d9b721923ed8b5cff7e1",
+    "apps/api/src/config/environment.ts": "adbf58f01780e7156e3f82c05ae9873772b577d22e547c5c68a7d34cd7ddbaeb",
     "apps/api/src/config/oauth.ts": "eac1ad3c4b1e7a6f0494223e839c45b33b13a0202cee8dfa11872cbf78ac2fe7",
     "apps/api/src/config/terms.ts": "59e2df75f7ac664dac1067fe500798de31bdf9c66db7804afbe5a0fc7be76a42",
-    "apps/api/src/index.ts": "6c5d0cd5d7b520744117313410c36de055993e94eec8700753d7a984462cf9fc",
+    "apps/api/src/index.ts": "c8f434a6893f2ada8d8609e4365a713c8265ab7cfac5b289b877f65ff5ec30da",
     "apps/api/src/logging/logger.ts": "1f9732fd66414edbe9db21a567e58288ef4b7458632ee25436da69117ec842b7",
     "apps/api/src/middleware/errors.ts": "51ca427ea1325a4c090f0d23aa6391fcc2a4c9df4066621f01a28eb779a3f425",
     "apps/api/src/modules/analysis/analysis-live.controller.ts": "e99684069e4960c7b8739af8ca6a9863b690c75adac6beadeab225fa7e34b2df",
@@ -2968,7 +2968,7 @@
     "apps/api/src/modules/auth/auth.mapper.ts": "8871ba2086c2678a19e421e7b572bc8f451c6fb03aacc6e5d6fae19a0102649c",
     "apps/api/src/modules/auth/auth.routes.ts": "002e0be577045bf91b29ad3a1d859b1bdf39b9ce1b11c687552f611563c337fa",
     "apps/api/src/modules/challenges/challenge-acceptance.controller.ts": "574d5f116fb104d66bb3cc1650e283f42ff72120eb19e42248e2d739aa7a3e86",
-    "apps/api/src/modules/challenges/challenge-acceptance.mapper.ts": "23341be61a93d125dda3ccaf3fffe3e77e6e1ef4c5eb5170c29e5579ceb68c7d",
+    "apps/api/src/modules/challenges/challenge-acceptance.mapper.ts": "a13a4e93376d2c502eca48f51ad2988c6d21490c0ea3706728ea19213aaaf15b",
     "apps/api/src/modules/challenges/challenge-acceptance.routes.ts": "a94c5c84724a9512992be87e64949b70479bc18745a5a787ada47add05da1ac4",
     "apps/api/src/modules/challenges/challenge-completion.controller.ts": "a0842266dddfdeb57819543997086b619b12df780aff1be959142d7dca7fcc41",
     "apps/api/src/modules/challenges/challenge-completion.mapper.ts": "ff09918a4d3014d72f60183e761fc56289d31b5bd7661e6734b0781f510ee672",
@@ -2980,9 +2980,9 @@
     "apps/api/src/modules/coins/templates.mapper.ts": "d4fe9885ef1a610df0f19222d95c566e2f4ea0c01d798ffa4bdd90d4a93e04fe",
     "apps/api/src/modules/coins/templates.routes.ts": "cf90674701ace10656b7ead8f8b5699f7d433eaa9f618bdb4d60921495ac1b9a",
     "apps/api/src/modules/collection/collection-chat.controller.ts": "a7b9cae1e5216e3fe1462e171fb92cc687267092f56f899a90655dedaa709db4",
-    "apps/api/src/modules/collection/collection-chat.mapper.ts": "14445bc3bfa9243859bea0c3f5ab9720912c51b64c8b17e23371de3b8cab50ec",
-    "apps/api/src/modules/collection/collection.controller.ts": "1082e47e3ee679ea8113cd8c80ee7059a97706c7b11411fd8779d606ceffd4d6",
-    "apps/api/src/modules/collection/collection.mapper.ts": "37cd81681a099871cc8966d1bbbcc60adc07195c040890e6db612933c66ca80e",
+    "apps/api/src/modules/collection/collection-chat.mapper.ts": "ddc7fe7c72a876026a0ac0a830ddc415eb71969b6c9b7fec6ed3b8dba51a3ed5",
+    "apps/api/src/modules/collection/collection.controller.ts": "e52bac708ce1c59b9502ebbb549db10a2e11e27ae81ac05c73ec66f666cda50a",
+    "apps/api/src/modules/collection/collection.mapper.ts": "626e23be614691f857e4ef347da500f3ca63a478c6c4e60dfd509deeb5957473",
     "apps/api/src/modules/collection/collection.routes.ts": "2672d8684ecfdb14c5d77df53e270a840244285aa031d7b73e97e2513d0d4848",
     "apps/api/src/modules/connections/broadcasts.mapper.ts": "8ec337952b3ce3821463fcfdfab1793dbce0e97493fdd6c04f885fdae13acaab",
     "apps/api/src/modules/connections/connections.controller.ts": "75d962751d123959e2c224d0815ff303263ee6a78ca3ccc76db82c378c76eaf1",
@@ -2999,17 +2999,17 @@
     "apps/api/src/modules/health/health.routes.ts": "a50ae03dab44ff8d9662c3203938ae3bfec375b4ed25d33e7c75f84d16965bb5",
     "apps/api/src/modules/kick-webhooks/kick-webhook.controller.ts": "7876db8253878a62977c7125179ff8e07eca57e41aecfdb8d757883f835f3084",
     "apps/api/src/modules/kick-webhooks/kick-webhook.routes.ts": "2871374a4e251a2e565074f2582f2c667be4e687b114e53c2acc9762f8a6b353",
-    "apps/api/src/modules/overlays/overlay.controller.ts": "80ba0a2ff0159603c18ca15b983e2179b2d36b9a51e7e0b79ab9e7ecdbba0025",
-    "apps/api/src/modules/overlays/overlay.mapper.ts": "eece3a791cdb00f4f9d06ad4b93e7618462db4900a80d410d018951bae3dde53",
+    "apps/api/src/modules/overlays/overlay.controller.ts": "0b797253abf3f9a2be54ef5e46a5578a089f3c731a5e0ffd58c65273d62634db",
+    "apps/api/src/modules/overlays/overlay.mapper.ts": "818f92531fef341ce241af58e1f43aac84b418d0c4806dcff64dd30baf5e73f3",
     "apps/api/src/modules/overlays/overlay.routes.ts": "3b4cb007b687e199feca52854594e64f63434c0b3fe759a1f4e67df1e8b5ffff",
-    "apps/api/src/modules/payment-accounts/paypal-receiving.controller.ts": "8f91c976d88c4bce70820817b385810335301f97fbaac107b56fd3fb0c767182",
+    "apps/api/src/modules/payment-accounts/paypal-receiving.controller.ts": "3f6ae5334b44c6f5bef38dc341bb6dea82e204141639d2f5bf5d8836d8728c2b",
     "apps/api/src/modules/payment-accounts/paypal-receiving.mapper.ts": "0695deaffa19f1df9362a061e78fa008fd6dff38cd7f4b60aa93bbfcf9570eca",
-    "apps/api/src/modules/payment-accounts/paypal-receiving.routes.ts": "f4613dfde81aafb7e353b8c3bea032394e0735cb4693d62feb7bd862913e5d8e",
-    "apps/api/src/modules/payment-accounts/stripe-existing-account.controller.ts": "6d80ad191fa1c0fade03f4c1d70f61166f884891005bef0c3a90c64debfcd3f9",
+    "apps/api/src/modules/payment-accounts/paypal-receiving.routes.ts": "c15ba1ce7b248335bec9490c14bcad029dc58f75afc34603cd9eceb01b803158",
+    "apps/api/src/modules/payment-accounts/stripe-existing-account.controller.ts": "18dff837071ebb8f04f30e603e51a268441a38a91a0122df167bc878be17f4c5",
     "apps/api/src/modules/payment-accounts/stripe-existing-account.mapper.ts": "c9d7a47492889001ea589e8f8bec64485ea646c8db1cb13cc04293eb1a61745e",
-    "apps/api/src/modules/payment-accounts/stripe-receiving.controller.ts": "1da7c3340d15d2c836b106b2727ed666ab052c99e3edcbed528f0b09906eee22",
+    "apps/api/src/modules/payment-accounts/stripe-receiving.controller.ts": "f61d2a4ef2d5217ab317f59e5167668c887b67503052f7b9e5a45fa358a85ab6",
     "apps/api/src/modules/payment-accounts/stripe-receiving.mapper.ts": "f4d891b574c5ed15ec235878f3ffddb0f7c2cdf6abecf18b7547ef4795ae2d3c",
-    "apps/api/src/modules/payment-accounts/stripe-receiving.routes.ts": "1e2591d24e2492ca5b8a0ca535a6cdf5dea5981aa97e76c90ad3ad06a24b3abf",
+    "apps/api/src/modules/payment-accounts/stripe-receiving.routes.ts": "3829f42153292085bb67588a9f7251de50dc2bea7c9f7145902838922335a0d2",
     "apps/api/src/modules/payments/checkout.controller.ts": "7758694a820cf5dc1c933fbad26fc883ada926ee0496d641a19e3b0c0cd666db",
     "apps/api/src/modules/payments/checkout.mapper.ts": "7741af17d7dd6453e5ed1bdb8932d57fd9cff9cc10f13457637347131309259a",
     "apps/api/src/modules/payments/checkout.routes.ts": "d88b3d91ef9c8c57839e8e438b443409a111371cb1bbdbe777de14e8fe48c377",

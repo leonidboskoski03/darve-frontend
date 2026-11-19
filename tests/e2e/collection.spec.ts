@@ -262,6 +262,35 @@ test('synthetic unavailable lookup blocks Start and a reservation conflict offer
   ).toBeVisible();
   expect(state.starts).toHaveLength(1);
 });
+test('creator refreshes the server review state after an early close', async ({ page }) => {
+  let reviewState: 'collecting' | 'closing' | 'delayed' | 'analysis_failed' | 'ready' =
+    'collecting';
+  const value = () => {
+    const time = Date.now();
+    const round = roundFixture(reviewState === 'collecting' ? 'collecting' : 'closed', time);
+    return { ...round, data: { ...round.data, reviewState } };
+  };
+  await scenario(page, {
+    read: (route) => json(route, value()),
+    stop: (route) => {
+      reviewState = 'closing';
+      return json(route, value(), 202);
+    },
+  });
+  await page.goto(fixture + '&roundId=' + ids.round);
+  await expect(page.getByLabel('Remaining collection time')).toHaveText(/^(29|30)s$/);
+  await page.getByRole('button', { name: 'Stop collection', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Confirm stop', exact: true }).click();
+  await expect(page.getByText('Ideas closed', { exact: true })).toBeVisible();
+  await expect(page.getByLabel('Remaining collection time')).toHaveText('Ended');
+  reviewState = 'delayed';
+  await expect(page.getByText('Analysis is delayed', { exact: true })).toBeVisible();
+  reviewState = 'analysis_failed';
+  await expect(page.getByText('Analysis could not finish', { exact: true })).toBeVisible();
+  reviewState = 'ready';
+  await page.getByRole('button', { name: 'Check status' }).click();
+  await expect(page.getByText('Ideas are ready for review', { exact: true })).toBeVisible();
+});
 test('synthetic round URL counts from server time, never posts Stop at zero and hides status after a failed read', async ({
   page,
 }) => {

@@ -18,6 +18,7 @@ import type { CreatorSnapshot } from '@/services/creator-session/index';
 import { CollectionProblem } from './error';
 import { useDisplayClock } from './use-display-clock';
 import { CollectionLiveIdeas } from './live-ideas';
+import { roundReviewMessage } from '@/entities/round-review/index';
 
 const title = (round: RoundDto) =>
   round.closeReason === 'PREPARATION_CANCELLED'
@@ -28,6 +29,14 @@ const title = (round: RoundDto) =>
         closed: 'Collection ended',
         failed: 'Collection could not start',
       }[round.state];
+function awaitsRoundUpdate(round: RoundDto) {
+  if (round.reviewState)
+    return ['preparing', 'collecting', 'closing', 'analysing', 'delayed'].includes(
+      round.reviewState,
+    );
+  if (round.state !== 'closed') return round.state !== 'failed';
+  return !['succeeded', 'failed', 'empty', 'restricted'].includes(round.analysis?.state ?? '');
+}
 export function CollectionRound({
   client,
   snapshot,
@@ -71,7 +80,7 @@ export function CollectionRound({
       !stop.isPending &&
       !state.state.error &&
       state.state.data &&
-      ['preparing', 'collecting'].includes(state.state.data.round.state)
+      awaitsRoundUpdate(state.state.data.round)
         ? 1000
         : false,
     refetchIntervalInBackground: false,
@@ -92,6 +101,8 @@ export function CollectionRound({
     fresh &&
     round.allowedActions.some((action) => action === 'stop' || action === 'cancel') &&
     !stop.isPending;
+  const reviewState =
+    round?.reviewState === 'collecting' && seconds === 0 ? 'closing' : round?.reviewState;
   const changed = confirmation && round && confirmation.version !== round.version;
   if (query.isPending) return <LoadingState label="Loading collection state" />;
   if (!round)
@@ -198,7 +209,11 @@ export function CollectionRound({
               Review viewer ideas
             </a>
           ) : null}
-          {round.state === 'closed' ? (
+          {reviewState ? (
+            <p role="status" className="collection-muted">
+              {roundReviewMessage[reviewState]}
+            </p>
+          ) : round.state === 'closed' ? (
             <p className="collection-muted">
               {round.analysis?.state === 'empty'
                 ? 'No eligible ideas were collected.'
@@ -207,7 +222,7 @@ export function CollectionRound({
                   : round.analysis?.state === 'failed'
                     ? 'Analysis could not finish.'
                     : round.analysis?.state === 'succeeded'
-                      ? 'Your ideas are ready for review.'
+                      ? 'Open review to see the analysis result.'
                       : 'Your ideas are being processed. Open review for updates.'}
             </p>
           ) : null}
@@ -279,7 +294,12 @@ export function CollectionRound({
         </aside>
       </div>
       {origin && (round.state === 'collecting' || round.state === 'closed') ? (
-        <CollectionLiveIdeas origin={origin} scope={snapshot.scope} roundId={round.id} />
+        <CollectionLiveIdeas
+          origin={origin}
+          scope={snapshot.scope}
+          roundId={round.id}
+          showStatus={!reviewState}
+        />
       ) : null}
       <div className="collection-bottom">
         <a href="/collection">Back to collection setup</a>
