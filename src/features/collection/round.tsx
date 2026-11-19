@@ -5,6 +5,7 @@ import { Button } from '@/design-system/button';
 import { Dialog } from '@/design-system/dialog';
 import { LoadingState } from '@/design-system/loading-state';
 import {
+  CollectionError,
   type CollectionClient,
   type RoundRead,
   type RoundDto,
@@ -76,7 +77,9 @@ export function CollectionRound({
     refetchIntervalInBackground: false,
     refetchOnWindowFocus: false,
   });
-  const read = query.data;
+  const rejected =
+    query.error instanceof CollectionError && [401, 403].includes(query.error.problem.status ?? 0);
+  const read = rejected ? undefined : query.data;
   const round = read?.round;
   const { now, visible } = useDisplayClock(
     round?.state === 'preparing' || round?.state === 'collecting',

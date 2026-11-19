@@ -66,7 +66,12 @@ async function scenario(
       return;
     }
     if (url.pathname === '/api/session') {
-      await json(route, syntheticSession);
+      await json(
+        route,
+        state.expired
+          ? { authenticated: false, csrfToken: null, user: null, expiresAt: null }
+          : syntheticSession,
+      );
       return;
     }
     if (state.expired) {

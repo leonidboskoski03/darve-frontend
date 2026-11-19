@@ -411,7 +411,7 @@ test('pending PayPal setup conflict keeps the creator authenticated', async ({ p
   const state = await scenario(page, true);
   state.paypalConflict = true;
   await page.goto(fixture.replace('view=terms', 'view=dashboard'));
-  await page.getByRole('link', { name: 'Payout settings', exact: true }).click();
+  await navigate(page, 'Payout settings', 'Payout settings');
   await page.getByRole('button', { name: 'Verify PayPal receiving' }).click();
   await expect(
     page.getByRole('alert').getByText(/This PayPal setup started in another sign-in session/),
