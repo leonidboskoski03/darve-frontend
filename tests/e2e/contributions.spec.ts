@@ -86,6 +86,16 @@ test('synthetic public page preserves A layout, exact funding and unavailable pr
   noCommands(state.requests);
   await capture(page, 'public', info.project.name);
 });
+test('public funding updates to Goal reached without a reload', async ({ page }) => {
+  const state = await fixture(page);
+  await open(page, 'view=public&publicId=' + ids.public);
+  await expect(page.getByText('Awaiting funding', { exact: true }).first()).toBeVisible();
+  state.public.data.funding.state = 'funded';
+  state.public.data.funding.goalReachedAt = state.public.serverTime;
+  state.public.data.checkoutAvailability = { available: false, reasonCode: 'goal_reached' };
+  await expect(page.getByText('Goal reached ✓', { exact: true })).toBeVisible({ timeout: 10_000 });
+  noCommands(state.requests);
+});
 test('synthetic unavailable source hides creator/text/credits and server reason stays visible', async ({
   page,
 }) => {
@@ -129,15 +139,15 @@ for (const provider of ['stripe', 'paypal'] as const)
     );
     await expect(page).toHaveURL('http://127.0.0.1:4175/receipts/' + ids.checkout);
     await expect(
-      page.getByRole('heading', { name: 'Payment not confirmed', exact: true }),
+      page.getByRole('heading', { name: 'Confirming payment…', exact: true }),
     ).toBeVisible();
     await expect(page.getByText('90071992547409.93 EUR', { exact: true })).toBeVisible();
     await expect(
-      page.getByRole('heading', { name: 'Verified payment recorded', exact: true }),
+      page.getByRole('heading', { name: 'Payment confirmed ✓', exact: true }),
     ).toHaveCount(0);
     await page.getByRole('button', { name: 'Refresh receipt', exact: true }).click();
     await expect(
-      page.getByRole('heading', { name: 'Payment not confirmed', exact: true }),
+      page.getByRole('heading', { name: 'Confirming payment…', exact: true }),
     ).toBeVisible();
     noCommands(state.requests);
     expect(
@@ -169,26 +179,29 @@ test('synthetic receipt shows canonical verified, late and unclassified timing w
   ];
   await open(page, 'view=receipt&checkout=' + ids.checkout);
   await expect(
-    page.getByRole('heading', { name: 'Verified payment recorded', exact: true }),
+    page.getByRole('heading', { name: 'Payment confirmed ✓', exact: true }),
   ).toBeVisible();
   await expect(
     page.getByRole('heading', { name: 'Received outside the funding deadline', exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByRole('heading', { name: 'Payment timing needs review', exact: true }),
+    page.getByRole('heading', {
+      name: 'Payment received, confirming funding eligibility…',
+      exact: true,
+    }),
   ).toBeVisible();
-  await expect(page.getByText('Stripe success-event reference', { exact: true })).toBeVisible();
-  await expect(page.getByText('Timing not established', { exact: true })).toBeVisible();
+  await expect(page.getByText(/Stripe success-event reference/)).toBeVisible();
+  await expect(page.getByText('Not supplied', { exact: true })).toHaveCount(0);
   noCommands(state.requests);
   await capture(page, 'receipt', info.project.name);
 });
-test('synthetic canonical refresh can reveal eligible money; no client counter or command is sent', async ({
+test('synthetic receipt automatically confirms eligible money without a client command', async ({
   page,
 }) => {
   const state = await fixture(page);
   await open(page, 'view=receipt&checkout=' + ids.checkout);
   await expect(
-    page.getByRole('heading', { name: 'Payment not confirmed', exact: true }),
+    page.getByRole('heading', { name: 'Confirming payment…', exact: true }),
   ).toBeVisible();
   state.receipt.data.state = 'succeeded';
   state.receipt.data.payments = [
@@ -201,7 +214,9 @@ test('synthetic canonical refresh can reveal eligible money; no client counter o
       eligibility: 'eligible',
     },
   ];
-  await page.getByRole('button', { name: 'Refresh receipt', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Payment confirmed ✓', exact: true })).toBeVisible(
+    { timeout: 10_000 },
+  );
   await expect(page.getByRole('heading', { name: 'Deadline eligible', exact: true })).toBeVisible();
   noCommands(state.requests);
 });
@@ -242,7 +257,7 @@ test('synthetic invalid return needs lookup and validates reference before a pri
   await page.getByRole('textbox', { name: 'Checkout reference', exact: true }).fill(ids.checkout);
   await page.getByRole('button', { name: 'Open private receipt', exact: true }).click();
   await expect(
-    page.getByRole('heading', { name: 'Payment not confirmed', exact: true }),
+    page.getByRole('heading', { name: 'Confirming payment…', exact: true }),
   ).toBeVisible();
   noCommands(state.requests);
 });
@@ -260,7 +275,7 @@ test('synthetic public and receipt views support 320px, keyboard, reduced motion
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
   await open(page, 'view=receipt&checkout=' + ids.checkout);
   await expect(
-    page.getByRole('heading', { name: 'Payment not confirmed', exact: true }),
+    page.getByRole('heading', { name: 'Confirming payment…', exact: true }),
   ).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);

@@ -260,6 +260,22 @@ async function openDeclaration(page: Page) {
   ).toBeVisible();
 }
 const consent = 'I confirm I completed this challenge on its original or authorized stream.';
+test('creator challenge updates to Goal reached and labels the amount held', async ({ page }) => {
+  const state = await scenario(page);
+  const funded = structuredClone(state.challenge.funding);
+  state.challenge.funding.state = 'pending';
+  state.challenge.funding.goalReachedAt = null;
+  state.challenge.funding.eligibleGross = '500';
+  state.challenge.funding.unclassifiedGross = '500';
+  state.challenge.terms.fundingClosesAt = new Date(Date.parse(stamp) + 60_000).toISOString();
+  await page.goto(fixture('challenge'));
+  await expect(page.getByRole('heading', { name: 'Challenge details' })).toBeVisible();
+  await expect(page.getByText(/Contributions are paused while Darve verifies/)).toBeVisible();
+  await expect(page.getByText('Goal reached ✓', { exact: true })).toHaveCount(0);
+  state.challenge.funding = funded;
+  await expect(page.getByText('Goal reached ✓', { exact: true })).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText('Held for this challenge', { exact: true })).toBeVisible();
+});
 test('synthetic owner public handoff stays on the product route and is withdrawn when source content is restricted', async ({
   page,
 }) => {

@@ -46,6 +46,13 @@ export function ChallengeDetail({
     queryKey: key,
     queryFn: ({ signal }) => client.challenge(id, signal),
     retry: false,
+    refetchInterval: ({ state }) =>
+      !selected &&
+      state.data?.data.funding.state === 'pending' &&
+      !state.error &&
+      state.dataUpdateCount <= 24
+        ? 5_000
+        : false,
   });
   const value = !query.isError ? query.data?.data : undefined;
   const onSuccess = (declaration: Declaration) => {
@@ -108,6 +115,19 @@ export function ChallengeDetail({
                 ? value.terms.text
                 : 'Challenge content unavailable'}
             </h2>
+            {value.funding.state === 'funded' && <p role="status">Goal reached ✓</p>}
+            {value.funding.state === 'pending' &&
+              value.contentAvailability === 'available' &&
+              Date.parse(value.fundingWindow?.effectiveClosesAt ?? value.terms.fundingClosesAt) >
+                Date.parse(query.data!.serverTime) &&
+              BigInt(value.funding.unclassifiedGross) > 0n &&
+              BigInt(value.funding.eligibleGross) + BigInt(value.funding.unclassifiedGross) >=
+                BigInt(value.terms.goal.amountMinor) && (
+                <p role="status">
+                  Contributions are paused while Darve verifies the timing of payments that could
+                  already reach the goal.
+                </p>
+              )}
             <p>{performanceLabel(value.performance.state)}</p>
             {!query.isFetching &&
             value.contentAvailability === 'available' &&
@@ -166,7 +186,7 @@ export function ChallengeDetail({
                 <dd>{moneyText(value.funding.adjustedGross, value.terms.goal.currency)}</dd>
               </div>
               <div>
-                <dt>Remaining contributions</dt>
+                <dt>Held for this challenge</dt>
                 <dd>
                   {moneyText(value.funding.remainingContributions, value.terms.goal.currency)}
                 </dd>

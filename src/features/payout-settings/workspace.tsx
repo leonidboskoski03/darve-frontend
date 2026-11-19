@@ -51,12 +51,27 @@ function ProviderCard({
   const expired = useExpired(query.data?.deadline ?? null);
   const name = providerName[provider];
   const account = query.isError || query.isFetching || busy ? null : query.data?.status;
-  const state = expired && account?.state === 'ready' ? 'unavailable' : account?.state;
-  const [label, details] = state
-    ? statusText[state]
-    : query.isError
-      ? ['Status unavailable', 'Check current status to reconnect to the account service.']
-      : ['Checking status', 'Reading current account information from Darve.'];
+  const verificationExpired =
+    expired && (account?.state === 'ready' || account?.state === 'unavailable');
+  const onboardingRequired =
+    provider === 'stripe' &&
+    account &&
+    'onboardingRequired' in account &&
+    account.onboardingRequired;
+  const state = verificationExpired || onboardingRequired ? 'connected' : account?.state;
+  const [label, details] =
+    state === 'connected'
+      ? [
+          'Connected',
+          onboardingRequired
+            ? 'Finish setup in Stripe to receive payments.'
+            : 'Verification expired. Verify again to confirm receiving.',
+        ]
+      : state
+        ? statusText[state]
+        : query.isError
+          ? ['Status unavailable', 'Check current status to reconnect to the account service.']
+          : ['Checking status', 'Reading current account information from Darve.'];
   const startable = account && ['not_connected', 'revoked'].includes(account.state);
   const resumable =
     account &&
@@ -131,12 +146,16 @@ function ProviderCard({
         </span>
       </div>
       <p className="payout-summary" role="status">
-        {expired && account?.state === 'ready'
-          ? 'The previous verification expired. Verify receiving again.'
-          : details}
+        {details}
       </p>
       {account && (
         <dl className="payout-facts">
+          {account.accountLabel && (
+            <div>
+              <dt>Connected account</dt>
+              <dd>{account.accountLabel}</dd>
+            </div>
+          )}
           <div>
             <dt>Country</dt>
             <dd>{account.country ?? '—'}</dd>
@@ -163,7 +182,7 @@ function ProviderCard({
           ) : null}
           {account.observedAt ? (
             <div>
-              <dt>Last verified</dt>
+              <dt>Last checked</dt>
               <dd>{formatter.format(new Date(account.observedAt))}</dd>
             </div>
           ) : null}
@@ -184,7 +203,9 @@ function ProviderCard({
           !setupHeld &&
           (provider === 'stripe' ? (
             <>
-              <Button onClick={() => openSetup('stripeExisting')}>Connect existing Stripe</Button>
+              {!onboardingRequired && (
+                <Button onClick={() => openSetup('stripeExisting')}>Connect existing Stripe</Button>
+              )}
               <Button tone="secondary" onClick={() => openSetup('stripe')}>
                 {startable ? 'Set up a Stripe test account' : 'Continue Stripe onboarding'}
               </Button>
@@ -207,7 +228,7 @@ function ProviderCard({
         </Button>
         {canVerify ? (
           <Button tone="secondary" onClick={() => void command('verify')}>
-            Verify {name} receiving
+            {verificationExpired ? `Verify ${name} again` : `Verify ${name} receiving`}
           </Button>
         ) : null}
         {canDisconnect ? (
@@ -286,6 +307,55 @@ export function PayoutSettings({ session }: { session: CreatorSession }) {
   const resume = useRef<HTMLButtonElement>(null);
   const stripe = useReceivingStatus(client, 'stripe');
   const paypal = useReceivingStatus(client, 'paypal');
+  const stripeDeadline = stripe.data?.deadline ?? null;
+  const paypalDeadline = paypal.data?.deadline ?? null;
+  const stripeExpired = useExpired(stripeDeadline);
+  const paypalExpired = useExpired(paypalDeadline);
+  const stripeVerification = stripe.data?.status.validUntil;
+  const paypalVerification = paypal.data?.status.validUntil;
+  const refreshAttempt = useRef<Partial<Record<Provider, string>>>({});
+  const refreshing = useRef(false);
+  const { refetch: refetchStripe } = stripe;
+  const { refetch: refetchPayPal } = paypal;
+  useEffect(() => {
+    if (setup) return;
+    const refresh = async () => {
+      if (document.hidden || client.scope.signal.aborted || refreshing.current) return;
+      refreshing.current = true;
+      try {
+        for (const [provider, expired, verification, verify, refetch] of [
+          ['stripe', stripeExpired, stripeVerification, client.refreshStripe, refetchStripe],
+          ['paypal', paypalExpired, paypalVerification, client.refreshPayPal, refetchPayPal],
+        ] as const) {
+          if (!expired || !verification || refreshAttempt.current[provider] === verification)
+            continue;
+          if (document.hidden || client.scope.signal.aborted) break;
+          refreshAttempt.current[provider] = verification;
+          try {
+            await verify();
+            if (!client.scope.signal.aborted) await refetch();
+          } catch {
+            // Keep the previous status and the manual Verify again action.
+          }
+        }
+      } finally {
+        refreshing.current = false;
+      }
+    };
+    void refresh();
+    const resume = () => void refresh();
+    document.addEventListener('visibilitychange', resume);
+    return () => document.removeEventListener('visibilitychange', resume);
+  }, [
+    client,
+    setup,
+    stripeVerification,
+    paypalVerification,
+    stripeExpired,
+    paypalExpired,
+    refetchStripe,
+    refetchPayPal,
+  ]);
   const stripeState = stripe.data?.status.state;
   const stripeIneligible =
     window.location.hash === '#stripe-account-ineligible' &&

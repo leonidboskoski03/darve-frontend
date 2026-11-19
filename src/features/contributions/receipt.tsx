@@ -107,8 +107,17 @@ export function PrivateReceipt({
     enabled: visible,
     retry: false,
     gcTime: 0,
+    refetchInterval: ({ state }) => {
+      if (!visible || state.error || !state.data || state.dataUpdateCount > 24) return false;
+      const receipt = state.data;
+      return receipt.paymentStatus !== 'failed' &&
+        (receipt.paymentStatus !== 'confirmed' ||
+          receipt.verifiedPayments.some((payment) => payment.eligibility === 'unclassified'))
+        ? 5_000
+        : false;
+    },
   });
-  const receipt = visible && !query.isError && !query.isFetching ? query.data : undefined;
+  const receipt = visible && !query.isError ? query.data : undefined;
   return (
     <>
       <header className="contribution-heading">
@@ -148,10 +157,10 @@ export function PrivateReceipt({
             </span>
             <h2 id="receipt-state-heading">
               {receipt.paymentStatus === 'confirmed'
-                ? 'Verified payment recorded'
+                ? 'Payment confirmed ✓'
                 : receipt.paymentStatus === 'failed'
                   ? 'Checkout failed'
-                  : 'Payment not confirmed'}
+                  : 'Confirming payment…'}
             </h2>
             <p>
               {receipt.paymentStatus === 'confirmed'
@@ -191,13 +200,13 @@ export function PrivateReceipt({
                   ? 'Deadline eligible'
                   : payment.eligibility === 'late'
                     ? 'Received outside the funding deadline'
-                    : 'Payment timing needs review'}
+                    : 'Payment received, confirming funding eligibility…'}
               </h2>
               <p>
                 {payment.eligibility === 'late'
                   ? 'This payment did not qualify toward the funding deadline.'
                   : payment.eligibility === 'unclassified'
-                    ? 'Verified money is retained, but deadline eligibility has not been established.'
+                    ? 'We’ve received your payment and are checking whether it counts toward the goal.'
                     : 'The backend classified this payment as eligible toward the funding deadline.'}
               </p>
               <dl className="contribution-details">
@@ -205,18 +214,21 @@ export function PrivateReceipt({
                   <dt>Verified amount</dt>
                   <dd>{contributionMoney(payment.amountMinor, receipt.amount.currency)}</dd>
                 </div>
-                <div>
-                  <dt>Paid time</dt>
-                  <dd>{time(payment.paidAt)}</dd>
-                </div>
-                <div>
-                  <dt>Eligibility reference</dt>
-                  <dd>{time(payment.eligibilityReferenceAt)}</dd>
-                </div>
-                <div>
-                  <dt>Time provenance</dt>
-                  <dd>{timingLabels[payment.eligibilityTimeBasis]}</dd>
-                </div>
+                {payment.paidAt && (
+                  <div>
+                    <dt>Paid time</dt>
+                    <dd>{time(payment.paidAt)}</dd>
+                  </div>
+                )}
+                {payment.eligibilityReferenceAt && (
+                  <div>
+                    <dt>Funding eligibility checked against</dt>
+                    <dd>
+                      {time(payment.eligibilityReferenceAt)} ·{' '}
+                      {timingLabels[payment.eligibilityTimeBasis]}
+                    </dd>
+                  </div>
+                )}
               </dl>
             </section>
           ))}

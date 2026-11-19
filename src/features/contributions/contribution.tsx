@@ -17,7 +17,7 @@ const reasons = {
   receiving_unavailable: 'This method cannot currently receive the contribution.',
   goal_reached: 'The funding goal has been recognized. New contributions are closed.',
   reconciliation_required:
-    'Payment information is being reviewed. New contributions are unavailable.',
+    'We’re confirming payments that may complete the goal. Please check back shortly.',
 };
 const money = contributionMoney;
 const time = (value: string) =>
@@ -40,6 +40,10 @@ export function Contribution({
       queryKey: ['public-challenge', publicId],
       queryFn: ({ signal }) => runtime.challenge(publicId, signal),
       retry: false,
+      refetchInterval: ({ state }) =>
+        state.data?.data.funding.state === 'pending' && !state.error && state.dataUpdateCount <= 24
+          ? 5_000
+          : false,
     },
     runtime.publicQueries,
   );
@@ -104,7 +108,7 @@ export function Contribution({
                 <dt>Funding status</dt>
                 <dd>
                   {value.funding.state === 'funded'
-                    ? 'Goal recognized'
+                    ? 'Goal reached ✓'
                     : value.funding.state === 'unsuccessful'
                       ? 'Funding unsuccessful'
                       : 'Awaiting funding'}
@@ -193,7 +197,7 @@ export function Contribution({
                 <dd>{money(value.funding.adjustedGross, value.terms.goal.currency)}</dd>
               </div>
               <div>
-                <dt>Remaining contributions</dt>
+                <dt>Held for this challenge</dt>
                 <dd>{money(value.funding.remainingContributions, value.terms.goal.currency)}</dd>
               </div>
               <div>
@@ -217,11 +221,7 @@ export function Contribution({
           </details>
         </>
       )}
-      <CheckoutFlow
-        runtime={runtime}
-        current={query.isFetching ? null : (value ?? null)}
-        onReceipt={onReceipt}
-      />
+      <CheckoutFlow runtime={runtime} current={value ?? null} onReceipt={onReceipt} />
       <p className="contribution-footnote">
         Already contributed? <a href="/receipts">Check a private receipt</a> in the original
         browser.
