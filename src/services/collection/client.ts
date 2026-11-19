@@ -177,7 +177,12 @@ export function createCollectionClient(session: CreatorSession, clock = () => pe
     },
     round(roundId: string, signal: AbortSignal) {
       return readRound(
-        { path: `/api/rounds/${id(roundId)}`, signal, schema: RoundResponseSchema, success: [200] },
+        {
+          path: `/api/rounds/${id(roundId)}?roundReview=1`,
+          signal,
+          schema: RoundResponseSchema,
+          success: [200],
+        },
         roundId,
       );
     },
@@ -188,7 +193,7 @@ export function createCollectionClient(session: CreatorSession, clock = () => pe
           throw new CollectionError(failure('configuration', 'INVALID_STOP_INPUT'));
         return readRound(
           {
-            path: `/api/rounds/${id(round.id)}/collection/stop`,
+            path: `/api/rounds/${id(round.id)}/collection/stop?roundReview=1`,
             method: 'POST',
             body: parsed.data,
             schema: RoundResponseSchema,

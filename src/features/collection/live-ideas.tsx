@@ -41,10 +41,12 @@ export function CollectionLiveIdeas({
   origin,
   scope,
   roundId,
+  showStatus = true,
 }: {
   origin: string;
   scope: AuthorityScope;
   roundId: string;
+  showStatus?: boolean;
 }) {
   const subscription = useMemo(
     () => createAnalysisLiveSubscription({ origin, roundId, scope }),
@@ -64,9 +66,11 @@ export function CollectionLiveIdeas({
     : live.roundState === 'failed'
       ? 'Analysis could not finish. Open review for the latest state.'
       : result
-        ? result.settling
-          ? 'Supporter counts are still updating. The order is final.'
-          : 'Final top ideas.'
+        ? result.suggestions.length === 0
+          ? 'No eligible ideas were selected.'
+          : result.settling
+            ? 'Supporter counts are still updating. The order is final.'
+            : 'Final top ideas.'
         : live.roundState === 'closing'
           ? 'Collection ended. Picking the top 10…'
           : live.phase === 'reconnecting'
@@ -82,7 +86,11 @@ export function CollectionLiveIdeas({
       <div className="collection-ideas__heading">
         <h2 id="live-ideas-title">
           <Sparkles size={18} aria-hidden="true" />
-          {result ? 'Top 10 ideas' : 'Top ideas right now'}
+          {result?.suggestions.length
+            ? 'Top 10 ideas'
+            : result
+              ? 'Viewer ideas'
+              : 'Top ideas right now'}
         </h2>
         {result ? (
           result.provisional ? (
@@ -94,9 +102,11 @@ export function CollectionLiveIdeas({
           <span className="collection-ideas__badge">Live preview, not final</span>
         ) : null}
       </div>
-      <p role="status" className="collection-muted">
-        {status}
-      </p>
+      {showStatus || (unavailable && !result) ? (
+        <p role="status" className="collection-muted">
+          {showStatus ? status : 'Live preview is unavailable.'}
+        </p>
+      ) : null}
       {result && result.provisional ? (
         <p className="collection-muted">
           Picked from ideas that were already checked when the round closed.
@@ -117,9 +127,6 @@ export function CollectionLiveIdeas({
           className="collection-ideas__list"
           items={live.preview.map((idea) => ({ id: idea.id, content: <IdeaRow {...idea} /> }))}
         />
-      ) : null}
-      {result && result.suggestions.length === 0 ? (
-        <p className="collection-muted">No eligible ideas were selected.</p>
       ) : null}
       {result || live.roundState === 'failed' ? (
         <a className="collection-ideas__review" href={reviewHref}>

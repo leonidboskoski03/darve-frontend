@@ -119,6 +119,46 @@ async function display(page: Page, compact = false) {
   await expect(page.getByRole('heading', { name: 'Synthetic challenge' })).toBeVisible();
   return frame;
 }
+test('OBS reflects early close and the server review state without retaining a countdown', async ({
+  page,
+}) => {
+  const frame = await display(page);
+  const clock = Date.parse(frame.serverTime);
+  frame.data = {
+    ...frame.data,
+    version: frame.data.version + 1,
+    presentationState: 'collecting',
+    reviewState: 'collecting',
+    collectionClosesAt: new Date(clock + 30_000).toISOString(),
+    challengeId: null,
+    challenge: null,
+    qrPayload: null,
+  };
+  frame.serverTime = new Date(clock + 1_000).toISOString();
+  await page.evaluate((value) => window.syntheticOverlay.emit(value), frame);
+  await expect(page.getByLabel('Collection time remaining')).toHaveText(/^0:(28|29)$/);
+
+  const transitions = [
+    ['collection_closed', 'closing', 'Ideas closed'],
+    ['analysis_running', 'delayed', 'Analysis is delayed'],
+    ['analysis_failed', 'analysis_failed', 'Analysis could not finish'],
+    ['choosing', 'ready', 'Ideas are ready for review'],
+    ['choosing', 'fallback', 'Showing previously reviewed ideas in fallback order'],
+  ] as const;
+  for (const [presentationState, reviewState, message] of transitions) {
+    frame.data = {
+      ...frame.data,
+      version: frame.data.version + 1,
+      presentationState,
+      reviewState,
+      collectionClosesAt: null,
+    };
+    frame.serverTime = new Date(Date.parse(frame.serverTime) + 1_000).toISOString();
+    await page.evaluate((value) => window.syntheticOverlay.emit(value), frame);
+    await expect(page.getByRole('heading', { name: message })).toBeVisible();
+    await expect(page.getByLabel('Collection time remaining')).toHaveCount(0);
+  }
+});
 test('compact approved renderer preserves transparency and QR pixels at broadcast sizes', async ({
   page,
 }) => {
