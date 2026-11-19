@@ -10,7 +10,8 @@
   },
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "dev:connected": "node --use-system-ca tools/connected-product.mjs start",
+    "dev:connected": "npm run dev:connected:acceptance --",
+    "dev:connected:acceptance": "node --use-system-ca tools/connected-product.mjs start",
     "product:check": "node --use-system-ca tools/connected-product.mjs check",
     "product:status": "node tools/connected-product.mjs status",
     "product:stop": "node tools/connected-product.mjs stop",

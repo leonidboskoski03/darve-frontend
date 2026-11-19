@@ -47,7 +47,7 @@ Do not run install/clean-install against files held by a Vite/test process on Wi
 | Environment/packaging/dependencies  | Reproducible install, types/build/affected runtime/browser checks and safe config/lockfile review. Actual hosting/security proof remains later.                 |
 | Settled feature integration/release | Current full gate and complete relevant browser/cross-system acceptance; release/hosted gates as documented, with explicit remaining limitations.               |
 
-Hosted dev CI uses `check:docs` for the complete prose allowlist and `check:dev` for other changes; the latter is formatting, lint/import architecture, links and one build/typecheck, without unit/browser suites. Release CI runs `check`, audit and all current Playwright acceptance. The pre-push hook still runs the full local gate. Relevant local feature tests remain mandatory; light hosted checks do not replace them. See [Git/CI](GIT_AND_CI_SETUP.md). Do not push solely to repeat an unchanged check.
+Hosted dev CI uses `check:docs` for the complete prose allowlist. Other changes run `check:dev`, Vitest, architecture and CI-policy tests. Release CI runs `check`, audit and all current Playwright acceptance. The pre-push hook still runs the full local gate. See [Git/CI](GIT_AND_CI_SETUP.md).
 
 ## Switching or resuming a chat
 
