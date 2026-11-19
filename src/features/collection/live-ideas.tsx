@@ -102,9 +102,9 @@ export function CollectionLiveIdeas({
           <span className="collection-ideas__badge">Live preview, not final</span>
         ) : null}
       </div>
-      {showStatus ? (
+      {showStatus || (unavailable && !result) ? (
         <p role="status" className="collection-muted">
-          {status}
+          {showStatus ? status : 'Live preview is unavailable.'}
         </p>
       ) : null}
       {result && result.provisional ? (
