@@ -219,7 +219,7 @@ describe('creator API and authorization boundary', () => {
     await client.unlink({ id: signedIn.user.id, version: 7 });
     expect(JSON.parse(send.mock.calls[1]?.[1]?.body as string)).toEqual({ expectedVersion: 7 });
     expect(send.mock.calls[2]?.[0]).toBe(origin + '/api/session');
-    expect(session.getSnapshot().phase).toBe('signed_out');
+    expect(session.getSnapshot().phase).toBe('expired');
   });
   it('rejects origin mismatch rather than sending creator flow to a different API', async () => {
     const { session } = await setup(false);

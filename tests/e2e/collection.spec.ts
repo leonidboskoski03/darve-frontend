@@ -342,7 +342,9 @@ test('synthetic preparing cancellation has no active countdown or collected snap
     page.getByText('Preparation was cancelled before any collection window started.'),
   ).toBeVisible();
 });
-test('synthetic terminal 401 clears private collection state', async ({ page }) => {
+test('synthetic feature 401 hides the rejected round but keeps the creator signed in', async ({
+  page,
+}) => {
   let expired = false;
   await scenario(page, {
     read: async (route) =>
@@ -355,10 +357,11 @@ test('synthetic terminal 401 clears private collection state', async ({ page }) 
     page.getByRole('heading', { name: 'Collecting viewer ideas', exact: true }),
   ).toBeVisible();
   expired = true;
-  await expect(
-    page.getByRole('heading', { name: 'Connect your stream to Darve', exact: true }),
-  ).toBeVisible({ timeout: 5000 });
-  await expect(page.getByRole('heading', { name: 'Round details', exact: true })).toHaveCount(0);
+  await expect(page.getByText('Darve could not authorize this collection action.')).toBeVisible({
+    timeout: 5000,
+  });
+  await expect(page.getByRole('button', { name: 'Sign out', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Collecting viewer ideas' })).toHaveCount(0);
 });
 test('synthetic partial connection pages cannot be mistaken for a complete source list', async ({
   page,

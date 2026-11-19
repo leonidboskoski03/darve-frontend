@@ -36,6 +36,7 @@ async function scenario(page: Page, accepted = false) {
     receivingGate: null as Promise<void> | null,
     paypal: 'pending' as 'pending' | 'ready' | 'revoked',
     receivingUnavailable: false,
+    paypalConflict: false,
     mutations: [] as string[],
     unexpected: [] as string[],
     errors: [] as string[],
@@ -100,7 +101,23 @@ async function scenario(page: Page, accepted = false) {
       state.signedIn = false;
       return route.fulfill({ status: 204, headers: cors });
     }
+    if (path === '/api/auth/twitch/start' && method === 'POST')
+      return reply(route, {
+        authorizationUrl: 'https://id.twitch.tv/oauth2/authorize?fixture=1',
+        expiresAt: new Date(Date.now() + 60000).toISOString(),
+      });
     if (!state.signedIn) return reply(route, failure(), 401);
+    if (
+      state.paypalConflict &&
+      method === 'POST' &&
+      ['/api/payment-accounts/paypal/onboarding', '/api/payment-accounts/paypal/refresh'].includes(
+        path,
+      )
+    ) {
+      const body = failure();
+      body.error.code = 'SETUP_SESSION_MISMATCH';
+      return reply(route, body, 409);
+    }
     if (
       path === '/api/connections' ||
       path === '/api/challenges' ||
@@ -371,3 +388,69 @@ test('synthetic core navigation preserves pending, verified and revoked receivin
   expect(state.unexpected).toEqual([]);
   expect(state.errors).toEqual([]);
 });
+test('signed-out dashboard deep link resumes after provider sign-in', async ({ page }) => {
+  const state = await scenario(page, true);
+  state.signedIn = false;
+  await page.route('https://id.twitch.tv/oauth2/authorize?*', async (route) => {
+    state.signedIn = true;
+    await route.fulfill({
+      status: 302,
+      headers: { location: 'http://127.0.0.1:4175/tests/fixtures/creator.html?view=oauth-return' },
+    });
+  });
+  await page.goto(fixture.replace('view=terms', 'view=dashboard&timeZone=UTC'));
+  await expect(page.getByRole('heading', { name: 'Connect your stream to Darve' })).toBeVisible();
+  expect(new URL(page.url()).searchParams.get('returnTo')).toBe('/dashboard?timeZone=UTC');
+  await expect(page.getByRole('navigation', { name: 'Creator workspace' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Continue with Twitch' }).click();
+  await expect(page).toHaveURL('http://127.0.0.1:4175/dashboard?timeZone=UTC');
+  await expect(page.getByRole('heading', { name: 'Dashboard', exact: true })).toBeVisible();
+});
+
+test('pending PayPal setup conflict keeps the creator authenticated', async ({ page }) => {
+  const state = await scenario(page, true);
+  state.paypalConflict = true;
+  await page.goto(fixture.replace('view=terms', 'view=dashboard'));
+  await page.getByRole('link', { name: 'Payout settings', exact: true }).click();
+  await page.getByRole('button', { name: 'Verify PayPal receiving' }).click();
+  await expect(
+    page.getByRole('alert').getByText(/This PayPal setup started in another sign-in session/),
+  ).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Start over PayPal' })).toBeVisible();
+  await page.getByRole('button', { name: 'Continue PayPal setup' }).click();
+  await page.getByRole('checkbox', { name: /I consent/ }).check();
+  await page.getByRole('button', { name: 'Confirm setup' }).click();
+  await expect(page.getByRole('dialog').getByRole('alert')).toHaveText(
+    /This PayPal setup started in another sign-in session/,
+  );
+  await expect(page.getByText(/Your session expired/)).toHaveCount(0);
+});
+for (const [view, path] of [
+  ['collection', '/collection'],
+  ['account', '/account'],
+  ['payouts', '/account/payments'],
+  ['obs', '/obs'],
+  ['coins', '/coins'],
+  ['templates', '/templates'],
+  ['support', '/support'],
+] as const) {
+  test(
+    'signed-out ' + path + ' waits for sign-in before opening private content',
+    async ({ page }) => {
+      const state = await scenario(page, true);
+      state.signedIn = false;
+      const privateReads: string[] = [];
+      page.on('request', (request) => {
+        const url = new URL(request.url());
+        if (url.origin === api && url.pathname !== '/api/session') privateReads.push(url.pathname);
+      });
+      await page.goto(fixture.replace('view=terms', 'view=' + view));
+      await expect(
+        page.getByRole('heading', { name: 'Connect your stream to Darve' }),
+      ).toBeVisible();
+      expect(new URL(page.url()).searchParams.get('returnTo')).toBe(path);
+      await expect(page.getByRole('navigation', { name: 'Creator workspace' })).toHaveCount(0);
+      expect(privateReads).toEqual([]);
+    },
+  );
+}

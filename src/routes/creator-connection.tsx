@@ -2,14 +2,27 @@ import { useContext, useEffect } from 'react';
 import { Navigate, useLocation, useMatch } from 'react-router-dom';
 import { CreatorAccess } from '@/features/creator-access/index';
 import { CreatorSessionContext, useCreatorSession } from '@/features/session-status/index';
-import { oauthReturnNotice, oauthReturnSearch } from '@/services/identity-navigation/index';
+import {
+  oauthReturnNotice,
+  oauthReturnSearch,
+  rememberCreatorReturn,
+  safeCreatorReturn,
+} from '@/services/identity-navigation/index';
 
 function Configured({ mode, origin }: { mode: 'connect' | 'terms'; origin: string }) {
   const { controller: session, snapshot } = useCreatorSession();
   const { search } = useLocation();
   const signInEntry = useMatch('/authorize');
+  const returnTo = signInEntry
+    ? safeCreatorReturn(new URLSearchParams(search).get('returnTo'))
+    : null;
   if (signInEntry && snapshot.phase === 'authenticated')
-    return <Navigate replace to={{ pathname: '/onboarding', search: oauthReturnSearch(search) }} />;
+    return (
+      <Navigate
+        replace
+        to={returnTo ?? { pathname: '/onboarding', search: oauthReturnSearch(search) }}
+      />
+    );
   return (
     <CreatorAccess
       runtime={{ origin, session, snapshot }}
@@ -18,6 +31,7 @@ function Configured({ mode, origin }: { mode: 'connect' | 'terms'; origin: strin
           ? oauthReturnNotice(search, snapshot.phase === 'authenticated')
           : null
       }
+      beforeSignIn={() => rememberCreatorReturn(returnTo)}
       mode={mode}
     />
   );

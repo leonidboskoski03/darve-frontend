@@ -65,12 +65,12 @@ export function createCreatorSession(options: {
       fetcher: options.fetcher,
     });
   const expired = () => snapshot.expiresAt !== null && Date.parse(snapshot.expiresAt) <= now();
-  const expire = () => rotate('expired');
-
-  async function inspect() {
+  async function inspect(quiet = false) {
     if (!options.origin || !running || logoutUncertain || snapshot.phase === 'signing_out') return;
     if (inspection) return inspection;
-    rotate('loading');
+    const previous = snapshot.phase;
+    const hadSession = previous === 'authenticated' || previous === 'expired';
+    if (!quiet) rotate('loading');
     const scope = snapshot.scope;
     const task = (async () => {
       const result = await client(scope)({
@@ -80,6 +80,7 @@ export function createCreatorSession(options: {
       });
       if (scope.signal.aborted || !running) return;
       if (result.kind !== 'data') {
+        if (quiet && !expired()) return;
         rotate(
           'unavailable',
           result.kind === 'error' ? result : failure('protocol', 'INVALID_SESSION_RESPONSE'),
@@ -87,14 +88,17 @@ export function createCreatorSession(options: {
         return;
       }
       if (!result.data.authenticated) {
-        publish({ ...snapshot, phase: 'signed_out' });
+        rotate(hadSession ? 'expired' : 'signed_out');
         return;
       }
       const remaining = Date.parse(result.data.expiresAt) - now();
       if (remaining <= 0) {
-        expire();
+        rotate('unavailable', failure('protocol', 'INVALID_SESSION_EXPIRY'));
         return;
       }
+      if (quiet && proof !== result.data.csrfToken) rotate('loading');
+      if (expiryTimer) clearTimeout(expiryTimer);
+      const currentScope = snapshot.scope;
       proof = result.data.csrfToken;
       publish({
         ...snapshot,
@@ -104,9 +108,9 @@ export function createCreatorSession(options: {
       });
       const expiresAt = result.data.expiresAt;
       const schedule = () => {
-        if (scope.signal.aborted || !running) return;
+        if (currentScope.signal.aborted || !running) return;
         const delay = Date.parse(expiresAt) - now();
-        if (delay <= 0) expire();
+        if (delay <= 0) void inspect(true);
         else expiryTimer = setTimeout(schedule, Math.min(delay, 2_147_483_647));
       };
       schedule();
@@ -165,15 +169,16 @@ export function createCreatorSession(options: {
       channel?.close();
       channel = null;
     },
-    inspect,
+    inspect: () => inspect(),
+    recheck: () => inspect(true),
     async request<T>(request: JsonRequest<T>): Promise<ApiResult<T>> {
-      if (expired()) expire();
+      if (expired()) await inspect(true);
       if (!options.origin || snapshot.phase !== 'authenticated')
         return failure('authority', 'CREATOR_SESSION_REQUIRED');
       const scope = snapshot.scope;
       const result = await client(scope)(request);
       if (scope.signal.aborted) return failure('cancelled', 'AUTHORITY_CHANGED');
-      if (result.kind === 'error' && result.status === 401) rotate('expired', result);
+      if (result.kind === 'error' && result.status === 401) void inspect(true);
       return result;
     },
     async logout() {
@@ -191,7 +196,7 @@ export function createCreatorSession(options: {
         success: [204],
       });
       if (scope.signal.aborted || !running) return;
-      if (result.kind === 'empty' || (result.kind === 'error' && result.status === 401)) {
+      if (result.kind === 'empty') {
         logoutUncertain = false;
         rotate('signed_out');
         channel?.postMessage('invalidate');

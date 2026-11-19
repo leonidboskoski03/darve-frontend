@@ -72,7 +72,7 @@ export function subscribeSupport(options: {
         if ([401, 403, 404].includes(response.status)) {
           terminal = true;
           options.onDenied();
-          if (response.status === 401) void options.session.inspect();
+          if (response.status === 401) void options.session.recheck();
           return;
         }
         if (response.status === 429 || response.status === 503) {
