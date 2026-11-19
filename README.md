@@ -2,27 +2,16 @@
 
 Canonical new frontend workspace. React + TypeScript + Vite, separate from the existing backend. Historical projects remain reference material; no old authentication or simulated workflows are imported. Preserve the selected F dashboard, M/R OBS and A contribution direction. The homepage rebuilds the selected standalone landing. Creator entry, server terms and connection management use the current API when configured; registered-development-app sign-in and purpose consent have actual founder-assisted evidence. Live collection and deployment remain separate.
 
-## Start locally
+## Run Darve locally
 
-Use Node from `.nvmrc` and npm 11. In PowerShell use `npm.cmd` if script execution policy blocks `npm`.
+Use the Node version in `.nvmrc` and npm 11. On Windows, use `npm.cmd` if PowerShell blocks `npm`.
 
-```powershell
-npm.cmd ci
-npm.cmd run dev
-```
+1. In the backend checkout, start Docker Desktop, run `npm ci` once, then run `npm run local:up`. Run `npm run local:seed` if the test creator or display is missing. [Backend runbook](https://github.com/leonidboskoski03/darve-backend/blob/dev/docs/BACKEND_DOCKER.md#run-darve-locally)
+2. In this checkout, run `npm ci` once and copy [.env.example](.env.example) to `.env.development.local`. Run `npm run dev` and open [Darve on localhost](http://localhost:5173). Use `localhost` throughout so cookies and API callbacks agree.
+3. Sign in with a configured provider, or run `npm run local:creator` and open [the local creator sign-in](http://localhost:3103) within two minutes. This signs in to the seeded creator on the full Docker stack. Open Dashboard, Payout settings, or OBS display. An accepted sandbox challenge can be opened from challenge history. Expired or funded challenges still show their funding state and close checkout.
+4. Stop Vite with Ctrl+C and run `npm run local:down` in the backend checkout. If a port is busy, identify its owner and stop that process or stack first. Keep ports 5173 and 3000 so origins still match.
 
-Open `http://127.0.0.1:5173`. The default presentation preview needs no backend, Docker or credentials and makes no API calls. The optional exact public API origin enables actual session inspection/logout and creator onboarding; see [isolated local API setup and acceptance](docs/LOCAL_API_COMPOSITION.md). Copy `.env.example` to `.env.local` only for documented public settings. Every `VITE_*` value is browser-visible. Provider keys belong in backend configuration.
-
-## Connected creator workspace
-
-With Docker Desktop running, open PowerShell in this repository.
-
-```powershell
-npm.cmd run product:check
-npm.cmd run dev:connected -- --pause-development-api
-```
-
-Open [Darve's connected creator workspace](http://localhost:5174/dashboard). The profile uses the pinned backend on localhost:3000 and preserves its own database between runs. The flag temporarily stops the existing Darve Docker API if it owns port 3000. Omit it when the port is free. Stop with Ctrl+C or `npm.cmd run product:stop` from another terminal to restore the previous API. See the [connected local runbook](docs/OPERATIONS.md#connected-local-creator-workspace).
+With the app and a seeded sandbox challenge running, `npm run test:core:local` runs the headless walkthrough. Install Chromium once with `npx playwright install chromium`. The walkthrough checks the existing payout connections and the public contribution and OBS pages, then revokes its own OBS grant and creator session. Use `npm run test:core:local -- --require-open-checkout` with a fresh sandbox challenge to require the checkout form. The walkthrough verifies receiving without submitting payment.
 
 ## Staff access locally
 
