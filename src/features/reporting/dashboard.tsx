@@ -141,7 +141,7 @@ export function Dashboard({
       )}
       {value && (
         <>
-          <AsOf time={value.dataAsOf} zone={value.period.timeZone} />
+          <AsOf time={value.dataAsOf} />
           <p className="report-muted">
             {value.period.fromDate} through {value.period.throughDate} · {value.period.timeZone}.{' '}
             {value.period.includesPartialToday
@@ -214,9 +214,7 @@ export function Dashboard({
                 {value.recentActivity.items.map((item, index) => (
                   <li key={`${item.kind}:${item.id}:${index}`}>
                     <a href={'/challenges/' + item.challengeId}>{activityLabels[item.kind]}</a>
-                    <time dateTime={item.occurredAt}>
-                      {reportTime(item.occurredAt, value.period.timeZone)}
-                    </time>
+                    <time dateTime={item.occurredAt}>{reportTime(item.occurredAt)}</time>
                   </li>
                 ))}
               </ol>

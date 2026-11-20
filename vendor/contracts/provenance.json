@@ -1,7 +1,7 @@
 {
   "package": "@darve/contracts",
   "version": "0.0.0",
-  "sourceRevision": "06be05ac7072c40b0e661dc262cb822084ebf932",
+  "sourceRevision": "d1695da03a3b8658ca60b179a4cf565bcd9d6f5c",
   "sourcePaths": ["packages/contracts", "tsconfig.base.json", "package-lock.json"],
   "sourceFiles": {
     "package-lock.json": "59083686090763494821add1bb0d02cd52e8e9fbc97e754440089ae8f3f5fd79",
@@ -22,7 +22,7 @@
     "packages/contracts/src/moderation.ts": "79e4e7812c8a53cdda9c01bc52af7bdf424e8ed3b5172d74de0778edfbb1d278",
     "packages/contracts/src/oauth.ts": "dcb04aa300c028d59c25b2af9cc5032f99fbbc409a4d69ecf1ae31606fa511a9",
     "packages/contracts/src/overlay-consumer.ts": "4c69b24135b501ddf4b275c5ac2d4a64a34be55c6471b88435ed919945483f9b",
-    "packages/contracts/src/overlay.ts": "66b82d92e6fcc6ee1e7edd128dd5441a531346c9d407025e14ca31d5e36cf6bb",
+    "packages/contracts/src/overlay.ts": "553a8121bcf66bfd4bbb8ebba321ea4dc0184ad90cfe90f70ef0223a3d4188ef",
     "packages/contracts/src/payment.ts": "42fd5c7a2af703c614295c57850c23ebe10a2b3fa0d63f2fe397690779848bdb",
     "packages/contracts/src/paypal-receiving.ts": "862e54638d394d6f13afa82aeb2d189dcc5b28c286b4c9a5256366ea23137d87",
     "packages/contracts/src/profile.ts": "29dc25c07dae19b5c74e37b0f2650aaaba84686ea763e89555d446647604bfc7",
@@ -56,9 +56,9 @@
     }
   },
   "artifact": {
-    "filename": "darve-contracts-06be05ac7072c40b0e661dc262cb822084ebf932.tgz",
-    "sha256": "c500b90476cf3a76919c125787f58beadf01f05d62381801078d586512f49407",
-    "integrity": "sha512-3MhWaoHtHYvimWlTJynOeDPAi8wwODycXohPPeVQJZMttuTXF1D+yvLfNDxuHXeDrdgkjpjwC+5IsWcV0CucAA==",
+    "filename": "darve-contracts-d1695da03a3b8658ca60b179a4cf565bcd9d6f5c.tgz",
+    "sha256": "9e4e4f3476f6732c51239a7113b46109dabd48f4572dd6e6ae1ad8eefd3659d0",
+    "integrity": "sha512-OKxme7DuHw1uAlSLsGmnHGULCQ1uCIk76DHSTRh+u9CivCuYmhIdIQ30aJSyrAIofPMZgh0avP6W+dWKlM+buQ==",
     "files": {
       "README.md": "3c38051c93820e6e48e2d7e77491305ed024044614219bf80e9498a675bef693",
       "dist/analysis.d.ts": "a4d1219ebea34bcfc5dba2492db6c882198fef34df2afa70038cc883b2dea5aa",
@@ -91,8 +91,8 @@
       "dist/oauth.js": "b37f9d48dd9c016491ef25489e98b871daa6c4adbe426f61526032a2afa29033",
       "dist/overlay-consumer.d.ts": "a600002ac94f467f236d2adfcda209fd02716da5c6479aa2b79a6598daf102a1",
       "dist/overlay-consumer.js": "6e4f9ae474c0f949c9e925d70c1c7c3a1473281dcd6299079ac0ab4712edc22d",
-      "dist/overlay.d.ts": "311af35270a3a42a5546ad0c82a3fe23759f4b7f92396556948c87b12e12d026",
-      "dist/overlay.js": "ece68e76e1c78270f17d90f13ed2fd05f386a7805237d5c2cb8dd921a670e902",
+      "dist/overlay.d.ts": "9afc0c6e17250831c40850bde2b20349629ce1d8b381ed3fcc3de7105ce76f32",
+      "dist/overlay.js": "d28c00f9742c44514f5be5e6fc03d64f4df52d6f81dbff5b8663c18e10a322a0",
       "dist/payment.d.ts": "6497b2fbee788073c5f70bd2510f9f88e7b9a0b3af1d57f7f8e2300d94c8dfb7",
       "dist/payment.js": "18e471510f5477c1b298116b5d232014e54e819c32d148a99d779228ae9e0726",
       "dist/paypal-receiving.d.ts": "bb1e31f3adbbd925c48ea15f03971b24ea58e13e8eeedaaa005902c75f6988b4",
@@ -188,6 +188,7 @@
     "ConnectionUnlinkInputSchema",
     "ConnectionsQuerySchema",
     "ConnectionsResponseSchema",
+    "CurrentOverlaySelectionResponseSchema",
     "DashboardActivitySchema",
     "DashboardMoneySchema",
     "DashboardQuerySchema",

@@ -355,10 +355,8 @@ export function Templates({
         {data && (
           <p className="templates-muted templates-checked">
             Catalogue checked{' '}
-            <time dateTime={data.catalogue.serverTime}>
-              {coinTime(data.catalogue.serverTime)} UTC
-            </time>
-            . Refresh before a new review.
+            <time dateTime={data.catalogue.serverTime}>{coinTime(data.catalogue.serverTime)}</time>.
+            Refresh before a new review.
           </p>
         )}
       </Panel>

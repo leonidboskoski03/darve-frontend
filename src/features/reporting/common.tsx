@@ -7,11 +7,10 @@ export function ReportProblem({ error }: { error: unknown }) {
     </p>
   ) : null;
 }
-export function AsOf({ time, zone = 'UTC' }: { time: string; zone?: string }) {
+export function AsOf({ time }: { time: string }) {
   return (
     <p className="report-muted">
-      Snapshot as of <time dateTime={time}>{reportTime(time, zone)}</time> · {zone}. Refresh for
-      current status.
+      Snapshot as of <time dateTime={time}>{reportTime(time)}</time>. Refresh for current status.
     </p>
   );
 }

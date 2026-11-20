@@ -10,6 +10,8 @@ import {
 import type { CreatorSession, CreatorSnapshot } from '@/services/creator-session/index';
 import { ReportProblem } from './common';
 import { useChallengePages } from './challenge-pages';
+import { FundingCloseTime } from './funding-close-time';
+import { PublicChallengeActions } from './public-challenge-actions';
 import './reporting.css';
 export type HistoryFilter = 'all' | 'funding' | 'funded' | 'declared' | 'unsuccessful';
 export function History({
@@ -104,7 +106,7 @@ export function History({
         <>
           <p className="report-muted">
             Page snapshots read from {reportTime(query.data.pages[0]!.serverTime)} to{' '}
-            {reportTime(query.data.pages.at(-1)!.serverTime)} UTC. Refresh for current status.
+            {reportTime(query.data.pages.at(-1)!.serverTime)}. Refresh for current status.
           </p>
           <p className="report-muted">
             {items.length} retained challenges loaded; {shown.length} match this filter.{' '}
@@ -143,17 +145,19 @@ export function History({
                     {performanceLabel(item.performance.state)}
                   </p>
                   <p className="report-muted">
-                    Accepted {reportTime(item.acceptedAt)} UTC · Funding closes{' '}
-                    {reportTime(
-                      item.fundingWindow?.effectiveClosesAt ?? item.terms.fundingClosesAt,
-                    )}{' '}
-                    UTC
+                    Accepted {reportTime(item.acceptedAt)} · Funding closes{' '}
+                    <FundingCloseTime
+                      deadline={item.fundingWindow?.effectiveClosesAt ?? item.terms.fundingClosesAt}
+                      serverTime={query.data.pages.at(-1)!.serverTime}
+                      open={item.funding.state === 'pending'}
+                    />
                   </p>
                   <div className="report-actions">
                     <a href={'/challenges/' + item.id}>View challenge</a>
                     <a href={'/collection/' + item.roundId + '/analytics'}>Round analytics</a>
                     <a href={'/collection/' + item.roundId + '/suggestions'}>Review round ideas</a>
                   </div>
+                  <PublicChallengeActions challenge={item} />
                 </article>
               ))
             )}

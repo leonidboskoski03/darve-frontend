@@ -5,7 +5,6 @@ import { CreatorAccess, ConnectionSummary } from '@/features/creator-access/inde
 import { DashboardCollection } from '@/features/collection/index';
 import { DashboardOverlay } from '@/features/overlay-settings/index';
 import { ReceivingStatusSummary } from '@/features/payout-settings/index';
-import { OverlayParamsSchema } from '@/services/contracts/index';
 import {
   Dashboard,
   DashboardHome,
@@ -57,15 +56,13 @@ function Configured() {
     ...(search.has('throughDate') ? { throughDate: search.get('throughDate')! } : {}),
     ...(search.has('broadcastId') ? { broadcastId: search.get('broadcastId')! } : {}),
   };
-  const display = OverlayParamsSchema.safeParse({ id: search.get('displayId') });
-  const displayId = display.success ? display.data.id.toLowerCase() : null;
   return (
     <>
       <DashboardHome
         session={controller}
         scope={snapshot.scope}
         collection={<DashboardCollection {...runtime} />}
-        obs={<DashboardOverlay session={controller} scope={snapshot.scope} displayId={displayId} />}
+        obs={<DashboardOverlay session={controller} scope={snapshot.scope} />}
         connections={<ConnectionSummary session={controller} scope={snapshot.scope} />}
         receiving={<ReceivingStatusSummary session={controller} />}
       />
@@ -75,7 +72,6 @@ function Configured() {
         input={input}
         onApply={(value) => {
           const next = new URLSearchParams(reportingParameters(value));
-          if (displayId) next.set('displayId', displayId);
           void setSearch(next);
         }}
       />
