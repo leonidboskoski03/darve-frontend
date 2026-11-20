@@ -52,12 +52,13 @@ function allowedPath(audience: Audience, pathname: string) {
   if (audience === 'staff') return pathname.startsWith('/admin/v1/');
   if (!pathname.startsWith('/api/')) return false;
   if (audience === 'guest')
-    return /^\/api\/(public\/challenges\/[^/]+\/checkouts|checkouts\/[^/]+(?:\/(?:complete|resume))?)$/.test(
+    return /^\/api\/(public\/challenges\/[^/]+\/(?:checkouts|paypal-quick\/orders)|checkouts\/[^/]+(?:\/(?:complete|resume))?|paypal-quick\/orders\/[A-Z0-9]{1,32}\/complete)$/.test(
       pathname,
     );
   if (audience === 'overlay') return /^\/api\/overlays\/[^/]+\/(session|snapshot)$/.test(pathname);
-  if (audience === 'public') return /^\/api\/public\/challenges\/[^/]+$/.test(pathname);
-  return !/^\/api\/(public|checkouts|overlays)(\/|$)/.test(pathname);
+  if (audience === 'public')
+    return /^\/api\/public\/challenges\/[^/]+(?:\/paypal-quick\/quote)?$/.test(pathname);
+  return !/^\/api\/(public|checkouts|overlays|paypal-quick)(\/|$)/.test(pathname);
 }
 
 /** One request, one declared audience/origin. No redirect following, retries or raw error payloads. */

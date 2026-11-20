@@ -8,6 +8,7 @@ import {
 } from '@/services/contributions/index';
 import './contributions.css';
 import { CheckoutFlow } from './checkout-flow';
+import { QuickPay } from './quick-pay';
 
 const reasons = {
   account_restricted: 'Contributions are unavailable for this creator.',
@@ -221,6 +222,7 @@ export function Contribution({
           </details>
         </>
       )}
+      <QuickPay runtime={runtime} challenge={value ?? null} />
       <CheckoutFlow runtime={runtime} current={value ?? null} onReceipt={onReceipt} />
       <p className="contribution-footnote">
         Already contributed? <a href="/receipts">Check a private receipt</a> in the original

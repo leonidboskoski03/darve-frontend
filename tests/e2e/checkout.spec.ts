@@ -21,6 +21,7 @@ async function setup(page: Page, provider: 'stripe' | 'paypal' = 'stripe') {
     commands: [] as { path: string; key: string | undefined; body: string | null }[],
     mode: 'proof' as 'proof' | 'unknown' | 'stale' | 'okay' | 'needs_approval',
     captured: false,
+    quick: 'confirmed' as 'confirmed' | 'declined',
   };
   state.receipt.data.amount.amountMinor = '1000';
   await page.route('http://127.0.0.1:3310/**', async (route) => {
@@ -53,13 +54,46 @@ async function setup(page: Page, provider: 'stripe' | 'paypal' = 'stripe') {
       await route.fulfill({ status: 204, headers: cors });
       return;
     }
+    if (request.method() === 'GET' && path.endsWith('/paypal-quick/quote')) {
+      await reply({
+        clientId: 'synthetic-paypal-client',
+        merchantId: 'SELLER0000001',
+        attributionId: 'Synthetic_BN',
+        agreementId: ids.other,
+        currency: 'EUR',
+        feeMinor: '70',
+      });
+      return;
+    }
     if (request.method() === 'POST') {
       state.commands.push({
         path,
         key: request.headers()['idempotency-key'],
         body: request.postData(),
       });
-      if (path.endsWith('/checkouts')) {
+      if (path.endsWith('/paypal-quick/orders')) {
+        if (state.mode === 'proof') {
+          state.mode = 'okay';
+          await error('GUEST_PROOF_REQUIRED', 409);
+        } else await reply({ orderId: 'QUICKORDER' }, 201);
+      } else if (path === '/api/paypal-quick/orders/QUICKORDER/complete') {
+        if (state.quick === 'declined') await error('PAYPAL_DECLINED', 422);
+        else {
+          const value = structuredClone(state.receipt);
+          value.data.state = 'succeeded';
+          value.data.payments = [
+            {
+              id: ids.payment,
+              amountMinor: '1000',
+              paidAt: null,
+              eligibilityReferenceAt: null,
+              eligibilityTimeBasis: 'unknown',
+              eligibility: 'unclassified',
+            },
+          ];
+          await reply(value);
+        }
+      } else if (path.endsWith('/checkouts')) {
         if (state.mode === 'proof') {
           state.mode = 'okay';
           await error('GUEST_PROOF_REQUIRED', 409);
@@ -94,6 +128,97 @@ async function setup(page: Page, provider: 'stripe' | 'paypal' = 'stripe') {
   });
   return state;
 }
+async function quickSdk(page: Page, mode: 'approve' | 'cancel' | 'load-fails') {
+  await page.route(/^https:\/\/www\.sandbox\.paypal\.com\/sdk\/js\?/, async (route) => {
+    if (mode === 'load-fails') return route.abort();
+    await route.fulfill({
+      contentType: 'application/javascript',
+      body: `
+window[document.currentScript.dataset.namespace] = {
+  FUNDING: { PAYPAL: 'paypal', CARD: 'card' },
+  Buttons(options) {
+    let button;
+    return {
+      isEligible: () => true,
+      close: async () => button?.remove(),
+      render: async (element) => {
+        button = document.createElement('button');
+        button.textContent = options.fundingSource === 'card' ? 'PayPal card' : 'PayPal wallet';
+        button.onclick = async () => {
+          try {
+            const orderID = await options.createOrder();
+            if (${JSON.stringify(mode)} === 'approve') await options.onApprove({ orderID });
+            else options.onCancel();
+          } catch { options.onError(); }
+        };
+        element.append(button);
+      }
+    };
+  }
+};`,
+    });
+  });
+}
+async function reviewQuick(page: Page) {
+  await page.goto(base + '?view=public&publicId=' + ids.public, { waitUntil: 'domcontentloaded' });
+  await page.getByLabel('Quick amount (EUR)').fill('10.00');
+  await page
+    .getByRole('checkbox', { name: /accept the challenge terms and fee of 0.70 EUR/ })
+    .check();
+}
+test('M3-1 Quick Pay confirms a card contribution and links to the private receipt', async ({
+  page,
+}) => {
+  const state = await setup(page, 'paypal');
+  await quickSdk(page, 'approve');
+  await reviewQuick(page);
+  await page.getByRole('button', { name: 'PayPal card' }).click();
+  await expect(page.getByText('Payment confirmed.', { exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Private receipt', exact: true })).toHaveAttribute(
+    'href',
+    '/receipts/' + ids.checkout,
+  );
+  const orders = state.commands.filter((command) => command.path.endsWith('/paypal-quick/orders'));
+  expect(orders).toHaveLength(2);
+  expect(orders[0]).toEqual(orders[1]);
+  expect(
+    state.commands.filter((command) => command.path.endsWith('/QUICKORDER/complete')),
+  ).toHaveLength(1);
+  await expect(page.getByRole('button', { name: 'Prepare checkout' })).toBeVisible();
+});
+test('M3-1 closing the PayPal popup never sends capture', async ({ page }) => {
+  const state = await setup(page, 'paypal');
+  await quickSdk(page, 'cancel');
+  await reviewQuick(page);
+  await page.getByRole('button', { name: 'PayPal wallet' }).click();
+  await expect(page.getByText('PayPal was closed.', { exact: false })).toBeVisible();
+  expect(state.commands.some((command) => command.path.endsWith('/complete'))).toBe(false);
+});
+test('M3-1 Quick Pay shows a clear capture failure', async ({ page }) => {
+  const state = await setup(page, 'paypal');
+  state.quick = 'declined';
+  await quickSdk(page, 'approve');
+  await reviewQuick(page);
+  await page.getByRole('button', { name: 'PayPal wallet' }).click();
+  await expect(page.getByText('PayPal declined this payment.', { exact: true })).toBeVisible();
+  await expect(page.getByText('Payment confirmed.', { exact: true })).toHaveCount(0);
+});
+test('M3-1 SDK load failure retains the standard PayPal and Stripe methods', async ({ page }) => {
+  const state = await setup(page, 'paypal');
+  state.mode = 'okay';
+  await quickSdk(page, 'load-fails');
+  await reviewQuick(page);
+  await expect(page.getByText('Quick Pay could not open.', { exact: false })).toBeVisible();
+  const method = page.getByRole('combobox', { name: 'Payment method' });
+  await expect(method.locator('option[value="stripe"]')).toHaveText('Stripe');
+  await method.selectOption('paypal');
+  await page.getByRole('checkbox', { name: /I reviewed this challenge/ }).check();
+  await page.getByRole('button', { name: 'Prepare checkout', exact: true }).click();
+  await expect(
+    page.getByRole('heading', { name: 'Private contribution receipt', exact: true }),
+  ).toBeVisible();
+  expect(state.commands.some((command) => command.path.endsWith('/checkouts'))).toBe(true);
+});
 async function prepare(page: Page, provider = 'stripe') {
   await page.goto(base + '?view=public&publicId=' + ids.public, { waitUntil: 'domcontentloaded' });
   await page.getByRole('combobox', { name: 'Payment method', exact: true }).selectOption(provider);
