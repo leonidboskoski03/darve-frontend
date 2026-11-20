@@ -1,5 +1,6 @@
 export { createOverlayReader, readOverlayLocation, type OverlayReader } from './reader';
 export {
+  canRetryOverlayIssue,
   createOverlayOwner,
   overlayMessage,
   type OverlayOwner,
