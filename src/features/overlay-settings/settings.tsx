@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/design-system/button';
 import {
+  canRetryOverlayIssue,
   createOverlayOwner,
   copyOverlayAccessLink,
   overlayMessage,
@@ -21,11 +22,14 @@ export function OverlaySettings({ session }: { session: CreatorSession }) {
     [grantId, setGrantId] = useState('');
   const [busy, setBusy] = useState(false),
     [problem, setProblem] = useState<{
-      action: 'issue' | 'select' | 'other';
+      action: 'select' | 'other';
       error: unknown;
     } | null>(null),
     [notice, setNotice] = useState(''),
-    [issueFinished, setIssueFinished] = useState(false);
+    [issueFinished, setIssueFinished] = useState(false),
+    [issueFailure, setIssueFailure] = useState<{ error: unknown } | null>(null);
+  const canRetryIssue = issueFailure !== null && canRetryOverlayIssue(issueFailure.error);
+  const issueLocked = issueFinished || (issueFailure !== null && !canRetryIssue);
   const [issueReviewed, setIssueReviewed] = useState(false),
     [revokeReviewed, setRevokeReviewed] = useState(false);
   const [pick, setPick] = useState<{
@@ -87,12 +91,16 @@ export function OverlaySettings({ session }: { session: CreatorSession }) {
   ) => {
     if (busy) return;
     setBusy(true);
+    if (action === 'issue') setIssueFailure(null);
     setProblem(null);
     setNotice('');
     try {
       await command();
     } catch (error) {
-      if (!scope.signal.aborted) setProblem({ action, error });
+      if (!scope.signal.aborted) {
+        if (action === 'issue') setIssueFailure({ error });
+        else setProblem({ action, error });
+      }
     } finally {
       if (!scope.signal.aborted) setBusy(false);
     }
@@ -130,18 +138,16 @@ export function OverlaySettings({ session }: { session: CreatorSession }) {
           <input
             type="checkbox"
             checked={issueReviewed}
-            disabled={busy || issueFinished}
+            disabled={busy || issueLocked}
             onChange={(e) => setIssueReviewed(e.target.checked)}
           />
           I understand this read-only link can display my selected challenge until revoked.
         </label>
         {!issueReviewed && <p id="obs-link-review">Tick the box above to enable link creation.</p>}
-        {problem?.action === 'issue' && (
-          <p role="alert">{overlayMessage(problem.error, 'issue')}</p>
-        )}
+        {issueFailure && <p role="alert">{overlayMessage(issueFailure.error, 'issue')}</p>}
         <Button
           aria-describedby={!issueReviewed ? 'obs-link-review' : undefined}
-          disabled={!issueReviewed || issueFinished || busy}
+          disabled={!issueReviewed || issueLocked || busy}
           aria-busy={busy}
           onClick={() =>
             void run(async () => {
@@ -158,9 +164,7 @@ export function OverlaySettings({ session }: { session: CreatorSession }) {
             }, 'issue')
           }
         >
-          {problem?.action === 'issue'
-            ? 'Try creating the OBS link again'
-            : 'Create private OBS link'}
+          {canRetryIssue ? 'Try creating the OBS link again' : 'Create private OBS link'}
         </Button>
         {link && (
           <div>

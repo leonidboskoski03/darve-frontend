@@ -384,7 +384,7 @@ async function owner(page: Page, withDisplay = true) {
   const state = {
     issued: 0,
     hasDisplay: withDisplay,
-    issueUnavailable: false,
+    issueFailure: null as 500 | 503 | 'network' | 'malformed-503' | null,
     selected: [] as unknown[],
     saved: [] as unknown[],
     revoked: 0,
@@ -459,7 +459,15 @@ async function owner(page: Page, withDisplay = true) {
     }
     if (url.pathname === '/api/overlay-grants') {
       state.issued++;
-      if (state.issueUnavailable) {
+      if (state.issueFailure === 'network') {
+        await route.abort('failed');
+        return;
+      }
+      if (state.issueFailure === 'malformed-503') {
+        await reply(route, {}, 503);
+        return;
+      }
+      if (state.issueFailure) {
         await reply(
           route,
           {
@@ -475,7 +483,7 @@ async function owner(page: Page, withDisplay = true) {
               refetch: null,
             },
           },
-          503,
+          state.issueFailure,
         );
         return;
       }
@@ -680,7 +688,7 @@ test('synthetic OBS display changes cannot carry a checked selection review into
 });
 test('OBS link remains blocked until reviewed and a 503 can be retried', async ({ page }) => {
   const state = await owner(page, false);
-  state.issueUnavailable = true;
+  state.issueFailure = 503;
   const create = page.getByRole('button', { name: 'Create private OBS link' });
   await expect(create).toBeDisabled();
   await expect(create).toHaveCSS('opacity', '0.45');
@@ -691,8 +699,10 @@ test('OBS link remains blocked until reviewed and a 503 can be retried', async (
   await expect(page.getByRole('alert')).toContainText(
     'Darve can’t create the link right now, try again.',
   );
-  state.issueUnavailable = false;
-  await page.getByRole('button', { name: 'Try creating the OBS link again' }).click();
+  const retry = page.getByRole('button', { name: 'Try creating the OBS link again' });
+  await expect(retry).toBeEnabled();
+  state.issueFailure = null;
+  await retry.click();
   await expect(page.getByLabel('Private browser-source URL')).toBeVisible();
   expect(state.issued).toBe(2);
   await page.reload();
@@ -701,6 +711,31 @@ test('OBS link remains blocked until reviewed and a 503 can be retried', async (
   await expect(page.getByLabel('Private browser-source URL')).toHaveCount(0);
   expect(state.issued).toBe(2);
 });
+for (const failure of ['network', 500, 'malformed-503'] as const) {
+  test(`OBS link creation stays locked after ${failure} and display refresh`, async ({ page }) => {
+    const state = await owner(page, false);
+    state.issueFailure = failure;
+    await page.getByText('Create a private OBS link to set up your first display.').waitFor();
+    const create = page.getByRole('button', { name: 'Create private OBS link' });
+    await page.getByRole('checkbox', { name: /I understand this read-only link/ }).check();
+    await create.click();
+    const warning = page
+      .getByRole('alert')
+      .filter({ hasText: 'The result is unconfirmed. Refresh the current display' });
+    await expect(warning).toBeVisible();
+    await expect(create).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Try creating the OBS link again' })).toHaveCount(
+      0,
+    );
+
+    state.hasDisplay = true;
+    await page.getByRole('button', { name: 'Refresh display and settings' }).click();
+    await expect(page.getByText('Current display: idle · version 1')).toBeVisible();
+    await expect(warning).toBeVisible();
+    await expect(create).toBeDisabled();
+    expect(state.issued).toBe(1);
+  });
+}
 test('a stale display link still selects the accepted challenge on the owner’s display', async ({
   page,
 }) => {

@@ -17,11 +17,22 @@ class OverlayError extends Error {
     super('Overlay request could not be confirmed.');
   }
 }
+export function canRetryOverlayIssue(error: unknown) {
+  return (
+    error instanceof OverlayError &&
+    error.problem.category === 'http' &&
+    error.problem.status === 503
+  );
+}
+const unconfirmed =
+  'The result is unconfirmed. Refresh the current display before another change. A link may have been issued; do not automatically create a replacement.';
 export function overlayMessage(error: unknown, action: 'issue' | 'select' | 'other' = 'other') {
+  if (action === 'issue')
+    return canRetryOverlayIssue(error)
+      ? 'Darve can’t create the link right now, try again.'
+      : unconfirmed;
   if (!(error instanceof OverlayError))
     return 'Overlay information could not be confirmed. Refresh before continuing.';
-  if (action === 'issue' && error.problem.status === 503)
-    return 'Darve can’t create the link right now, try again.';
   if (action === 'select' && error.problem.status === 503)
     return 'Darve can’t save the display selection right now. Check the current selection and try again.';
   if (error.problem.code === 'SOURCE_UNAVAILABLE')
@@ -32,7 +43,7 @@ export function overlayMessage(error: unknown, action: 'issue' | 'select' | 'oth
   if (action === 'select' && error.problem.status === 404)
     return 'The display or selected challenge could not be found. Refresh and choose a challenge again.';
   if (error.problem.status === 404) return 'This display or grant is unavailable for your account.';
-  return 'The result is unconfirmed. Refresh the current display before another change. A link may have been issued; do not automatically create a replacement.';
+  return unconfirmed;
 }
 export function createOverlayOwner(session: CreatorSession) {
   const scope = session.getSnapshot().scope;
