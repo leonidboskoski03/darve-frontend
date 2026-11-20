@@ -77,8 +77,8 @@ it('keeps provider statuses distinct and parses the exact revocation responses',
   await expect(client.revokeStripe(7)).resolves.toBeUndefined();
   expect((await client.revokePayPal(7)).data).toEqual(revoked);
   expect(send.mock.calls.slice(1).map(([url, req]) => [url, req?.method, req?.body])).toEqual([
-    [origin + '/api/payment-accounts/stripe', 'GET', undefined],
-    [origin + '/api/payment-accounts/paypal', 'GET', undefined],
+    [origin + '/api/payment-accounts/stripe?details=1', 'GET', undefined],
+    [origin + '/api/payment-accounts/paypal?details=1', 'GET', undefined],
     [origin + '/api/payment-accounts/stripe/refresh', 'POST', '{}'],
     [origin + '/api/payment-accounts/stripe', 'DELETE', '{"expectedVersion":7}'],
     [origin + '/api/payment-accounts/paypal', 'DELETE', '{"expectedVersion":7}'],

@@ -37,6 +37,10 @@ async function scenario(page: Page, accepted = false) {
     paypal: 'pending' as 'pending' | 'ready' | 'revoked',
     receivingUnavailable: false,
     paypalConflict: false,
+    paypalExpired: false,
+    paypalPreviousDeadline: new Date(Date.now() - 1_000).toISOString(),
+    paypalRateLimit: false,
+    stripeOnboarding: false,
     mutations: [] as string[],
     unexpected: [] as string[],
     errors: [] as string[],
@@ -143,8 +147,11 @@ async function scenario(page: Page, accepted = false) {
         serverTime: new Date().toISOString(),
         data: makeFrame(2).data.preferences,
       });
-    if (path === '/api/payment-accounts/paypal/refresh' && method === 'POST')
+    if (path === '/api/payment-accounts/paypal/refresh' && method === 'POST') {
+      if (state.paypalRateLimit) return reply(route, failure(), 429);
+      state.paypalExpired = false;
       state.paypal = 'ready';
+    }
     if (
       [
         '/api/payment-accounts/stripe',
@@ -160,12 +167,25 @@ async function scenario(page: Page, accepted = false) {
         route,
         envelope({
           environment: 'test',
-          state: stripe ? 'unconfigured' : state.paypal,
-          version: stripe ? null : ready ? 2 : 1,
-          country: stripe ? null : 'US',
+          state: stripe
+            ? state.stripeOnboarding
+              ? 'restricted'
+              : 'unconfigured'
+            : state.paypalExpired
+              ? 'unavailable'
+              : state.paypal,
+          version: stripe && !state.stripeOnboarding ? null : ready ? 2 : 1,
+          country: stripe && !state.stripeOnboarding ? null : 'US',
+          ...(stripe && state.stripeOnboarding
+            ? { onboardingRequired: true, accountLabel: 'acct_…4F2a' }
+            : {}),
           currencies: ready ? ['USD'] : [],
           observedAt: ready ? new Date().toISOString() : null,
-          validUntil: ready ? new Date(Date.now() + 60_000).toISOString() : null,
+          validUntil: ready
+            ? state.paypalExpired
+              ? state.paypalPreviousDeadline
+              : new Date(Date.now() + 60_000).toISOString()
+            : null,
           ...(stripe ? {} : { walletActive: ready, cardsActive: false }),
         }),
       );
@@ -387,6 +407,28 @@ test('synthetic core navigation preserves pending, verified and revoked receivin
   expect(state.mutations).toEqual(['POST /api/payment-accounts/paypal/refresh']);
   expect(state.unexpected).toEqual([]);
   expect(state.errors).toEqual([]);
+});
+test('payout shows connected accounts, checks expired verification and explains rate limiting', async ({
+  page,
+}) => {
+  const state = await scenario(page, true);
+  state.stripeOnboarding = true;
+  state.paypal = 'ready';
+  state.paypalExpired = true;
+  state.paypalRateLimit = true;
+  await page.goto(fixture);
+  await navigate(page, 'Payout settings', 'Payout settings');
+  const stripe = page.getByRole('region', { name: 'Stripe', exact: true });
+  await expect(stripe.getByText('Connected', { exact: true })).toBeVisible();
+  await expect(stripe.getByText('acct_…4F2a', { exact: true })).toBeVisible();
+  await expect(stripe.getByRole('button', { name: 'Continue Stripe onboarding' })).toBeVisible();
+  const paypal = page.getByRole('region', { name: 'PayPal', exact: true });
+  await expect(paypal.getByText('Connected', { exact: true })).toBeVisible();
+  await expect(paypal.getByText('Last checked', { exact: true })).toBeVisible();
+  await expect.poll(() => state.mutations).toEqual(['POST /api/payment-accounts/paypal/refresh']);
+  await paypal.getByRole('button', { name: 'Verify PayPal again' }).click();
+  await expect(paypal.getByRole('alert')).toContainText('Too many attempts — wait a minute.');
+  expect(state.unexpected).toEqual([]);
 });
 test('signed-out dashboard deep link resumes after provider sign-in', async ({ page }) => {
   const state = await scenario(page, true);
