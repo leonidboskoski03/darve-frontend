@@ -1,12 +1,12 @@
 {
   "package": "@darve/contracts",
   "version": "0.0.0",
-  "sourceRevision": "d1695da03a3b8658ca60b179a4cf565bcd9d6f5c",
+  "sourceRevision": "931cc5a45ed9cdb0a92399c4c25442c15cf2e08e",
   "sourcePaths": ["packages/contracts", "tsconfig.base.json", "package-lock.json"],
   "sourceFiles": {
-    "package-lock.json": "59083686090763494821add1bb0d02cd52e8e9fbc97e754440089ae8f3f5fd79",
+    "package-lock.json": "b77404da2bd0ddbc252878d619298376b77c4f4320f31f54ea58f2d06efc61c9",
     "packages/contracts/README.md": "3c38051c93820e6e48e2d7e77491305ed024044614219bf80e9498a675bef693",
-    "packages/contracts/package.json": "21dcf7d61d4fc5a30eb1198034465891c33c6624b781ad56ef67027fef241030",
+    "packages/contracts/package.json": "07f4ed753f678d72edc2f270951b149979cd6b7fae036258984851603b25bf3a",
     "packages/contracts/src/analysis.ts": "742b340ff26318d684dfc20b2b907c0eeff77fc7a4c33cb72fad74d00c639d72",
     "packages/contracts/src/challenge.ts": "71de1c387f6fe90677829e8e19891305d42a6b11dc269e72dbb7435f98a41515",
     "packages/contracts/src/coins.ts": "834262acaf49c13e5b6da4fcfbce59438733566670ecebc98b54e6b7b36da01a",
@@ -43,7 +43,7 @@
     "node": "24.16.0",
     "npm": "11.16.0",
     "typescript": "5.9.3",
-    "zod": "4.6.5",
+    "zod": "4.6.7",
     "configOverrides": {
       "rootDir": "src",
       "outDir": "dist",
@@ -56,9 +56,9 @@
     }
   },
   "artifact": {
-    "filename": "darve-contracts-d1695da03a3b8658ca60b179a4cf565bcd9d6f5c.tgz",
-    "sha256": "9e4e4f3476f6732c51239a7113b46109dabd48f4572dd6e6ae1ad8eefd3659d0",
-    "integrity": "sha512-OKxme7DuHw1uAlSLsGmnHGULCQ1uCIk76DHSTRh+u9CivCuYmhIdIQ30aJSyrAIofPMZgh0avP6W+dWKlM+buQ==",
+    "filename": "darve-contracts-931cc5a45ed9cdb0a92399c4c25442c15cf2e08e.tgz",
+    "sha256": "3ad377ae059207b13f98c38b22ba21ff107ea4d4e5ae062183b56cb3a861afaa",
+    "integrity": "sha512-hspL1AsZiMi3kSbVQAwhgx0GnA/qpoI4RSaakBH4RMgOaKprMzyvdnrVJCutwl/4YkAEo+b2D6OvvJqOd5mJTg==",
     "files": {
       "README.md": "3c38051c93820e6e48e2d7e77491305ed024044614219bf80e9498a675bef693",
       "dist/analysis.d.ts": "a4d1219ebea34bcfc5dba2492db6c882198fef34df2afa70038cc883b2dea5aa",
@@ -119,7 +119,7 @@
       "dist/support-recovery.js": "6d3608b04047ce961db2d1747d97eef3631a28fa1b691d062c76220cbf002def",
       "dist/support.d.ts": "a97306f3d712ba553a8e956466bbdaff30133d719f6d200f94f0880fbbf096c6",
       "dist/support.js": "e29ab29b98714591367bd15d582fbf95b3af1a0b6c5ab2c543e2124f5dc8aded",
-      "package.json": "22d4bdc3b6638fc13eaff02f0676d3f3ae65c51b8bf92f96ddc986a78dd9cf86"
+      "package.json": "d1f2a4021101ed24f7fcb804e4b68218d4505a6f52fbff2dbb15231da63728b0"
     }
   },
   "exports": [

@@ -1,5 +1,5 @@
 {
-  "sourceRevision": "d1695da03a3b8658ca60b179a4cf565bcd9d6f5c",
+  "sourceRevision": "931cc5a45ed9cdb0a92399c4c25442c15cf2e08e",
   "status": "B15/F09-02 aligns coin/template request revision limits and exports the strict existing history query; existing F08 recovery and authority handoffs retained. Ordinary activation remains separate.",
   "operations": [
     {
