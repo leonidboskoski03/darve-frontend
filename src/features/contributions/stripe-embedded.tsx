@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/design-system/button';
 import {
+  CheckoutError,
   checkoutUncertain,
   contributionMoney,
   loadStripeSdk,
@@ -131,11 +132,16 @@ export function StripeEmbedded({
       setSession(result);
       if (!result.mount) setCheckingUntil(Date.now() + 60000);
     } catch (error) {
-      setProblem(quickPayMessage(error));
-      if (!checkoutUncertain(error)) {
+      if (error instanceof CheckoutError && error.problem.code === 'EMBEDDED_SESSION_NOT_OPENED') {
+        setProblem('Couldn’t open the card form. Nothing was charged. Try again.');
         setAttempt(null);
-        setReviewed(null);
-        void quoteQuery.refetch();
+      } else {
+        setProblem(quickPayMessage(error));
+        if (!checkoutUncertain(error)) {
+          setAttempt(null);
+          setReviewed(null);
+          void quoteQuery.refetch();
+        }
       }
     } finally {
       submitting.current = false;

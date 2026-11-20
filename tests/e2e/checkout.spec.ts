@@ -22,6 +22,7 @@ async function setup(page: Page, provider: 'stripe' | 'paypal' = 'stripe') {
     mode: 'proof' as 'proof' | 'unknown' | 'stale' | 'okay' | 'needs_approval',
     captured: false,
     embeddedPaid: false,
+    embeddedRejected: false,
     quick: 'confirmed' as 'confirmed' | 'declined',
   };
   state.receipt.data.amount.amountMinor = '1000';
@@ -102,7 +103,9 @@ async function setup(page: Page, provider: 'stripe' | 'paypal' = 'stripe') {
         body: request.postData(),
       });
       if (path.endsWith('/stripe-embedded/sessions')) {
-        if (state.mode === 'proof') {
+        if (state.embeddedRejected) {
+          await error('EMBEDDED_SESSION_NOT_OPENED', 409);
+        } else if (state.mode === 'proof') {
           state.mode = 'okay';
           await error('GUEST_PROOF_REQUIRED', 409);
         } else
@@ -173,6 +176,28 @@ async function setup(page: Page, provider: 'stripe' | 'paypal' = 'stripe') {
   });
   return state;
 }
+test('M3-2 embedded Stripe allows retry when the form could not open', async ({ page }) => {
+  const state = await setup(page);
+  state.embeddedRejected = true;
+  await page.goto(base + '?view=public&publicId=' + ids.public, { waitUntil: 'domcontentloaded' });
+  const section = page.getByRole('region', {
+    name: 'Pay on this page (card / Apple Pay / Google Pay)',
+  });
+  await section.getByLabel('Card amount (EUR)').fill('10.00');
+  await section.getByRole('checkbox').check();
+  const start = section.getByRole('button', { name: 'Open card form' });
+  await start.click();
+  await expect(section.getByRole('alert')).toHaveText(
+    'Couldn’t open the card form. Nothing was charged. Try again.',
+  );
+  await expect(section.getByText('Waiting for Darve to confirm this payment.')).toHaveCount(0);
+  await expect(section.getByRole('button', { name: 'Check this payment' })).toHaveCount(0);
+  await expect(start).toBeEnabled();
+  await start.click();
+  await expect.poll(() => state.commands.length).toBe(2);
+  expect(state.commands[0]?.key).not.toBe(state.commands[1]?.key);
+  expect(state.commands[0]?.body).toBe(state.commands[1]?.body);
+});
 test('M3-2 embedded Stripe waits for verified status', async ({ page }) => {
   const state = await setup(page);
   await page.route('https://js.stripe.com/endive/stripe.js', (route) =>
