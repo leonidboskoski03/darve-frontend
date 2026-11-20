@@ -5,6 +5,8 @@ export {
   type QuickPayAttempt,
 } from './quick-pay';
 export { loadQuickPaySdk, type QuickPaySdk } from './paypal-sdk';
+export { loadStripeSdk } from './stripe-sdk';
+export { type EmbeddedStripeAttempt, type EmbeddedStripeSession } from './stripe-embedded';
 export {
   createContributionRuntime,
   createContributionController,

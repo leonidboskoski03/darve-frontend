@@ -1,5 +1,5 @@
 {
-  "sourceRevision": "c8112c5f798afd9440e2bfa3c91be5a66c6a9c54",
+  "sourceRevision": "fe8587a2e115d61d7f39815eff38b47f574860d1",
   "status": "B15/F09-02 aligns coin/template request revision limits and exports the strict existing history query; existing F08 recovery and authority handoffs retained. Ordinary activation remains separate.",
   "operations": [
     {
@@ -1274,9 +1274,9 @@
       ],
       "source": {
         "file": "apps/api/src/modules/payments/checkout.routes.ts",
-        "line": 9,
+        "line": 11,
         "handler": "controller.create",
-        "sha256": "7c2f61cd6260773b43f91c7711bcecf32fd6bf56fcbf1172e067da20752a9595"
+        "sha256": "4dcd91915c2972710ced88de666b524d3b746b6ac7107eedb50dd78b01764ebb"
       },
       "frontend": "F06"
     },
@@ -1299,9 +1299,9 @@
       ],
       "source": {
         "file": "apps/api/src/modules/payments/checkout.routes.ts",
-        "line": 10,
+        "line": 12,
         "handler": "controller.status",
-        "sha256": "7c2f61cd6260773b43f91c7711bcecf32fd6bf56fcbf1172e067da20752a9595"
+        "sha256": "4dcd91915c2972710ced88de666b524d3b746b6ac7107eedb50dd78b01764ebb"
       },
       "frontend": "F06"
     },
@@ -1326,9 +1326,9 @@
       ],
       "source": {
         "file": "apps/api/src/modules/payments/checkout.routes.ts",
-        "line": 11,
+        "line": 13,
         "handler": "controller.complete",
-        "sha256": "7c2f61cd6260773b43f91c7711bcecf32fd6bf56fcbf1172e067da20752a9595"
+        "sha256": "4dcd91915c2972710ced88de666b524d3b746b6ac7107eedb50dd78b01764ebb"
       },
       "frontend": "F06"
     },
@@ -1352,9 +1352,9 @@
       ],
       "source": {
         "file": "apps/api/src/modules/payments/checkout.routes.ts",
-        "line": 12,
+        "line": 14,
         "handler": "controller.resume",
-        "sha256": "7c2f61cd6260773b43f91c7711bcecf32fd6bf56fcbf1172e067da20752a9595"
+        "sha256": "4dcd91915c2972710ced88de666b524d3b746b6ac7107eedb50dd78b01764ebb"
       },
       "frontend": "F06"
     },
@@ -2973,9 +2973,9 @@
       "publicExports": ["PayPalQuickQuoteInputSchema", "PayPalQuickQuoteResponseSchema"],
       "source": {
         "file": "apps/api/src/modules/payments/checkout.routes.ts",
-        "line": 14,
+        "line": 16,
         "handler": "quick.quote",
-        "sha256": "7c2f61cd6260773b43f91c7711bcecf32fd6bf56fcbf1172e067da20752a9595"
+        "sha256": "4dcd91915c2972710ced88de666b524d3b746b6ac7107eedb50dd78b01764ebb"
       },
       "frontend": "F06"
     },
@@ -2996,7 +2996,7 @@
         "file": "apps/api/src/modules/payments/checkout.routes.ts",
         "line": 17,
         "handler": "quick.create",
-        "sha256": "7c2f61cd6260773b43f91c7711bcecf32fd6bf56fcbf1172e067da20752a9595"
+        "sha256": "4dcd91915c2972710ced88de666b524d3b746b6ac7107eedb50dd78b01764ebb"
       },
       "frontend": "F06"
     },
@@ -3015,9 +3015,76 @@
       "publicExports": ["CheckoutCompleteInputSchema", "CheckoutResponseSchema"],
       "source": {
         "file": "apps/api/src/modules/payments/checkout.routes.ts",
-        "line": 19,
+        "line": 21,
         "handler": "quick.complete",
-        "sha256": "7c2f61cd6260773b43f91c7711bcecf32fd6bf56fcbf1172e067da20752a9595"
+        "sha256": "4dcd91915c2972710ced88de666b524d3b746b6ac7107eedb50dd78b01764ebb"
+      },
+      "frontend": "F06"
+    },
+    {
+      "id": "public-api:GET /api/public/challenges/:publicId/stripe-embedded/quote",
+      "origin": "public-api",
+      "method": "GET",
+      "path": "/api/public/challenges/:publicId/stripe-embedded/quote",
+      "authority": "public",
+      "csrf": "Origin policy; no guest cookie",
+      "idempotency": "none",
+      "request": "none",
+      "query": "StripeEmbeddedQuoteInputSchema",
+      "response": "StripeEmbeddedQuoteResponseSchema",
+      "successStatuses": [200],
+      "publicExports": ["StripeEmbeddedQuoteInputSchema", "StripeEmbeddedQuoteResponseSchema"],
+      "source": {
+        "file": "apps/api/src/modules/payments/checkout.routes.ts",
+        "line": 24,
+        "handler": "embedded.quote",
+        "sha256": "4dcd91915c2972710ced88de666b524d3b746b6ac7107eedb50dd78b01764ebb"
+      },
+      "frontend": "F06"
+    },
+    {
+      "id": "public-api:POST /api/public/challenges/:publicId/stripe-embedded/sessions",
+      "origin": "public-api",
+      "method": "POST",
+      "path": "/api/public/challenges/:publicId/stripe-embedded/sessions",
+      "authority": "guest",
+      "csrf": "Origin policy + guest cookie",
+      "idempotency": "CheckoutKeySchema",
+      "request": "StripeEmbeddedSessionInputSchema",
+      "query": "CheckoutEmptyQuerySchema",
+      "response": "StripeEmbeddedSessionResponseSchema",
+      "successStatuses": [200, 201],
+      "publicExports": [
+        "StripeEmbeddedSessionInputSchema",
+        "CheckoutEmptyQuerySchema",
+        "StripeEmbeddedSessionResponseSchema"
+      ],
+      "source": {
+        "file": "apps/api/src/modules/payments/checkout.routes.ts",
+        "line": 28,
+        "handler": "embedded.create",
+        "sha256": "4dcd91915c2972710ced88de666b524d3b746b6ac7107eedb50dd78b01764ebb"
+      },
+      "frontend": "F06"
+    },
+    {
+      "id": "public-api:GET /api/stripe-embedded/checkouts/:id",
+      "origin": "public-api",
+      "method": "GET",
+      "path": "/api/stripe-embedded/checkouts/:id",
+      "authority": "guest",
+      "csrf": "Origin policy + guest cookie",
+      "idempotency": "none",
+      "request": "none",
+      "query": "CheckoutEmptyQuerySchema",
+      "response": "CheckoutResponseSchema",
+      "successStatuses": [200],
+      "publicExports": ["CheckoutEmptyQuerySchema", "CheckoutResponseSchema"],
+      "source": {
+        "file": "apps/api/src/modules/payments/checkout.routes.ts",
+        "line": 32,
+        "handler": "embedded.status",
+        "sha256": "4dcd91915c2972710ced88de666b524d3b746b6ac7107eedb50dd78b01764ebb"
       },
       "frontend": "F06"
     }
@@ -3121,7 +3188,7 @@
     "apps/api/src/modules/payment-accounts/stripe-receiving.routes.ts": "3829f42153292085bb67588a9f7251de50dc2bea7c9f7145902838922335a0d2",
     "apps/api/src/modules/payments/checkout.controller.ts": "7758694a820cf5dc1c933fbad26fc883ada926ee0496d641a19e3b0c0cd666db",
     "apps/api/src/modules/payments/checkout.mapper.ts": "7741af17d7dd6453e5ed1bdb8932d57fd9cff9cc10f13457637347131309259a",
-    "apps/api/src/modules/payments/checkout.routes.ts": "7c2f61cd6260773b43f91c7711bcecf32fd6bf56fcbf1172e067da20752a9595",
+    "apps/api/src/modules/payments/checkout.routes.ts": "4dcd91915c2972710ced88de666b524d3b746b6ac7107eedb50dd78b01764ebb",
     "apps/api/src/modules/payments/paypal-webhook.controller.ts": "3886c6f5d1c90a842804efff0e25423f9c68a58589e5e3e80d71b1b1d0ad17d5",
     "apps/api/src/modules/payments/paypal-webhook.routes.ts": "cb33607a3d8bc1e255a9f9b78afd90878b7a90318e014b0f77594cf309679912",
     "apps/api/src/modules/payments/stripe-webhook.controller.ts": "7e42ccbb68a4ab129d6993b4cca92a475c8b33a53c1ed140043f0184e6871564",

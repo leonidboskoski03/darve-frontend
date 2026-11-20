@@ -9,6 +9,7 @@ import {
 import './contributions.css';
 import { CheckoutFlow } from './checkout-flow';
 import { QuickPay } from './quick-pay';
+import { StripeEmbedded } from './stripe-embedded';
 
 const reasons = {
   account_restricted: 'Contributions are unavailable for this creator.',
@@ -222,6 +223,7 @@ export function Contribution({
           </details>
         </>
       )}
+      <StripeEmbedded key={publicId} runtime={runtime} challenge={value ?? null} />
       <QuickPay runtime={runtime} challenge={value ?? null} />
       <CheckoutFlow runtime={runtime} current={value ?? null} onReceipt={onReceipt} />
       <p className="contribution-footnote">

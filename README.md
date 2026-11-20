@@ -15,6 +15,8 @@ With the app and a seeded sandbox challenge running, `npm run test:core:local` r
 
 Quick Pay appears as an additional sandbox option on a contribution page with PayPal receiving available. Enter an amount and review the displayed fee to load PayPal's eligible wallet or card buttons. The existing PayPal and Stripe checkouts remain available below it.
 
+When the backend enables Stripe Embedded Checkout, **Pay on this page** opens Stripe's card form after the viewer reviews the fee. Apple Pay and Google Pay appear when Stripe considers the browser, device and HTTPS payment domain eligible. Follow the [backend sandbox setup](https://github.com/leonidboskoski03/darve-backend/blob/dev/docs/B07_STRIPE_CHECKOUT_CONTRACTS.md#embedded-sandbox-checkout).
+
 ## Staff access locally
 
 `npm.cmd run dev:staff` opens the independent staff entry at `http://localhost:5176`. It uses the separate browser-public example in [env/staff](env/staff/.env.example); omit its paired addresses for the unavailable/no-request state. A configured sign-in needs the matching admin API and reviewed identity/email settings. [Staff operations](docs/OPERATIONS.md#separate-staff-entry) and [F08-03 qualification](docs/F08_STAFF_AND_SUPPORT_IMPLEMENTATION.md#f08-03-staff-entry-and-authority) own the exact setup and controlled local API proof. This command does not start/configure a backend or send email.
