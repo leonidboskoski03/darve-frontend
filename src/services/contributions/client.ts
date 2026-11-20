@@ -11,6 +11,7 @@ import { createAuthorityScope, createQueryClient } from '@/services/server-state
 import { validReceiptId } from './navigation';
 import { createCheckoutCommands } from './checkout';
 import { createQuickPayCommands } from './quick-pay';
+import { createEmbeddedStripeCommands } from './stripe-embedded';
 
 export type { PublicChallengeDto };
 export type PublicRead = ReturnType<typeof PublicChallengeResponseSchema.parse>;
@@ -105,6 +106,7 @@ export function createContributionRuntime(config: {
     scope,
     payments,
     quickPay: createQuickPayCommands(publicRequest, privateRequest, active),
+    embeddedStripe: createEmbeddedStripeCommands(publicRequest, privateRequest, active),
     publicQueries,
     getSnapshot: () => snapshot,
     subscribe: (listener: () => void) => {

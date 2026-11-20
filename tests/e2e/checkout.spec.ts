@@ -21,6 +21,7 @@ async function setup(page: Page, provider: 'stripe' | 'paypal' = 'stripe') {
     commands: [] as { path: string; key: string | undefined; body: string | null }[],
     mode: 'proof' as 'proof' | 'unknown' | 'stale' | 'okay' | 'needs_approval',
     captured: false,
+    embeddedPaid: false,
     quick: 'confirmed' as 'confirmed' | 'declined',
   };
   state.receipt.data.amount.amountMinor = '1000';
@@ -65,13 +66,57 @@ async function setup(page: Page, provider: 'stripe' | 'paypal' = 'stripe') {
       });
       return;
     }
+    if (request.method() === 'GET' && path.endsWith('/stripe-embedded/quote')) {
+      await reply({
+        publishableKey: 'pk_test_syntheticembeddedfixture',
+        connectedAccountId: 'acct_syntheticembedded',
+        agreementId: ids.other,
+        currency: 'EUR',
+        feeMinor: '70',
+      });
+      return;
+    }
+    if (request.method() === 'GET' && path === '/api/stripe-embedded/checkouts/' + ids.checkout) {
+      const value = structuredClone(state.receipt);
+      value.data.state = state.embeddedPaid ? 'succeeded' : 'awaiting';
+      value.data.nextAction = null;
+      value.data.payments = state.embeddedPaid
+        ? [
+            {
+              id: ids.payment,
+              amountMinor: '1000',
+              paidAt: null,
+              eligibilityReferenceAt: null,
+              eligibilityTimeBasis: 'unknown',
+              eligibility: 'unclassified',
+            },
+          ]
+        : [];
+      await reply(value);
+      return;
+    }
     if (request.method() === 'POST') {
       state.commands.push({
         path,
         key: request.headers()['idempotency-key'],
         body: request.postData(),
       });
-      if (path.endsWith('/paypal-quick/orders')) {
+      if (path.endsWith('/stripe-embedded/sessions')) {
+        if (state.mode === 'proof') {
+          state.mode = 'okay';
+          await error('GUEST_PROOF_REQUIRED', 409);
+        } else
+          await reply(
+            {
+              checkoutId: ids.checkout,
+              mount: {
+                connectedAccountId: 'acct_syntheticembedded',
+                clientSecret: 'cs_test_embedded_secret_fixture',
+              },
+            },
+            201,
+          );
+      } else if (path.endsWith('/paypal-quick/orders')) {
         if (state.mode === 'proof') {
           state.mode = 'okay';
           await error('GUEST_PROOF_REQUIRED', 409);
@@ -128,6 +173,51 @@ async function setup(page: Page, provider: 'stripe' | 'paypal' = 'stripe') {
   });
   return state;
 }
+test('M3-2 embedded Stripe waits for verified status', async ({ page }) => {
+  const state = await setup(page);
+  await page.route('https://js.stripe.com/endive/stripe.js', (route) =>
+    route.fulfill({
+      contentType: 'application/javascript',
+      body: `
+        window.Stripe = (key, options) => ({
+          async createEmbeddedCheckoutPage({ fetchClientSecret, onComplete }) {
+            if (key !== 'pk_test_syntheticembeddedfixture' ||
+                options.stripeAccount !== 'acct_syntheticembedded' ||
+                await fetchClientSecret() !== 'cs_test_embedded_secret_fixture') throw new Error('Bad mount');
+            const button = document.createElement('button');
+            button.textContent = 'Pay with test card';
+            button.onclick = onComplete;
+            return { mount: (target) => target.append(button), destroy: () => button.remove() };
+          }
+        });
+      `,
+    }),
+  );
+  await page.goto(base + '?view=public&publicId=' + ids.public, {
+    waitUntil: 'domcontentloaded',
+  });
+  const section = page.getByRole('region', {
+    name: 'Pay on this page (card / Apple Pay / Google Pay)',
+  });
+  await section.getByLabel('Card amount (EUR)').fill('10.00');
+  await expect(section.getByRole('button', { name: 'Open card form' })).toBeDisabled();
+  await section.getByRole('checkbox').check();
+  await section.getByRole('button', { name: 'Open card form' }).click();
+  await section.getByRole('button', { name: 'Pay with test card' }).click();
+  await expect(section.getByText('Waiting for Darve to confirm this payment.')).toBeVisible();
+  await expect(section.getByRole('link', { name: 'Private receipt' })).toHaveCount(0);
+  state.embeddedPaid = true;
+  await section.getByRole('button', { name: 'Check this payment' }).click();
+  await expect(section.getByText('Payment confirmed.')).toBeVisible();
+  await expect(section.getByRole('link', { name: 'Private receipt' })).toHaveAttribute(
+    'href',
+    '/receipts/' + ids.checkout,
+  );
+  expect(state.commands).toHaveLength(2);
+  expect(state.commands[0]).toEqual(state.commands[1]);
+  await expect(page.getByRole('heading', { name: 'Quick Pay' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Prepare checkout' })).toBeVisible();
+});
 async function quickSdk(page: Page, mode: 'approve' | 'cancel' | 'load-fails') {
   await page.route(/^https:\/\/www\.sandbox\.paypal\.com\/sdk\/js\?/, async (route) => {
     if (mode === 'load-fails') return route.abort();
