@@ -13,25 +13,19 @@ import { OverlayParamsSchema } from '@/services/contracts/index';
 import type { CreatorSession } from '@/services/creator-session/index';
 import './settings.css';
 
-export function OverlaySettings({
-  session,
-  displayId,
-  onDisplay,
-}: {
-  session: CreatorSession;
-  displayId: string | null;
-  onDisplay: (id: string) => void;
-}) {
+export function OverlaySettings({ session }: { session: CreatorSession }) {
   const [client] = useState(() => createOverlayOwner(session)),
     [historyClient] = useState(() => createReportingClient(session));
   const [link, setLink] = useState<string | null>(null),
     [showLink, setShowLink] = useState(false),
-    [grantId, setGrantId] = useState(''),
-    [knownDisplay, setKnownDisplay] = useState('');
+    [grantId, setGrantId] = useState('');
   const [busy, setBusy] = useState(false),
-    [problem, setProblem] = useState<unknown>(null),
+    [problem, setProblem] = useState<{
+      action: 'issue' | 'select' | 'other';
+      error: unknown;
+    } | null>(null),
     [notice, setNotice] = useState(''),
-    [issueAttempted, setIssueAttempted] = useState(false);
+    [issueFinished, setIssueFinished] = useState(false);
   const [issueReviewed, setIssueReviewed] = useState(false),
     [revokeReviewed, setRevokeReviewed] = useState(false);
   const [pick, setPick] = useState<{
@@ -46,9 +40,8 @@ export function OverlaySettings({
     scope = session.getSnapshot().scope;
   const selection = useQuery(
     {
-      queryKey: scope.key(['overlay-selection', displayId]),
-      enabled: !!displayId,
-      queryFn: ({ signal }) => client.selection(displayId!, signal),
+      queryKey: scope.key(['overlay-selection']),
+      queryFn: ({ signal }) => client.currentSelection(signal),
       retry: false,
     },
     scope.queryClient,
@@ -70,6 +63,7 @@ export function OverlaySettings({
     scope.queryClient,
   );
   const currentSelection = selection.isSuccess && !selection.isFetching ? selection.data : null;
+  const displayId = currentSelection?.displayId;
   const currentPreferences =
     preferences.isSuccess && !preferences.isFetching ? preferences.data : null;
   const currentHistory = history.isSuccess && !history.isFetching ? history.data.data : null;
@@ -87,15 +81,18 @@ export function OverlaySettings({
       ))
       ? pick
       : null;
-  const run = async (action: () => Promise<void>) => {
+  const run = async (
+    command: () => Promise<void>,
+    action: 'issue' | 'select' | 'other' = 'other',
+  ) => {
     if (busy) return;
     setBusy(true);
     setProblem(null);
     setNotice('');
     try {
-      await action();
+      await command();
     } catch (error) {
-      setProblem(error);
+      if (!scope.signal.aborted) setProblem({ action, error });
     } finally {
       if (!scope.signal.aborted) setBusy(false);
     }
@@ -104,11 +101,8 @@ export function OverlaySettings({
     setPick(null);
     setSelectionReviewed(false);
     setNotice('');
-    await Promise.all([
-      displayId ? selection.refetch() : undefined,
-      preferences.refetch(),
-      history.refetch(),
-    ]);
+    setProblem(null);
+    await Promise.all([selection.refetch(), preferences.refetch(), history.refetch()]);
   };
   const choose = (value: { roundId: string | null; challengeId: string | null }) => {
     if (!currentSelection || currentSelection.displayId !== displayId) return;
@@ -129,37 +123,44 @@ export function OverlaySettings({
       <section className="obs-settings-section">
         <h2>Browser source access</h2>
         <p>
-          Create a private link once, then paste that original link into OBS. Keep it private. A URL
-          ending in grantId only works in a browser that already has its access cookie.
+          Paste the original private link into OBS. If the address changes after opening it, the
+          shorter address only works in the same OBS browser. Keep the original link private.
         </p>
         <label className="obs-check">
           <input
             type="checkbox"
             checked={issueReviewed}
-            disabled={busy || issueAttempted}
+            disabled={busy || issueFinished}
             onChange={(e) => setIssueReviewed(e.target.checked)}
           />
           I understand this read-only link can display my selected challenge until revoked.
         </label>
+        {!issueReviewed && <p id="obs-link-review">Tick the box above to enable link creation.</p>}
+        {problem?.action === 'issue' && (
+          <p role="alert">{overlayMessage(problem.error, 'issue')}</p>
+        )}
         <Button
-          disabled={!issueReviewed || issueAttempted || busy}
+          aria-describedby={!issueReviewed ? 'obs-link-review' : undefined}
+          disabled={!issueReviewed || issueFinished || busy}
           aria-busy={busy}
           onClick={() =>
             void run(async () => {
-              setIssueAttempted(true);
               const result = await client.issue();
               if (scope.signal.aborted) return;
               setLink(result.presentationUrl);
               setShowLink(false);
               setGrantId(result.id);
-              onDisplay(result.displayId);
+              setIssueFinished(true);
+              await selection.refetch();
               setNotice(
                 'Private link created. Copy it into OBS now; it is not saved in this page.',
               );
-            })
+            }, 'issue')
           }
         >
-          Create private OBS link
+          {problem?.action === 'issue'
+            ? 'Try creating the OBS link again'
+            : 'Create private OBS link'}
         </Button>
         {link && (
           <div>
@@ -251,40 +252,23 @@ export function OverlaySettings({
           A new collection selects its preparing round on the server. Showing an accepted challenge
           is a separate choice and never moves contributions between challenges.
         </p>
-        {!displayId && (
-          <div className="obs-inline">
-            <label>
-              Existing display ID
-              <input value={knownDisplay} onChange={(e) => setKnownDisplay(e.target.value)} />
-            </label>
-            <Button
-              tone="secondary"
-              disabled={!OverlayParamsSchema.safeParse({ id: knownDisplay }).success}
-              onClick={() => onDisplay(knownDisplay.toLowerCase())}
-            >
-              Load existing display
-            </Button>
-            <p>
-              If you have no display ID, create the private source link above. Loading does not
-              create a link.
-            </p>
-          </div>
+        {selection.isSuccess && selection.data === null && (
+          <p>Create a private OBS link to set up your first display.</p>
         )}
-        {displayId && selection.isFetching && (
-          <p role="status">Checking current display selection…</p>
-        )}
-        {displayId && selection.isError && (
+        {selection.isFetching && <p role="status">Checking current display selection…</p>}
+        {selection.isError && (
           <p role="alert">
-            Display selection is unavailable. Refresh before reviewing another change.
+            Darve can’t load your display right now. Refresh display and settings to try again.
           </p>
+        )}
+        {problem?.action === 'select' && (
+          <p role="alert">{overlayMessage(problem.error, 'select')}</p>
         )}
         {currentSelection && (
           <>
             <SelectionRead selection={currentSelection} />
             <p>
-              <a href={'/dashboard?displayId=' + currentSelection.displayId}>
-                View this display on the dashboard
-              </a>
+              <a href="/dashboard">View this display on the dashboard</a>
             </p>
           </>
         )}
@@ -293,7 +277,9 @@ export function OverlaySettings({
           disabled={busy || selection.isFetching || preferences.isFetching || history.isFetching}
           onClick={() => void refresh()}
         >
-          Refresh display and settings
+          {problem?.action === 'select'
+            ? 'Retry display selection'
+            : 'Refresh display and settings'}
         </Button>
         {displayId && currentSelection && (
           <>
@@ -402,7 +388,7 @@ export function OverlaySettings({
                         await selection.refetch();
                       }
                       setNotice('Display selection confirmed.');
-                    })
+                    }, 'select')
                   }
                 >
                   Confirm display selection
@@ -430,7 +416,7 @@ export function OverlaySettings({
           }
         />
       )}
-      {problem ? <p role="alert">{overlayMessage(problem)}</p> : null}
+      {problem?.action === 'other' && <p role="alert">{overlayMessage(problem.error)}</p>}
       {notice && <p role="status">{notice}</p>}
     </div>
   );

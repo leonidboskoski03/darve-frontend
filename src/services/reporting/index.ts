@@ -19,4 +19,10 @@ export type {
   Declaration,
   DeclarationAttempt,
 } from './client';
-export { moneyText, reportTime, fundingLabel, performanceLabel } from './presentation';
+export {
+  moneyText,
+  reportTime,
+  fundingLabel,
+  performanceLabel,
+  publicPaymentLink,
+} from './presentation';

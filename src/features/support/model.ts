@@ -1,3 +1,4 @@
+import { creatorTime } from '@/shared/creator-time';
 import { SupportError, type SupportTicket } from '@/services/support/index';
 export const categoryLabels = { account: 'Account', challenge: 'Challenge', stream: 'Stream' };
 export const statusLabels = {
@@ -6,10 +7,7 @@ export const statusLabels = {
   waiting_for_streamer: 'Waiting for you',
   resolved: 'Resolved',
 };
-export const date = (value: string) =>
-  new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(
-    new Date(value),
-  );
+export const date = (value: string) => creatorTime(value);
 export const ticketLabel = (ticket: SupportTicket) =>
   `${categoryLabels[ticket.category]} · ${ticket.id.slice(0, 8)}`;
 export function errorCopy(error: unknown) {

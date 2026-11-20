@@ -1,5 +1,5 @@
 {
-  "sourceRevision": "06be05ac7072c40b0e661dc262cb822084ebf932",
+  "sourceRevision": "d1695da03a3b8658ca60b179a4cf565bcd9d6f5c",
   "status": "B15/F09-02 aligns coin/template request revision limits and exports the strict existing history query; existing F08 recovery and authority handoffs retained. Ordinary activation remains separate.",
   "operations": [
     {
@@ -818,9 +818,9 @@
       ],
       "source": {
         "file": "apps/api/src/modules/overlays/overlay.routes.ts",
-        "line": 6,
+        "line": 16,
         "handler": "c.events",
-        "sha256": "3b4cb007b687e199feca52854594e64f63434c0b3fe759a1f4e67df1e8b5ffff"
+        "sha256": "cfc7f621d99c8f6e7c843618534a981cb035b08dbcb2a2b1c505e4b8c72d290c"
       },
       "frontend": "F07"
     },
@@ -844,9 +844,9 @@
       ],
       "source": {
         "file": "apps/api/src/modules/overlays/overlay.routes.ts",
-        "line": 6,
+        "line": 15,
         "handler": "c.snapshot",
-        "sha256": "3b4cb007b687e199feca52854594e64f63434c0b3fe759a1f4e67df1e8b5ffff"
+        "sha256": "cfc7f621d99c8f6e7c843618534a981cb035b08dbcb2a2b1c505e4b8c72d290c"
       },
       "frontend": "F07"
     },
@@ -869,9 +869,9 @@
       ],
       "source": {
         "file": "apps/api/src/modules/overlays/overlay.routes.ts",
-        "line": 6,
+        "line": 14,
         "handler": "c.bootstrap",
-        "sha256": "3b4cb007b687e199feca52854594e64f63434c0b3fe759a1f4e67df1e8b5ffff"
+        "sha256": "cfc7f621d99c8f6e7c843618534a981cb035b08dbcb2a2b1c505e4b8c72d290c"
       },
       "frontend": "F07"
     },
@@ -894,9 +894,30 @@
       ],
       "source": {
         "file": "apps/api/src/modules/overlays/overlay.routes.ts",
-        "line": 6,
+        "line": 13,
         "handler": "c.select",
-        "sha256": "3b4cb007b687e199feca52854594e64f63434c0b3fe759a1f4e67df1e8b5ffff"
+        "sha256": "cfc7f621d99c8f6e7c843618534a981cb035b08dbcb2a2b1c505e4b8c72d290c"
+      },
+      "frontend": "F07"
+    },
+    {
+      "id": "public-api:GET /api/overlay-displays/current",
+      "origin": "public-api",
+      "method": "GET",
+      "path": "/api/overlay-displays/current",
+      "authority": "creator",
+      "csrf": "no mutation CSRF; Origin policy still applies",
+      "idempotency": "none",
+      "request": "none",
+      "query": "empty",
+      "response": "CurrentOverlaySelectionResponseSchema (nullable binding)",
+      "successStatuses": [200],
+      "publicExports": ["CurrentOverlaySelectionResponseSchema"],
+      "source": {
+        "file": "apps/api/src/modules/overlays/overlay.routes.ts",
+        "line": 11,
+        "handler": "c.currentSelection",
+        "sha256": "cfc7f621d99c8f6e7c843618534a981cb035b08dbcb2a2b1c505e4b8c72d290c"
       },
       "frontend": "F07"
     },
@@ -915,9 +936,9 @@
       "publicExports": ["OverlayParamsSchema", "OverlaySelectionResponseSchema"],
       "source": {
         "file": "apps/api/src/modules/overlays/overlay.routes.ts",
-        "line": 6,
+        "line": 12,
         "handler": "c.selection",
-        "sha256": "3b4cb007b687e199feca52854594e64f63434c0b3fe759a1f4e67df1e8b5ffff"
+        "sha256": "cfc7f621d99c8f6e7c843618534a981cb035b08dbcb2a2b1c505e4b8c72d290c"
       },
       "frontend": "F07"
     },
@@ -941,9 +962,9 @@
       ],
       "source": {
         "file": "apps/api/src/modules/overlays/overlay.routes.ts",
-        "line": 6,
+        "line": 9,
         "handler": "c.patch",
-        "sha256": "3b4cb007b687e199feca52854594e64f63434c0b3fe759a1f4e67df1e8b5ffff"
+        "sha256": "cfc7f621d99c8f6e7c843618534a981cb035b08dbcb2a2b1c505e4b8c72d290c"
       },
       "frontend": "F07"
     },
@@ -962,9 +983,9 @@
       "publicExports": ["OverlayPreferencesResponseSchema", "OverlayPreferencesV2ResponseSchema"],
       "source": {
         "file": "apps/api/src/modules/overlays/overlay.routes.ts",
-        "line": 6,
+        "line": 9,
         "handler": "c.preferences",
-        "sha256": "3b4cb007b687e199feca52854594e64f63434c0b3fe759a1f4e67df1e8b5ffff"
+        "sha256": "cfc7f621d99c8f6e7c843618534a981cb035b08dbcb2a2b1c505e4b8c72d290c"
       },
       "frontend": "F07"
     },
@@ -983,9 +1004,9 @@
       "publicExports": ["OverlayParamsSchema"],
       "source": {
         "file": "apps/api/src/modules/overlays/overlay.routes.ts",
-        "line": 6,
+        "line": 8,
         "handler": "c.revoke",
-        "sha256": "3b4cb007b687e199feca52854594e64f63434c0b3fe759a1f4e67df1e8b5ffff"
+        "sha256": "cfc7f621d99c8f6e7c843618534a981cb035b08dbcb2a2b1c505e4b8c72d290c"
       },
       "frontend": "F07"
     },
@@ -1004,9 +1025,9 @@
       "publicExports": ["OverlayIssueInputSchema", "OverlayGrantIssuedResponseSchema"],
       "source": {
         "file": "apps/api/src/modules/overlays/overlay.routes.ts",
-        "line": 6,
+        "line": 7,
         "handler": "c.issue",
-        "sha256": "3b4cb007b687e199feca52854594e64f63434c0b3fe759a1f4e67df1e8b5ffff"
+        "sha256": "cfc7f621d99c8f6e7c843618534a981cb035b08dbcb2a2b1c505e4b8c72d290c"
       },
       "frontend": "F07"
     },
@@ -3024,9 +3045,9 @@
     "apps/api/src/modules/health/health.routes.ts": "a50ae03dab44ff8d9662c3203938ae3bfec375b4ed25d33e7c75f84d16965bb5",
     "apps/api/src/modules/kick-webhooks/kick-webhook.controller.ts": "7876db8253878a62977c7125179ff8e07eca57e41aecfdb8d757883f835f3084",
     "apps/api/src/modules/kick-webhooks/kick-webhook.routes.ts": "2871374a4e251a2e565074f2582f2c667be4e687b114e53c2acc9762f8a6b353",
-    "apps/api/src/modules/overlays/overlay.controller.ts": "0b797253abf3f9a2be54ef5e46a5578a089f3c731a5e0ffd58c65273d62634db",
+    "apps/api/src/modules/overlays/overlay.controller.ts": "a05ed62820d7ac2d842917e274630f3df23decdfbaada4de68275fedd41a7bf1",
     "apps/api/src/modules/overlays/overlay.mapper.ts": "507e0422f9e6b1162702f164d22a8a80506d3f19e86a354017b7bb99b753c0bf",
-    "apps/api/src/modules/overlays/overlay.routes.ts": "3b4cb007b687e199feca52854594e64f63434c0b3fe759a1f4e67df1e8b5ffff",
+    "apps/api/src/modules/overlays/overlay.routes.ts": "cfc7f621d99c8f6e7c843618534a981cb035b08dbcb2a2b1c505e4b8c72d290c",
     "apps/api/src/modules/payment-accounts/paypal-receiving.controller.ts": "e8aad6ccc78b94d65ff69d9078a0692873f1d5dc6b95134e9027b93af0a05149",
     "apps/api/src/modules/payment-accounts/paypal-receiving.mapper.ts": "99b00bdb090e7f98188a3dc553ae9183f1a28fdfde06a9fe59f0da254e7c82d8",
     "apps/api/src/modules/payment-accounts/paypal-receiving.routes.ts": "c15ba1ce7b248335bec9490c14bcad029dc58f75afc34603cd9eceb01b803158",

@@ -366,9 +366,25 @@ const cors = {
   'access-control-allow-methods': 'GET,POST,PATCH,PUT,DELETE,OPTIONS',
 };
 async function owner(page: Page, withDisplay = true) {
+  // The fixture rewrites its URL to the real route. Serve the same fixture on a true reload.
+  await page.route(
+    (url) => url.origin === origin && url.pathname === '/obs',
+    async (route) => {
+      const response = await route.fetch({ url: origin + '/tests/fixtures/creator.html?view=obs' });
+      await route.fulfill({ response });
+    },
+  );
+  await page.addInitScript(() => {
+    if (location.pathname !== '/obs') return;
+    const params = new URLSearchParams(location.search);
+    params.set('view', 'obs');
+    history.replaceState(history.state, '', '/obs?' + params.toString());
+  });
   const frame = OverlaySnapshotV2ResponseSchema.parse(acceptedFrame(2));
   const state = {
     issued: 0,
+    hasDisplay: withDisplay,
+    issueUnavailable: false,
     selected: [] as unknown[],
     saved: [] as unknown[],
     revoked: 0,
@@ -443,6 +459,27 @@ async function owner(page: Page, withDisplay = true) {
     }
     if (url.pathname === '/api/overlay-grants') {
       state.issued++;
+      if (state.issueUnavailable) {
+        await reply(
+          route,
+          {
+            schemaVersion: 1,
+            serverTime: frame.serverTime,
+            error: {
+              code: 'SERVICE_UNAVAILABLE',
+              message: 'private',
+              requestId: 'test',
+              retryable: true,
+              retryAfterSeconds: 1,
+              issues: [],
+              refetch: null,
+            },
+          },
+          503,
+        );
+        return;
+      }
+      state.hasDisplay = true;
       state.selection = { ...state.selection, displayId: state.issueDisplayId };
       await reply(
         route,
@@ -494,8 +531,8 @@ async function owner(page: Page, withDisplay = true) {
       await reply(route, envelope(state.selection));
       return;
     }
-    if (url.pathname.startsWith('/api/overlay-displays/')) {
-      await reply(route, envelope(state.selection));
+    if (url.pathname === '/api/overlay-displays/current') {
+      await reply(route, envelope(state.hasDisplay ? state.selection : null));
       return;
     }
     await reply(route, envelope({}), 404);
@@ -509,7 +546,7 @@ async function owner(page: Page, withDisplay = true) {
   return state;
 }
 
-test('synthetic OBS refresh without a selected display reads available settings without inventing a display lookup', async ({
+test('synthetic OBS refresh with no owner display reads settings without creating a display', async ({
   page,
 }) => {
   const state = await owner(page, false);
@@ -623,7 +660,7 @@ test('synthetic OBS display changes cannot carry a checked selection review into
   state.issueDisplayId = foreignId;
   await page.getByRole('checkbox', { name: /I understand this read-only link/ }).check();
   await page.getByRole('button', { name: 'Create private OBS link' }).click();
-  await expect(page).toHaveURL(new RegExp('displayId=' + foreignId));
+  await expect(page.getByLabel('Private browser-source URL')).toHaveValue(new RegExp(foreignId));
   await expect(page.getByText('Current display: idle · version 1')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Confirm display selection' })).toHaveCount(0);
   expect(state.selected).toEqual([]);
@@ -640,6 +677,44 @@ test('synthetic OBS display changes cannot carry a checked selection review into
       expectedVersion: 1,
     },
   ]);
+});
+test('OBS link remains blocked until reviewed and a 503 can be retried', async ({ page }) => {
+  const state = await owner(page, false);
+  state.issueUnavailable = true;
+  const create = page.getByRole('button', { name: 'Create private OBS link' });
+  await expect(create).toBeDisabled();
+  await expect(create).toHaveCSS('opacity', '0.45');
+  await expect(page.getByText('Tick the box above to enable link creation.')).toBeVisible();
+  await expect(page.getByText(/shorter address only works in the same OBS browser/)).toBeVisible();
+  await page.getByRole('checkbox', { name: /I understand this read-only link/ }).check();
+  await create.click();
+  await expect(page.getByRole('alert')).toContainText(
+    'Darve can’t create the link right now, try again.',
+  );
+  state.issueUnavailable = false;
+  await page.getByRole('button', { name: 'Try creating the OBS link again' }).click();
+  await expect(page.getByLabel('Private browser-source URL')).toBeVisible();
+  expect(state.issued).toBe(2);
+  await page.reload();
+  await expect(page.getByText('Current display: idle · version 1')).toBeVisible();
+  await expect(page.getByText('Existing display ID')).toHaveCount(0);
+  await expect(page.getByLabel('Private browser-source URL')).toHaveCount(0);
+  expect(state.issued).toBe(2);
+});
+test('a stale display link still selects the accepted challenge on the owner’s display', async ({
+  page,
+}) => {
+  const state = await owner(page);
+  await page.goto(origin + '/tests/fixtures/creator.html?view=obs&displayId=' + foreignId);
+  await page.getByRole('button', { name: 'Review for display' }).click();
+  await page.getByRole('checkbox', { name: /Show this selection/ }).check();
+  await page.getByRole('button', { name: 'Confirm display selection' }).click();
+  await expect(
+    page.getByRole('status').filter({ hasText: 'Display selection confirmed.' }),
+  ).toBeVisible();
+  expect(state.selectedDisplayIds).toEqual([displayId]);
+  await page.reload();
+  await expect(page.getByText(/Current display: challenge/)).toBeVisible();
 });
 test('synthetic owner controls never issue on mount and require separate review for link, selection and settings', async ({
   page,
@@ -727,6 +802,16 @@ test('synthetic stale selection requires refreshed renewed review without an aut
   await expect(page.getByRole('alert').filter({ hasText: 'display changed' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Confirm display selection' })).toHaveCount(0);
   expect(state.selected.length).toBe(1);
+  state.stale = false;
+  await page.getByRole('button', { name: 'Retry display selection' }).click();
+  await page.getByRole('button', { name: 'Review for display' }).click();
+  await expect(page.getByRole('button', { name: 'Confirm display selection' })).toBeDisabled();
+  await page.getByRole('checkbox', { name: /Show this selection/ }).check();
+  await page.getByRole('button', { name: 'Confirm display selection' }).click();
+  await expect(
+    page.getByRole('status').filter({ hasText: 'Display selection confirmed.' }),
+  ).toBeVisible();
+  expect(state.selected.length).toBe(2);
 });
 test('synthetic OBS settings support keyboard, 320px reflow, reduced motion and accessible controls', async ({
   page,

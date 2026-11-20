@@ -1,3 +1,4 @@
+import { creatorTime } from '@/shared/creator-time';
 import { useEffect, useRef, useState } from 'react';
 import type { UseQueryResult } from '@tanstack/react-query';
 import { FlaskConical, Wallet } from 'lucide-react';
@@ -28,7 +29,6 @@ type Setup = {
   state: Receiving['data']['state'];
 };
 type Target = { version: number; country: string | null; reconcile: boolean };
-const formatter = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' });
 
 function ProviderCard({
   provider,
@@ -183,7 +183,7 @@ function ProviderCard({
           {account.observedAt ? (
             <div>
               <dt>Last checked</dt>
-              <dd>{formatter.format(new Date(account.observedAt))}</dd>
+              <dd>{creatorTime(account.observedAt)}</dd>
             </div>
           ) : null}
         </dl>

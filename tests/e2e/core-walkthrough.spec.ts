@@ -128,7 +128,8 @@ async function scenario(page: Page, accepted = false) {
       path === '/api/challenges/current'
     )
       return reply(route, envelope({ items: [], nextCursor: null }));
-    if (path === '/api/rounds/current') return reply(route, envelope(null));
+    if (path === '/api/rounds/current' || path === '/api/overlay-displays/current')
+      return reply(route, envelope(null));
     if (path === '/api/dashboard/summary') {
       const summary = dashboardFixture();
       summary.period.timeZone = new URL(request.url()).searchParams.get('timeZone')!;

@@ -15,6 +15,8 @@ import {
 import type { CreatorSession, CreatorSnapshot } from '@/services/creator-session/index';
 import { AsOf, ReportProblem } from './common';
 import { DeclarationDialog } from './declaration-dialog';
+import { FundingCloseTime } from './funding-close-time';
+import { PublicChallengeActions } from './public-challenge-actions';
 import './reporting.css';
 export function ChallengeDetail({
   session,
@@ -99,8 +101,8 @@ export function ChallengeDetail({
       {query.isPending && <p role="status">Loading challenge details…</p>}
       {recorded && (
         <p role="status">
-          Your completion declaration was recorded {reportTime(recorded.declaredAt)} UTC.
-          Verification: streamer declaration.
+          Your completion declaration was recorded {reportTime(recorded.declaredAt)}. Verification:
+          streamer declaration.
         </p>
       )}
       {value && (
@@ -129,12 +131,7 @@ export function ChallengeDetail({
                 </p>
               )}
             <p>{performanceLabel(value.performance.state)}</p>
-            {!query.isFetching &&
-            value.contentAvailability === 'available' &&
-            value.contributionUrl &&
-            value.allowedActions.includes('view_public') ? (
-              <a href={'/contribute/' + value.publicId}>Open public contribution page</a>
-            ) : null}
+            <PublicChallengeActions challenge={value} />
             <dl className="report-details">
               <div>
                 <dt>Accepted goal</dt>
@@ -146,15 +143,16 @@ export function ChallengeDetail({
               </div>
               <div>
                 <dt>Accepted</dt>
-                <dd>{reportTime(value.acceptedAt)} UTC</dd>
+                <dd>{reportTime(value.acceptedAt)}</dd>
               </div>
               <div>
                 <dt>Funding closes</dt>
                 <dd>
-                  {reportTime(
-                    value.fundingWindow?.effectiveClosesAt ?? value.terms.fundingClosesAt,
-                  )}{' '}
-                  UTC
+                  <FundingCloseTime
+                    deadline={value.fundingWindow?.effectiveClosesAt ?? value.terms.fundingClosesAt}
+                    serverTime={query.data!.serverTime}
+                    open={value.funding.state === 'pending'}
+                  />
                 </dd>
               </div>
               <div>
@@ -271,7 +269,7 @@ export function ChallengeDetail({
               </p>
             )}
             {value.performance.declaredAt && (
-              <p>Declared {reportTime(value.performance.declaredAt)} UTC · Streamer declaration.</p>
+              <p>Declared {reportTime(value.performance.declaredAt)} · Streamer declaration.</p>
             )}
           </section>
         </>

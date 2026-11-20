@@ -91,6 +91,7 @@ export {
   OverlayGrantIssuedResponseSchema,
   OverlaySelectionInputSchema,
   OverlaySelectionResponseSchema,
+  CurrentOverlaySelectionResponseSchema,
   OverlayPreferencesV2InputSchema,
   OverlayPreferencesV2ResponseSchema,
   OverlayReaderQuerySchema,

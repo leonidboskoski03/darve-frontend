@@ -1,3 +1,4 @@
+import { creatorTime } from '@/shared/creator-time';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ActionLink } from '@/design-system/action-link';
@@ -54,7 +55,7 @@ function CurrentRound({
       ) : null}
       <p>
         <small>
-          Checked <time dateTime={serverTime}>{serverTime.slice(11, 19)} UTC</time>
+          Checked <time dateTime={serverTime}>{creatorTime(serverTime)}</time>
         </small>
       </p>
       <ActionLink href={`/collection/${id}${ended ? '/suggestions' : ''}`}>
