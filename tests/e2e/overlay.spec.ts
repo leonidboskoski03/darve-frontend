@@ -315,10 +315,25 @@ test('synthetic selected source removal and unsupported templates do not retain 
   await page.evaluate((frame) => window.syntheticOverlay.emit(frame), frame);
   await expect(page.locator('.obs-card')).toHaveCount(0);
 });
-test('synthetic funded and declared projections remain distinct and suppress contribution QR', async ({
+test('synthetic OBS updates partial funding and suppresses the QR only when the goal is reached', async ({
   page,
 }) => {
   const frame = await display(page);
+  const challenge = frame.data.challenge!;
+  challenge.terms.goal = { amountMinor: '2000', currency: 'USD' };
+  challenge.funding = {
+    ...challenge.funding,
+    revision: challenge.funding.revision + 1,
+    confirmedGross: '500',
+    eligibleGross: '500',
+    unclassifiedGross: '0',
+  };
+  frame.data.version++;
+  await page.evaluate((frame) => window.syntheticOverlay.emit(frame), frame);
+  await expect(page.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '25');
+  await expect(page.locator('.obs-funding strong')).toContainText('5.00');
+  await expect(page.getByRole('img')).toBeVisible();
+
   frame.data.version++;
   frame.data.presentationState = 'accepted_closed';
   frame.data.qrPayload = null;
