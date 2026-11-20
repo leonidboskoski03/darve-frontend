@@ -6,11 +6,12 @@ import {
   PrivateReceipt,
   ReceiptLookup,
   GuestBoundary,
+  ViewerLink,
 } from '@/features/contributions/index';
 import type { ContributionRuntime } from '@/services/contributions/index';
 
 function Configured({ runtime }: { runtime: ContributionRuntime }) {
-  const { publicId, checkoutId } = useParams(),
+  const { publicId, checkoutId, slug } = useParams(),
     navigate = useNavigate(),
     location = useLocation();
   const { visible, revision } = useSyncExternalStore(
@@ -21,8 +22,8 @@ function Configured({ runtime }: { runtime: ContributionRuntime }) {
   const main = useRef<HTMLElement>(null);
   useEffect(() => {
     main.current?.focus();
-    document.title = (publicId ? 'Support a challenge' : 'Private receipt') + ' — Darve';
-  }, [publicId, checkoutId, location.pathname]);
+    document.title = (publicId || slug ? 'Support a challenge' : 'Private receipt') + ' — Darve';
+  }, [publicId, checkoutId, slug, location.pathname]);
   return (
     <div className="contribution-shell" data-color-scheme="light">
       <a className="skip-link" href="#main-content">
@@ -41,7 +42,9 @@ function Configured({ runtime }: { runtime: ContributionRuntime }) {
         <small>Made for viewers. Built for streamers.</small>
       </aside>
       <main id="main-content" ref={main} tabIndex={-1} className="contribution-main">
-        {publicId ? (
+        {slug ? (
+          <ViewerLink runtime={runtime} slug={slug} />
+        ) : publicId ? (
           <Contribution
             key={publicId}
             runtime={runtime}

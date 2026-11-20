@@ -65,7 +65,7 @@ export function createOverlaySubscription(options: {
   });
   const query = new URLSearchParams({
     grantId: readerQuery.grantId!.toLowerCase(),
-    ...(protocol === 2 ? { protocolVersion: '2', roundReview: '1' } : {}),
+    ...(protocol === 2 ? { protocolVersion: '2', roundReview: '1', viewerLink: '1' } : {}),
   });
   const base = `/api/overlays/${displayId}`;
   const now = options.now ?? (() => performance.now());

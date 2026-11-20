@@ -13,14 +13,18 @@ const view = params.get('view');
 const path =
   view === 'public'
     ? '/contribute/' + encodeURIComponent(params.get('publicId') ?? '')
-    : view === 'receipt'
-      ? '/receipts/' + encodeURIComponent(params.get('checkout') ?? '')
-      : view === 'return'
-        ? '/payments/return?' +
-          new URLSearchParams(
-            [...params].filter(([key]) => ['checkout', 'token', 'PayerID', 'status'].includes(key)),
-          ).toString()
-        : '/receipts';
+    : view === 'short'
+      ? '/s/' + encodeURIComponent(params.get('slug') ?? '')
+      : view === 'receipt'
+        ? '/receipts/' + encodeURIComponent(params.get('checkout') ?? '')
+        : view === 'return'
+          ? '/payments/return?' +
+            new URLSearchParams(
+              [...params].filter(([key]) =>
+                ['checkout', 'token', 'PayerID', 'status'].includes(key),
+              ),
+            ).toString()
+          : '/receipts';
 window.history.replaceState(null, '', path);
 const clean = sanitizePaymentReturn(window.location.href);
 if (clean) window.history.replaceState(null, '', clean);

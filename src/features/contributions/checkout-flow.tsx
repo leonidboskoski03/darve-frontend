@@ -48,7 +48,7 @@ export function CheckoutFlow({
   if (!held && (!current || !current.checkoutAvailability.available)) return null;
   return (
     <section className="contribution-checkout" aria-labelledby="prepare-checkout-heading">
-      <h2 id="prepare-checkout-heading">Choose your contribution</h2>
+      <h2 id="prepare-checkout-heading">Other ways to pay</h2>
       <form
         onSubmit={(event) => {
           event.preventDefault();

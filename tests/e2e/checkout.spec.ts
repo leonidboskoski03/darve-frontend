@@ -19,6 +19,7 @@ async function setup(page: Page, provider: 'stripe' | 'paypal' = 'stripe') {
     public: publicContributionFixture(true),
     receipt: privateReceiptFixture(provider),
     commands: [] as { path: string; key: string | undefined; body: string | null }[],
+    quotes: [] as { path: string; amount: string | null }[],
     mode: 'proof' as 'proof' | 'unknown' | 'stale' | 'okay' | 'needs_approval',
     captured: false,
     embeddedPaid: false,
@@ -57,6 +58,7 @@ async function setup(page: Page, provider: 'stripe' | 'paypal' = 'stripe') {
       return;
     }
     if (request.method() === 'GET' && path.endsWith('/paypal-quick/quote')) {
+      state.quotes.push({ path, amount: new URL(request.url()).searchParams.get('amountMinor') });
       await reply({
         clientId: 'synthetic-paypal-client',
         merchantId: 'SELLER0000001',
@@ -68,6 +70,7 @@ async function setup(page: Page, provider: 'stripe' | 'paypal' = 'stripe') {
       return;
     }
     if (request.method() === 'GET' && path.endsWith('/stripe-embedded/quote')) {
+      state.quotes.push({ path, amount: new URL(request.url()).searchParams.get('amountMinor') });
       await reply({
         publishableKey: 'pk_test_syntheticembeddedfixture',
         connectedAccountId: 'acct_syntheticembedded',
@@ -176,6 +179,43 @@ async function setup(page: Page, provider: 'stripe' | 'paypal' = 'stripe') {
   });
   return state;
 }
+test('amount picks and custom input feed both primary methods above the alternate checkout', async ({
+  page,
+}) => {
+  const state = await setup(page);
+  await quickSdk(page, 'approve');
+  await page.goto(base + '?view=public&publicId=' + ids.public, { waitUntil: 'domcontentloaded' });
+  const picker = page.getByRole('group', { name: 'Contribution amount (EUR)' });
+  const paypal = page.getByRole('region', { name: 'Quick Pay' });
+  const stripe = page.getByRole('region', { name: /Pay on this page/ });
+  await picker.getByRole('button', { name: '5', exact: true }).click();
+  await expect(
+    page.getByText('Includes 0.70 EUR Darve fee · Details', { exact: true }),
+  ).toBeVisible();
+  await paypal.getByRole('checkbox').check();
+  await stripe.getByRole('checkbox').check();
+  await expect(paypal.getByRole('button', { name: 'PayPal wallet' })).toBeVisible();
+  await expect(paypal.getByRole('button', { name: 'PayPal card' })).toBeVisible();
+  await expect(stripe.getByRole('button', { name: 'Open card form' })).toBeEnabled();
+  await picker.getByLabel('Custom amount (EUR)').fill('7.50');
+  await expect(paypal.getByRole('checkbox')).not.toBeChecked();
+  await expect(stripe.getByRole('checkbox')).not.toBeChecked();
+  await expect
+    .poll(() =>
+      state.quotes.map(({ path, amount }) => path.split('/').at(-2) + ':' + amount).sort(),
+    )
+    .toEqual([
+      'paypal-quick:500',
+      'paypal-quick:750',
+      'stripe-embedded:500',
+      'stripe-embedded:750',
+    ]);
+  await expect(page.getByRole('heading', { name: 'Other ways to pay' })).toBeVisible();
+  await expect(
+    page.getByRole('combobox', { name: 'Payment method' }).getByRole('option'),
+  ).toHaveText(['Choose a method', 'Stripe', 'PayPal']);
+  expect(state.commands).toHaveLength(0);
+});
 test('M3-2 embedded Stripe allows retry when the form could not open', async ({ page }) => {
   const state = await setup(page);
   state.embeddedRejected = true;
@@ -183,14 +223,14 @@ test('M3-2 embedded Stripe allows retry when the form could not open', async ({ 
   const section = page.getByRole('region', {
     name: 'Pay on this page (card / Apple Pay / Google Pay)',
   });
-  await section.getByLabel('Card amount (EUR)').fill('10.00');
+  await page.getByLabel('Custom amount (EUR)').fill('10.00');
   await section.getByRole('checkbox').check();
   const start = section.getByRole('button', { name: 'Open card form' });
   await start.click();
   await expect(section.getByRole('alert')).toHaveText(
     'Couldn’t open the card form. Nothing was charged. Try again.',
   );
-  await expect(section.getByText('Waiting for Darve to confirm this payment.')).toHaveCount(0);
+  await expect(section.getByText('Confirming a payment…')).toHaveCount(0);
   await expect(section.getByRole('button', { name: 'Check this payment' })).toHaveCount(0);
   await expect(start).toBeEnabled();
   await start.click();
@@ -224,17 +264,17 @@ test('M3-2 embedded Stripe waits for verified status', async ({ page }) => {
   const section = page.getByRole('region', {
     name: 'Pay on this page (card / Apple Pay / Google Pay)',
   });
-  await section.getByLabel('Card amount (EUR)').fill('10.00');
+  await page.getByLabel('Custom amount (EUR)').fill('10.00');
   await expect(section.getByRole('button', { name: 'Open card form' })).toBeDisabled();
   await section.getByRole('checkbox').check();
   await section.getByRole('button', { name: 'Open card form' }).click();
   await section.getByRole('button', { name: 'Pay with test card' }).click();
-  await expect(section.getByText('Waiting for Darve to confirm this payment.')).toBeVisible();
-  await expect(section.getByRole('link', { name: 'Private receipt' })).toHaveCount(0);
+  await expect(section.getByText('Confirming a payment…')).toBeVisible();
+  await expect(section.getByRole('link', { name: 'View receipt' })).toHaveCount(0);
   state.embeddedPaid = true;
   await section.getByRole('button', { name: 'Check this payment' }).click();
-  await expect(section.getByText('Payment confirmed.')).toBeVisible();
-  await expect(section.getByRole('link', { name: 'Private receipt' })).toHaveAttribute(
+  await expect(section.getByText('Payment confirmed')).toBeVisible();
+  await expect(section.getByRole('link', { name: 'View receipt' })).toHaveAttribute(
     'href',
     '/receipts/' + ids.checkout,
   );
@@ -276,9 +316,11 @@ window[document.currentScript.dataset.namespace] = {
 }
 async function reviewQuick(page: Page) {
   await page.goto(base + '?view=public&publicId=' + ids.public, { waitUntil: 'domcontentloaded' });
-  await page.getByLabel('Quick amount (EUR)').fill('10.00');
+  await page.getByLabel('Custom amount (EUR)').fill('10.00');
   await page
-    .getByRole('checkbox', { name: /accept the challenge terms and fee of 0.70 EUR/ })
+    .getByRole('checkbox', {
+      name: /accept the challenge terms and PayPal contribution fee of 0.70 EUR/,
+    })
     .check();
 }
 test('M3-1 Quick Pay confirms a card contribution and links to the private receipt', async ({
@@ -288,8 +330,8 @@ test('M3-1 Quick Pay confirms a card contribution and links to the private recei
   await quickSdk(page, 'approve');
   await reviewQuick(page);
   await page.getByRole('button', { name: 'PayPal card' }).click();
-  await expect(page.getByText('Payment confirmed.', { exact: true })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Private receipt', exact: true })).toHaveAttribute(
+  await expect(page.getByText('Payment confirmed', { exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'View receipt', exact: true })).toHaveAttribute(
     'href',
     '/receipts/' + ids.checkout,
   );
@@ -316,7 +358,7 @@ test('M3-1 Quick Pay shows a clear capture failure', async ({ page }) => {
   await reviewQuick(page);
   await page.getByRole('button', { name: 'PayPal wallet' }).click();
   await expect(page.getByText('PayPal declined this payment.', { exact: true })).toBeVisible();
-  await expect(page.getByText('Payment confirmed.', { exact: true })).toHaveCount(0);
+  await expect(page.getByText('Payment confirmed', { exact: true })).toHaveCount(0);
 });
 test('M3-1 SDK load failure retains the standard PayPal and Stripe methods', async ({ page }) => {
   const state = await setup(page, 'paypal');
@@ -455,6 +497,7 @@ test('synthetic PayPal return never captures automatically and explicit completi
   await expect(page).toHaveURL(/\/receipts\/[^?]+$/);
   await page.getByRole('checkbox', { name: /I approved this order on PayPal/ }).check();
   await page.getByRole('button', { name: 'Complete PayPal payment', exact: true }).click();
+  await page.getByText('Receipt details', { exact: true }).click();
   await expect(page.getByText('Outcome unknown', { exact: true })).toBeVisible();
   expect(state.commands).toHaveLength(1);
   expect(state.commands[0]?.path).toMatch(/\/complete$/);

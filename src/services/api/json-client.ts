@@ -57,8 +57,10 @@ function allowedPath(audience: Audience, pathname: string) {
     );
   if (audience === 'overlay') return /^\/api\/overlays\/[^/]+\/(session|snapshot)$/.test(pathname);
   if (audience === 'public')
-    return /^\/api\/public\/challenges\/[^/]+(?:\/(?:paypal-quick|stripe-embedded)\/quote)?$/.test(
-      pathname,
+    return (
+      /^\/api\/public\/challenges\/[^/]+(?:\/(?:paypal-quick|stripe-embedded)\/quote)?$/.test(
+        pathname,
+      ) || /^\/api\/public\/viewer-links\/[a-z0-9-]{1,63}$/.test(pathname)
     );
   return !/^\/api\/(public|checkouts|overlays|paypal-quick|stripe-embedded)(\/|$)/.test(pathname);
 }

@@ -9,6 +9,7 @@ export const createAppRouter = ({
   createBrowserRouter([
     ...[
       '/contribute/:publicId',
+      '/s/:slug',
       '/receipts',
       '/receipts/:checkoutId',
       '/payments/return',

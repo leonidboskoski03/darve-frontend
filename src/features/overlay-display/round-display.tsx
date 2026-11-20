@@ -1,12 +1,22 @@
-import { useSyncExternalStore } from 'react';
+import { useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { createPortal } from 'react-dom';
 import { roundReviewMessage } from '@/entities/round-review/index';
 import { resolveOverlayTemplate } from '@/entities/overlay-template/index';
 import type { OverlayReader } from '@/services/overlay/index';
 import { OverlayDisplay as ChallengeDisplay } from './display';
+import './viewer-link.css';
 
 export function OverlayDisplay({ reader }: { reader: OverlayReader }) {
   const value = useSyncExternalStore(reader.subscribe, reader.getSnapshot);
   const { snapshot: frame, presentation } = value;
+  const display = useRef<HTMLDivElement>(null);
+  const [qr, setQr] = useState<Element | null>(null);
+  const payload = presentation?.qrPayload;
+  const url = payload ? frame?.viewerUrl : undefined;
+  useLayoutEffect(() => {
+    // Enhance the common QR slot without changing the approved template renderer.
+    setQr(url ? (display.current?.querySelector('.obs-qr') ?? null) : null);
+  }, [payload, url, frame?.version]);
   if (
     !frame ||
     !presentation?.fresh ||
@@ -15,7 +25,17 @@ export function OverlayDisplay({ reader }: { reader: OverlayReader }) {
     !('reviewState' in frame) ||
     !frame.reviewState
   ) {
-    return <ChallengeDisplay reader={reader} />;
+    return (
+      <div ref={display} className="obs-challenge-frame">
+        <ChallengeDisplay reader={reader} />
+        {url &&
+          qr &&
+          createPortal(
+            <span className="obs-viewer-url">{url.replace(/^https?:\/\//, '')}</span>,
+            qr,
+          )}
+      </div>
+    );
   }
   if (frame.reviewState === 'restricted') return <div data-obs-phase="restricted" />;
   const template = resolveOverlayTemplate(frame.preferences.template);

@@ -135,6 +135,12 @@ Completion procedure: commit current evidence/UI/operator fixes, retain active h
 
 ## Coverage corrections
 
+### Compact viewer page
+
+The contribution page puts the creator, challenge, funding progress and live deadline first. PayPal Quick Pay and Stripe on-page checkout use the same amount picker. Each payment method still requires its own server quote and payment confirmation. The legacy PayPal and hosted Stripe methods stay visible under “Other ways to pay.” Funding classification, provider availability, accepted terms and refresh controls are under Details. The private receipt puts the amount, challenge, time and payment status first.
+
+Creators can copy their stable `/s/<slug>` link from OBS settings. The short link opens the currently selected open challenge. The OBS card prints it beside the unchanged challenge QR. Viewer names and messages remain open pending privacy and moderation decisions.
+
 The [F01-04 reconciliation](F01_REFERENCE_AND_COMPONENT_AUDIT.md#f01-04-product-coverage-reconciliation) reopens F06 for omitted creator receiving setup and product handoff. F06-01–04 remain CLOSED for guest contribution/receipt implementation and the recorded genuine sandbox approvals/payments. Historical “qualified” statements refer to that narrower scope. Node-only seller setup pages were acceptance tooling, not a completed creator payout-settings screen.
 
 | Task / priority                                                    | Bounded result                                                                                                                                                                                                                                                                                              | Dependencies and done criteria                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |

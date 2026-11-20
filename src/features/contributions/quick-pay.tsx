@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/design-system/button';
 import {
   contributionMoney,
@@ -10,6 +9,7 @@ import {
   type PublicChallengeDto,
   type QuickPayAttempt,
 } from '@/services/contributions/index';
+import type { PrimaryAmount, PrimaryQuotes } from './primary-quotes';
 
 const sdkError = 'Quick Pay could not open. You can use the checkout options below.';
 type Progress = 'idle' | 'opening' | 'capturing' | 'cancelled' | 'pending' | 'confirmed';
@@ -17,41 +17,39 @@ type Progress = 'idle' | 'opening' | 'capturing' | 'cancelled' | 'pending' | 'co
 export function QuickPay({
   runtime,
   challenge,
+  picked,
+  quoteQuery,
 }: {
   runtime: ContributionRuntime;
   challenge: PublicChallengeDto | null;
+  picked: PrimaryAmount;
+  quoteQuery: PrimaryQuotes['paypal'];
 }) {
-  const [amount, setAmount] = useState('');
   const [reviewedKey, setReviewedKey] = useState<string | null>(null);
   const [progress, setProgress] = useState<Progress>('idle');
   const [problem, setProblem] = useState<string | null>(null);
   const [sdkStatus, setSdkStatus] = useState<'loading' | 'ready' | 'unavailable'>('loading');
   const [receiptId, setReceiptId] = useState<string | null>(null);
-  const [locked, setLocked] = useState(false);
-  const amountMinor = quickPayMinor(amount);
+  const [held, setHeld] = useState<{
+    picked: PrimaryAmount;
+    quote: PrimaryQuotes['paypal']['data'];
+  }>();
+  const locked = !!held;
+  const amount = held?.picked ?? picked;
+  const amountMinor = quickPayMinor(amount.text);
   const wallet = useRef<HTMLDivElement>(null);
   const card = useRef<HTMLDivElement>(null);
   const attempt = useRef<QuickPayAttempt | null>(null);
   const orderPromise = useRef<Promise<string> | null>(null);
   const order = useRef<string | null>(null);
   const capturePromise = useRef<Promise<void> | null>(null);
-  const publicId = challenge?.publicId;
   const available =
     challenge?.availablePaymentProviders.some(
       (provider) => provider.provider === 'paypal' && provider.availability.available,
     ) ?? false;
-  const quoteQuery = useQuery(
-    {
-      queryKey: ['paypal-quick-quote', publicId, amountMinor],
-      enabled: !!publicId && !!amountMinor && available && !locked,
-      queryFn: ({ signal }) => runtime.quickPay.quote(publicId!, amountMinor!, signal),
-      retry: false,
-      staleTime: 30000,
-    },
-    runtime.publicQueries,
-  );
+  const responseQuote = held?.quote ?? quoteQuery.data;
   const quote =
-    quoteQuery.data?.currency === challenge?.terms.goal.currency ? quoteQuery.data : undefined;
+    responseQuote?.currency === challenge?.terms.goal.currency ? responseQuote : undefined;
   const reviewKey =
     quote && challenge && amountMinor
       ? [
@@ -61,13 +59,14 @@ export function QuickPay({
           quote.agreementId,
           quote.feeMinor,
           amountMinor,
+          amount.revision,
         ].join(':')
       : null;
   const reviewed = reviewKey !== null && reviewedKey === reviewKey;
-  const setup = useRef({ reviewed, challenge, amountMinor, quote, available });
+  const setup = useRef({ reviewed, challenge, amountMinor, quote, available, amount });
   useEffect(() => {
-    setup.current = { reviewed, challenge, amountMinor, quote, available };
-  }, [reviewed, challenge, amountMinor, quote, available]);
+    setup.current = { reviewed, challenge, amountMinor, quote, available, amount };
+  }, [reviewed, challenge, amountMinor, quote, available, amount]);
 
   const createOrder = useCallback(() => {
     if (orderPromise.current) return orderPromise.current;
@@ -84,7 +83,7 @@ export function QuickPay({
       attempt.current ??
       runtime.quickPay.prepare(current.challenge, current.amountMinor, current.quote);
     attempt.current = held;
-    setLocked(true);
+    setHeld({ picked: current.amount, quote: current.quote });
     setProblem(null);
     setProgress('opening');
     orderPromise.current = runtime.quickPay
@@ -202,29 +201,12 @@ export function QuickPay({
       <h2 id="quick-pay-heading">Quick Pay</h2>
       {progress === 'confirmed' ? (
         <p role="status">
-          <strong>Payment confirmed.</strong> <a href={'/receipts/' + receiptId}>Private receipt</a>
+          <strong>Payment confirmed</strong> — <a href={'/receipts/' + receiptId}>View receipt</a>
         </p>
       ) : (
         <>
-          <label className="ds-field">
-            <span className="ds-field__label">
-              Quick amount ({challenge?.terms.goal.currency ?? currency})
-            </span>
-            <input
-              className="ds-input"
-              inputMode="decimal"
-              placeholder="10.00"
-              autoComplete="off"
-              value={amount}
-              disabled={locked}
-              onChange={(event) => {
-                setAmount(event.target.value);
-                setReviewedKey(null);
-              }}
-            />
-          </label>
-          {quoteQuery.isFetching && <p role="status">Checking the fee…</p>}
-          {quoteQuery.error && <p role="alert">{quickPayMessage(quoteQuery.error)}</p>}
+          {!locked && quoteQuery.isFetching && <p role="status">Checking the fee…</p>}
+          {!locked && quoteQuery.error && <p role="alert">{quickPayMessage(quoteQuery.error)}</p>}
           {quote && (
             <label className="contribution-consent">
               <input
@@ -234,7 +216,7 @@ export function QuickPay({
                 onChange={(event) => setReviewedKey(event.target.checked ? reviewKey : null)}
               />
               <span>
-                I accept the challenge terms and fee of{' '}
+                I accept the challenge terms and PayPal contribution fee of{' '}
                 {contributionMoney(quote.feeMinor, quote.currency)}.
               </span>
             </label>
@@ -248,14 +230,14 @@ export function QuickPay({
             </>
           )}
           {progress === 'opening' && <p role="status">Opening PayPal…</p>}
-          {progress === 'capturing' && <p role="status">Confirming payment…</p>}
+          {progress === 'capturing' && <p role="status">Confirming a payment…</p>}
           {progress === 'cancelled' && (
             <p role="status">PayPal was closed. You can retry this checkout.</p>
           )}
           {problem && <p role="alert">{problem}</p>}
           {progress === 'pending' && (
             <>
-              {!problem && <p role="status">PayPal is still confirming this payment.</p>}
+              {!problem && <p role="status">Confirming a payment…</p>}
               {receiptId && <a href={'/receipts/' + receiptId}>Private receipt</a>}
               <Button
                 tone="secondary"

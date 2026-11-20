@@ -85,6 +85,8 @@ export {
   AnalysisLiveEventSchema,
   type AnalysisLiveEvent,
   OverlayParamsSchema,
+  ViewerSlugParamsSchema,
+  ViewerLinkResponseSchema,
   OverlayBootstrapInputSchema,
   OverlayBootstrapResponseSchema,
   OverlayIssueInputSchema,

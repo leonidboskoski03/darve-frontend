@@ -46,8 +46,8 @@ try {
   const contribution = await viewer.goto(frontendOrigin + '/contribute/' + challengeId);
   expect(contribution?.ok()).toBe(true);
   await expect(viewer.getByRole('progressbar')).toBeVisible();
-  await expect(viewer.getByRole('heading', { name: 'Contribution availability' })).toBeVisible();
-  const checkout = viewer.getByRole('heading', { name: 'Choose your contribution' });
+  await expect(viewer.getByRole('progressbar', { name: 'Funding progress' })).toBeVisible();
+  const checkout = viewer.getByRole('heading', { name: 'Other ways to pay' });
   if (process.argv.includes('--require-open-checkout')) await expect(checkout).toBeVisible();
   if (await checkout.isVisible()) {
     await expect(viewer.getByLabel('Payment method')).toBeVisible();

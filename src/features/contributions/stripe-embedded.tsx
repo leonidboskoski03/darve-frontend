@@ -13,15 +13,20 @@ import {
   type EmbeddedStripeSession,
   type PublicChallengeDto,
 } from '@/services/contributions/index';
+import type { PrimaryAmount, PrimaryQuotes } from './primary-quotes';
 
 export function StripeEmbedded({
   runtime,
   challenge,
+  picked,
+  quoteQuery,
 }: {
   runtime: ContributionRuntime;
   challenge: PublicChallengeDto | null;
+  picked: PrimaryAmount;
+  quoteQuery: PrimaryQuotes['stripe'];
 }) {
-  const [amount, setAmount] = useState('');
+  const [heldQuote, setHeldQuote] = useState<PrimaryQuotes['stripe']['data']>();
   const [reviewed, setReviewed] = useState<string | null>(null);
   const [attempt, setAttempt] = useState<EmbeddedStripeAttempt | null>(null);
   const [session, setSession] = useState<EmbeddedStripeSession | null>(null);
@@ -31,22 +36,13 @@ export function StripeEmbedded({
   const [problem, setProblem] = useState<string | null>(null);
   const slot = useRef<HTMLDivElement>(null);
   const submitting = useRef(false);
-  const amountMinor = quickPayMinor(amount);
-  const publicId = challenge?.publicId;
+  const amountMinor = quickPayMinor(picked.text);
   const available = challenge?.availablePaymentProviders.some(
     ({ provider, availability }) => provider === 'stripe' && availability.available,
   );
-  const quoteQuery = useQuery(
-    {
-      enabled: !!publicId && !!amountMinor && !!available && !attempt,
-      queryKey: ['stripe-embedded-quote', publicId, amountMinor],
-      queryFn: ({ signal }) => runtime.embeddedStripe.quote(publicId!, amountMinor!, signal),
-      retry: false,
-    },
-    runtime.publicQueries,
-  );
+  const responseQuote = attempt ? heldQuote : quoteQuery.data;
   const quote =
-    quoteQuery.data?.currency === challenge?.terms.goal.currency ? quoteQuery.data : undefined;
+    responseQuote?.currency === challenge?.terms.goal.currency ? responseQuote : undefined;
   const reviewKey =
     quote && challenge && amountMinor
       ? [
@@ -56,6 +52,7 @@ export function StripeEmbedded({
           quote.feeMinor,
           quote.connectedAccountId,
           amountMinor,
+          picked.revision,
         ].join(':')
       : null;
   const accepted = reviewKey !== null && reviewed === reviewKey;
@@ -73,6 +70,7 @@ export function StripeEmbedded({
     runtime.publicQueries,
   );
   const confirmed = !!status.data?.confirmed;
+  const publicId = attempt?.publicId;
   useEffect(() => {
     if (confirmed && publicId) {
       runtime.refreshPrivate();
@@ -124,6 +122,7 @@ export function StripeEmbedded({
         : null);
     if (!reviewedAttempt) return;
     submitting.current = true;
+    setHeldQuote(quote);
     setAttempt(reviewedAttempt);
     setOpening(true);
     setProblem(null);
@@ -154,42 +153,26 @@ export function StripeEmbedded({
       <h2 id="stripe-embedded-heading">Pay on this page (card / Apple Pay / Google Pay)</h2>
       {confirmed ? (
         <p role="status">
-          <strong>Payment confirmed.</strong>{' '}
-          <a href={'/receipts/' + checkoutId}>Private receipt</a>
+          <strong>Payment confirmed</strong> — <a href={'/receipts/' + checkoutId}>View receipt</a>
         </p>
       ) : (
         <>
           {!session && (
             <>
-              <label className="ds-field">
-                <span className="ds-field__label">
-                  Card amount ({challenge?.terms.goal.currency})
-                </span>
-                <input
-                  className="ds-input"
-                  inputMode="decimal"
-                  autoComplete="off"
-                  value={amount}
-                  disabled={!!attempt}
-                  onChange={(event) => {
-                    setAmount(event.target.value);
-                    setReviewed(null);
-                    setProblem(null);
-                  }}
-                />
-              </label>
-              {quoteQuery.isFetching && <p role="status">Checking the fee…</p>}
-              {quoteQuery.error && <p role="alert">{quickPayMessage(quoteQuery.error)}</p>}
+              {!attempt && quoteQuery.isFetching && <p role="status">Checking the fee…</p>}
+              {!attempt && quoteQuery.error && (
+                <p role="alert">{quickPayMessage(quoteQuery.error)}</p>
+              )}
               {quote && (
                 <label className="contribution-consent">
                   <input
                     type="checkbox"
-                    checked={accepted}
+                    checked={!!attempt || accepted}
                     disabled={!!attempt}
                     onChange={(event) => setReviewed(event.target.checked ? reviewKey : null)}
                   />
                   <span>
-                    I accept the challenge terms and fee of{' '}
+                    I accept the challenge terms and Stripe contribution fee of{' '}
                     {contributionMoney(quote.feeMinor, quote.currency)}.
                   </span>
                 </label>
@@ -216,9 +199,7 @@ export function StripeEmbedded({
             </p>
           )}
           {status.data?.failed && <p role="alert">Stripe did not confirm this payment.</p>}
-          {checkingUntil > 0 && !status.data?.failed && (
-            <p role="status">Waiting for Darve to confirm this payment.</p>
-          )}
+          {checkingUntil > 0 && !status.data?.failed && <p role="status">Confirming a payment…</p>}
           {status.error && <p role="alert">{quickPayMessage(status.error)}</p>}
           {checkoutId && (checkingUntil > 0 || formFailed) && !status.data?.failed && (
             <Button

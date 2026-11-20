@@ -1,5 +1,5 @@
 {
-  "sourceRevision": "fe8587a2e115d61d7f39815eff38b47f574860d1",
+  "sourceRevision": "10b5fd536a21795dd9a7fddd286c9578c8412ede",
   "status": "B15/F09-02 aligns coin/template request revision limits and exports the strict existing history query; existing F08 recovery and authority handoffs retained. Ordinary activation remains separate.",
   "operations": [
     {
@@ -210,6 +210,27 @@
         "line": 6,
         "handler": "controller.publicDetail",
         "sha256": "0d9e82712e684c9aadefd94c2969e1a9fbd027aa95f5a2fe3d5e114d4fa26d7c"
+      },
+      "frontend": "F06"
+    },
+    {
+      "id": "public-api:GET /api/public/viewer-links/:slug",
+      "origin": "public-api",
+      "method": "GET",
+      "path": "/api/public/viewer-links/:slug",
+      "authority": "public",
+      "csrf": "no mutation CSRF; Origin policy still applies",
+      "idempotency": "none",
+      "request": "none; ViewerSlugParamsSchema",
+      "query": "empty",
+      "response": "ViewerLinkResponseSchema",
+      "successStatuses": [200],
+      "publicExports": ["ViewerSlugParamsSchema", "ViewerLinkResponseSchema"],
+      "source": {
+        "file": "apps/api/src/modules/overlays/overlay.routes.ts",
+        "line": 7,
+        "handler": "c.resolveViewerLink",
+        "sha256": "a446411adbf4b150f482b0018cac8d7b95b3bb2be7432ea0d1846c8159159872"
       },
       "frontend": "F06"
     },
@@ -806,7 +827,7 @@
       "csrf": "no mutation CSRF; Origin policy still applies",
       "idempotency": "none",
       "request": "none; OverlayParamsSchema",
-      "query": "OverlayReaderQuerySchema; Last-Event-ID OverlayEventCursorSchema; optional roundReview=1 with protocolVersion=2",
+      "query": "OverlayReaderQuerySchema; Last-Event-ID OverlayEventCursorSchema; optional roundReview=1 with protocolVersion=2; optional viewerLink=1",
       "response": "SSE OverlayEventSchema or OverlayEventV2Schema",
       "successStatuses": [200],
       "publicExports": [
@@ -818,9 +839,9 @@
       ],
       "source": {
         "file": "apps/api/src/modules/overlays/overlay.routes.ts",
-        "line": 16,
+        "line": 17,
         "handler": "c.events",
-        "sha256": "cfc7f621d99c8f6e7c843618534a981cb035b08dbcb2a2b1c505e4b8c72d290c"
+        "sha256": "a446411adbf4b150f482b0018cac8d7b95b3bb2be7432ea0d1846c8159159872"
       },
       "frontend": "F07"
     },
@@ -833,7 +854,7 @@
       "csrf": "no mutation CSRF; Origin policy still applies",
       "idempotency": "none",
       "request": "none; OverlayParamsSchema",
-      "query": "OverlayReaderQuerySchema; optional roundReview=1 with protocolVersion=2",
+      "query": "OverlayReaderQuerySchema; optional roundReview=1 with protocolVersion=2; optional viewerLink=1",
       "response": "OverlaySnapshotResponseSchema or OverlaySnapshotV2ResponseSchema",
       "successStatuses": [200],
       "publicExports": [
@@ -844,9 +865,9 @@
       ],
       "source": {
         "file": "apps/api/src/modules/overlays/overlay.routes.ts",
-        "line": 15,
+        "line": 16,
         "handler": "c.snapshot",
-        "sha256": "cfc7f621d99c8f6e7c843618534a981cb035b08dbcb2a2b1c505e4b8c72d290c"
+        "sha256": "a446411adbf4b150f482b0018cac8d7b95b3bb2be7432ea0d1846c8159159872"
       },
       "frontend": "F07"
     },
@@ -869,9 +890,9 @@
       ],
       "source": {
         "file": "apps/api/src/modules/overlays/overlay.routes.ts",
-        "line": 14,
+        "line": 15,
         "handler": "c.bootstrap",
-        "sha256": "cfc7f621d99c8f6e7c843618534a981cb035b08dbcb2a2b1c505e4b8c72d290c"
+        "sha256": "a446411adbf4b150f482b0018cac8d7b95b3bb2be7432ea0d1846c8159159872"
       },
       "frontend": "F07"
     },
@@ -894,9 +915,9 @@
       ],
       "source": {
         "file": "apps/api/src/modules/overlays/overlay.routes.ts",
-        "line": 13,
+        "line": 14,
         "handler": "c.select",
-        "sha256": "cfc7f621d99c8f6e7c843618534a981cb035b08dbcb2a2b1c505e4b8c72d290c"
+        "sha256": "a446411adbf4b150f482b0018cac8d7b95b3bb2be7432ea0d1846c8159159872"
       },
       "frontend": "F07"
     },
@@ -909,15 +930,15 @@
       "csrf": "no mutation CSRF; Origin policy still applies",
       "idempotency": "none",
       "request": "none",
-      "query": "empty",
+      "query": "optional viewerLink=1",
       "response": "CurrentOverlaySelectionResponseSchema (nullable binding)",
       "successStatuses": [200],
       "publicExports": ["CurrentOverlaySelectionResponseSchema"],
       "source": {
         "file": "apps/api/src/modules/overlays/overlay.routes.ts",
-        "line": 11,
+        "line": 12,
         "handler": "c.currentSelection",
-        "sha256": "cfc7f621d99c8f6e7c843618534a981cb035b08dbcb2a2b1c505e4b8c72d290c"
+        "sha256": "a446411adbf4b150f482b0018cac8d7b95b3bb2be7432ea0d1846c8159159872"
       },
       "frontend": "F07"
     },
@@ -936,9 +957,9 @@
       "publicExports": ["OverlayParamsSchema", "OverlaySelectionResponseSchema"],
       "source": {
         "file": "apps/api/src/modules/overlays/overlay.routes.ts",
-        "line": 12,
+        "line": 13,
         "handler": "c.selection",
-        "sha256": "cfc7f621d99c8f6e7c843618534a981cb035b08dbcb2a2b1c505e4b8c72d290c"
+        "sha256": "a446411adbf4b150f482b0018cac8d7b95b3bb2be7432ea0d1846c8159159872"
       },
       "frontend": "F07"
     },
@@ -962,9 +983,9 @@
       ],
       "source": {
         "file": "apps/api/src/modules/overlays/overlay.routes.ts",
-        "line": 9,
+        "line": 11,
         "handler": "c.patch",
-        "sha256": "cfc7f621d99c8f6e7c843618534a981cb035b08dbcb2a2b1c505e4b8c72d290c"
+        "sha256": "a446411adbf4b150f482b0018cac8d7b95b3bb2be7432ea0d1846c8159159872"
       },
       "frontend": "F07"
     },
@@ -983,9 +1004,9 @@
       "publicExports": ["OverlayPreferencesResponseSchema", "OverlayPreferencesV2ResponseSchema"],
       "source": {
         "file": "apps/api/src/modules/overlays/overlay.routes.ts",
-        "line": 9,
+        "line": 10,
         "handler": "c.preferences",
-        "sha256": "cfc7f621d99c8f6e7c843618534a981cb035b08dbcb2a2b1c505e4b8c72d290c"
+        "sha256": "a446411adbf4b150f482b0018cac8d7b95b3bb2be7432ea0d1846c8159159872"
       },
       "frontend": "F07"
     },
@@ -1004,9 +1025,9 @@
       "publicExports": ["OverlayParamsSchema"],
       "source": {
         "file": "apps/api/src/modules/overlays/overlay.routes.ts",
-        "line": 8,
+        "line": 9,
         "handler": "c.revoke",
-        "sha256": "cfc7f621d99c8f6e7c843618534a981cb035b08dbcb2a2b1c505e4b8c72d290c"
+        "sha256": "a446411adbf4b150f482b0018cac8d7b95b3bb2be7432ea0d1846c8159159872"
       },
       "frontend": "F07"
     },
@@ -1025,9 +1046,9 @@
       "publicExports": ["OverlayIssueInputSchema", "OverlayGrantIssuedResponseSchema"],
       "source": {
         "file": "apps/api/src/modules/overlays/overlay.routes.ts",
-        "line": 7,
+        "line": 8,
         "handler": "c.issue",
-        "sha256": "cfc7f621d99c8f6e7c843618534a981cb035b08dbcb2a2b1c505e4b8c72d290c"
+        "sha256": "a446411adbf4b150f482b0018cac8d7b95b3bb2be7432ea0d1846c8159159872"
       },
       "frontend": "F07"
     },
@@ -3124,7 +3145,7 @@
     "apps/api/src/composition/paypal-reconciliation.ts": "bf952d1b1697eec3e7e8cb75cc9360fc5953cf4cd4685f661e229f8606e4b1de",
     "apps/api/src/composition/provider-maintenance.ts": "98866b11c193abaec3ea751ccf0bd31bb642509c880715427d7ca1d30b3d73c2",
     "apps/api/src/composition/runtime.ts": "4b95a2ff0f6f23b92316df0df56b960b88cdf91666e4e62e5464950d5ea97914",
-    "apps/api/src/composition/stripe-checkout.ts": "3eb99ad6fa6b19cfa1cf62d2e21e084e9ba4f8be82a5ba839bc644fca6349f04",
+    "apps/api/src/composition/stripe-checkout.ts": "b1a32072dc7b5c76534b8989770d96feb26317398136c282c8fec2be35c793ad",
     "apps/api/src/composition/stripe-existing-account.ts": "2ee2663b6475d1de14fcd93a083c139489ee166736f23fcf04092683f2f1d9a1",
     "apps/api/src/composition/stripe-receiving.ts": "3ad4fcdb98f5d583c8f2f2d2dfc8cf1544868395d269b289571609da23afd5dd",
     "apps/api/src/composition/support.ts": "f635627647e8721446036a64732d09d6bb4d133844c57b55c430d88f0d4f00bb",
@@ -3175,9 +3196,9 @@
     "apps/api/src/modules/health/health.routes.ts": "a50ae03dab44ff8d9662c3203938ae3bfec375b4ed25d33e7c75f84d16965bb5",
     "apps/api/src/modules/kick-webhooks/kick-webhook.controller.ts": "7876db8253878a62977c7125179ff8e07eca57e41aecfdb8d757883f835f3084",
     "apps/api/src/modules/kick-webhooks/kick-webhook.routes.ts": "2871374a4e251a2e565074f2582f2c667be4e687b114e53c2acc9762f8a6b353",
-    "apps/api/src/modules/overlays/overlay.controller.ts": "a05ed62820d7ac2d842917e274630f3df23decdfbaada4de68275fedd41a7bf1",
-    "apps/api/src/modules/overlays/overlay.mapper.ts": "507e0422f9e6b1162702f164d22a8a80506d3f19e86a354017b7bb99b753c0bf",
-    "apps/api/src/modules/overlays/overlay.routes.ts": "cfc7f621d99c8f6e7c843618534a981cb035b08dbcb2a2b1c505e4b8c72d290c",
+    "apps/api/src/modules/overlays/overlay.controller.ts": "71fc5542535e75fba1199e3cdd1db7d3e439163a306a83a9dee0cc6e65436341",
+    "apps/api/src/modules/overlays/overlay.mapper.ts": "4e8cecf27ca3d522a6bfd37ef3f5eaa80303ea0e7172ae1fba99cab6ed664206",
+    "apps/api/src/modules/overlays/overlay.routes.ts": "a446411adbf4b150f482b0018cac8d7b95b3bb2be7432ea0d1846c8159159872",
     "apps/api/src/modules/payment-accounts/paypal-receiving.controller.ts": "e8aad6ccc78b94d65ff69d9078a0692873f1d5dc6b95134e9027b93af0a05149",
     "apps/api/src/modules/payment-accounts/paypal-receiving.mapper.ts": "99b00bdb090e7f98188a3dc553ae9183f1a28fdfde06a9fe59f0da254e7c82d8",
     "apps/api/src/modules/payment-accounts/paypal-receiving.routes.ts": "c15ba1ce7b248335bec9490c14bcad029dc58f75afc34603cd9eceb01b803158",
