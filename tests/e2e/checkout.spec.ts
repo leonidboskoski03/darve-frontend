@@ -81,6 +81,7 @@ async function setup(page: Page, provider: 'stripe' | 'paypal' = 'stripe') {
                 orderId: 'SYNTHETICORDER',
                 url: 'https://www.sandbox.paypal.com/checkoutnow?token=SYNTHETICORDER',
               };
+        value.data.state = 'awaiting';
         await reply(value);
       } else if (path.endsWith('/complete')) {
         state.captured = state.mode !== 'needs_approval';
@@ -135,6 +136,26 @@ test('synthetic unknown creation keeps the same intent and exposes no replacemen
     page.getByRole('heading', { name: 'Private contribution receipt', exact: true }),
   ).toBeVisible();
   expect(state.commands[0]).toEqual(state.commands[1]);
+});
+test('synthetic unknown PayPal preparation can retry the same private receipt', async ({
+  page,
+}) => {
+  const state = await setup(page, 'paypal');
+  state.receipt.data.state = 'unknown';
+  await page.route('https://www.sandbox.paypal.com/**', (route) =>
+    route.fulfill({ body: 'Synthetic PayPal approval' }),
+  );
+  await page.goto(base + '?view=receipt&checkout=' + ids.checkout);
+  const retry = page.getByRole('button', { name: 'Retry PayPal preparation' });
+  await expect(retry).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Complete PayPal payment' })).toHaveCount(0);
+  expect(state.commands).toHaveLength(0);
+  await page.getByRole('checkbox', { name: /retry the same PayPal preparation/ }).check();
+  await retry.click();
+  await expect(page.getByText('Synthetic PayPal approval')).toBeVisible();
+  expect(state.commands).toEqual([
+    { path: '/api/checkouts/' + ids.checkout + '/resume', body: '{}', key: undefined },
+  ]);
 });
 test('synthetic stale terms require a new unchecked review rather than an automatic retry', async ({
   page,

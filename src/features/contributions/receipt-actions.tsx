@@ -24,10 +24,15 @@ export function ReceiptActions({
     [problem, setProblem] = useState<unknown>(null);
   const awaiting =
     !!receipt && receipt.paymentStatus === 'unconfirmed' && receipt.state === 'awaiting';
+  const retryPreparation =
+    receipt?.paymentProvider === 'paypal' &&
+    receipt.paymentStatus === 'unconfirmed' &&
+    ['unknown', 'creating', 'reconciling'].includes(receipt.state) &&
+    receipt.verifiedPayments.length === 0;
   const availability = useQuery(
     {
       queryKey: ['public-challenge', receipt?.publicChallengeId],
-      enabled: awaiting,
+      enabled: awaiting || retryPreparation,
       queryFn: ({ signal }) => runtime.challenge(receipt!.publicChallengeId, signal),
       retry: false,
     },
@@ -55,7 +60,7 @@ export function ReceiptActions({
     availability.data?.data.availablePaymentProviders.some(
       (row) => row.provider === receipt?.paymentProvider && row.availability.available,
     );
-  if (!awaiting) return null;
+  if (!awaiting && !retryPreparation) return null;
   const error = capture.error ?? resume.error ?? problem,
     uncertain = checkoutUncertain(error),
     busy = capture.isPending || resume.isPending;
@@ -63,8 +68,9 @@ export function ReceiptActions({
     <section className="contribution-checkout" aria-labelledby="continue-payment-heading">
       <h2 id="continue-payment-heading">Continue this checkout</h2>
       <p>
-        Review the contribution amount, recorded Darve fee and accepted terms above. Continuing
-        rechecks this same checkout; it does not create a replacement.
+        {retryPreparation
+          ? 'PayPal preparation is unconfirmed. Review the amount, fee and terms above before retrying this same checkout.'
+          : 'Review the contribution amount, recorded Darve fee and accepted terms above. Continuing rechecks this same checkout; it does not create a replacement.'}
       </p>
       {availability.isFetching && <p role="status">Checking current payment availability…</p>}
       {!allowed && !availability.isFetching && (
@@ -75,7 +81,7 @@ export function ReceiptActions({
       )}
       {allowed && (
         <>
-          {receipt.paymentProvider === 'paypal' && <h3>1. Approve on PayPal</h3>}
+          {awaiting && receipt.paymentProvider === 'paypal' && <h3>1. Approve on PayPal</h3>}
           <label className="contribution-consent">
             <input
               type="checkbox"
@@ -84,13 +90,15 @@ export function ReceiptActions({
               onChange={(event) => setReviewed(event.target.checked)}
             />
             <span>
-              I reviewed this checkout’s amount, recorded fee and accepted terms and want to
-              continue to {receipt.paymentProvider === 'stripe' ? 'Stripe' : 'PayPal'}.
+              {retryPreparation
+                ? 'I reviewed the amount, recorded fee and terms and want to retry the same PayPal preparation.'
+                : 'I reviewed this checkout’s amount, recorded fee and accepted terms and want to continue to ' +
+                  (receipt.paymentProvider === 'stripe' ? 'Stripe.' : 'PayPal.')}
             </span>
           </label>
           <Button
             aria-busy={resume.isPending}
-            disabled={!reviewed}
+            disabled={!reviewed || busy}
             onClick={() => {
               if (!busy) {
                 capture.reset();
@@ -99,9 +107,11 @@ export function ReceiptActions({
               }
             }}
           >
-            Continue to {receipt.paymentProvider === 'stripe' ? 'Stripe' : 'PayPal'}
+            {retryPreparation
+              ? 'Retry PayPal preparation'
+              : 'Continue to ' + (receipt.paymentProvider === 'stripe' ? 'Stripe' : 'PayPal')}
           </Button>
-          {receipt.paymentProvider === 'paypal' && (
+          {awaiting && receipt.paymentProvider === 'paypal' && (
             <>
               <h3>2. Finish after PayPal approval</h3>
               <p>
@@ -143,6 +153,11 @@ export function ReceiptActions({
             </>
           )}
         </>
+      )}
+      {retryPreparation && resume.isSuccess && !resume.data.available && (
+        <p role="status">
+          PayPal preparation is still unconfirmed. Check this receipt before trying again.
+        </p>
       )}
       {!!error && <p role="alert">{checkoutMessage(error)}</p>}
       {capture.isSuccess && (
