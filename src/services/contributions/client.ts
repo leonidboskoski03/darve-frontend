@@ -10,6 +10,7 @@ import { createJsonClient, failure, type ApiFailure } from '@/services/api/index
 import { createAuthorityScope, createQueryClient } from '@/services/server-state/index';
 import { validReceiptId } from './navigation';
 import { createCheckoutCommands } from './checkout';
+import { createQuickPayCommands } from './quick-pay';
 
 export type { PublicChallengeDto };
 export type PublicRead = ReturnType<typeof PublicChallengeResponseSchema.parse>;
@@ -103,6 +104,7 @@ export function createContributionRuntime(config: {
   return {
     scope,
     payments,
+    quickPay: createQuickPayCommands(publicRequest, privateRequest, active),
     publicQueries,
     getSnapshot: () => snapshot,
     subscribe: (listener: () => void) => {

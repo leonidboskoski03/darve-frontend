@@ -13,6 +13,8 @@ Use the Node version in `.nvmrc` and npm 11. On Windows, use `npm.cmd` if PowerS
 
 With the app and a seeded sandbox challenge running, `npm run test:core:local` runs the headless walkthrough. Install Chromium once with `npx playwright install chromium`. The walkthrough checks the existing payout connections and the public contribution and OBS pages, then revokes its own OBS grant and creator session. Use `npm run test:core:local -- --require-open-checkout` with a fresh sandbox challenge to require the checkout form. The walkthrough verifies receiving without submitting payment.
 
+Quick Pay appears as an additional sandbox option on a contribution page with PayPal receiving available. Enter an amount and review the displayed fee to load PayPal's eligible wallet or card buttons. The existing PayPal and Stripe checkouts remain available below it.
+
 ## Staff access locally
 
 `npm.cmd run dev:staff` opens the independent staff entry at `http://localhost:5176`. It uses the separate browser-public example in [env/staff](env/staff/.env.example); omit its paired addresses for the unavailable/no-request state. A configured sign-in needs the matching admin API and reviewed identity/email settings. [Staff operations](docs/OPERATIONS.md#separate-staff-entry) and [F08-03 qualification](docs/F08_STAFF_AND_SUPPORT_IMPLEMENTATION.md#f08-03-staff-entry-and-authority) own the exact setup and controlled local API proof. This command does not start/configure a backend or send email.

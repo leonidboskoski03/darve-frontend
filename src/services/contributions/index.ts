@@ -1,4 +1,11 @@
 export {
+  quickPayMessage,
+  quickPayMinor,
+  type QuickPayQuote,
+  type QuickPayAttempt,
+} from './quick-pay';
+export { loadQuickPaySdk, type QuickPaySdk } from './paypal-sdk';
+export {
   createContributionRuntime,
   createContributionController,
   ContributionError,
