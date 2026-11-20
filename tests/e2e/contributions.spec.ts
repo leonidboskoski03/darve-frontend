@@ -86,10 +86,22 @@ test('synthetic public page preserves A layout, exact funding and unavailable pr
   noCommands(state.requests);
   await capture(page, 'public', info.project.name);
 });
-test('public funding updates to Goal reached without a reload', async ({ page }) => {
+test('public funding updates the eligible total before reaching the goal without a reload', async ({
+  page,
+}) => {
   const state = await fixture(page);
   await open(page, 'view=public&publicId=' + ids.public);
   await expect(page.getByText('Awaiting funding', { exact: true }).first()).toBeVisible();
+  await expect(page.locator('.contribution-raised')).toContainText('10.00 EUR');
+  state.public.data.funding.revision++;
+  state.public.data.funding.confirmedGross = '1507';
+  state.public.data.funding.eligibleGross = '1500';
+  await expect(page.locator('.contribution-raised')).toContainText('15.00 EUR', {
+    timeout: 10_000,
+  });
+  await expect(page.getByText('Awaiting funding', { exact: true }).first()).toBeVisible();
+
+  state.public.data.funding.revision++;
   state.public.data.funding.state = 'funded';
   state.public.data.funding.goalReachedAt = state.public.serverTime;
   state.public.data.checkoutAvailability = { available: false, reasonCode: 'goal_reached' };
