@@ -459,12 +459,16 @@ async function owner(page: Page, withDisplay = true) {
     }
     if (url.pathname === '/api/overlay-preferences') {
       if (method === 'PATCH') {
-        const body = request.postDataJSON() as { styles: typeof state.preferences.styles };
+        const body = request.postDataJSON() as {
+          styles: typeof state.preferences.styles;
+          streamDelaySeconds?: number;
+        };
         state.saved.push(request.postDataJSON());
         state.preferences = {
           ...state.preferences,
           version: state.preferences.version + 1,
           styles: body.styles,
+          streamDelaySeconds: body.streamDelaySeconds ?? state.preferences.streamDelaySeconds ?? 0,
         };
       }
       await reply(route, {
@@ -908,4 +912,68 @@ test('production isolated entry stays transparent without credentials and never 
         path.includes('workspace-layout'),
     ),
   ).toBe(false);
+});
+
+test('M4-1 OBS settings save integer stream delay and preserve it on refresh', async ({ page }) => {
+  const state = await owner(page);
+  const input = page.getByLabel('Stream delay (seconds)', { exact: true });
+  await expect(input).toHaveValue('0');
+  await input.fill('31');
+  await expect
+    .poll(() => input.evaluate((el) => (el as HTMLInputElement).validity.rangeOverflow))
+    .toBe(true);
+  await input.fill('0.5');
+  await expect
+    .poll(() => input.evaluate((el) => (el as HTMLInputElement).validity.stepMismatch))
+    .toBe(true);
+  await input.fill('10');
+  await page.getByRole('checkbox', { name: /Apply these settings/ }).check();
+  await page.getByRole('button', { name: 'Save display settings' }).click();
+  await expect(
+    page.getByRole('status').filter({ hasText: 'Display settings confirmed.' }),
+  ).toBeVisible();
+  expect(state.saved[0]).toMatchObject({ streamDelaySeconds: 10 });
+  await page.getByRole('button', { name: 'Refresh display and settings' }).click();
+  await expect(input).toHaveValue('10');
+  await input.fill('0');
+  await page.getByRole('checkbox', { name: /Apply these settings/ }).check();
+  await page.getByRole('button', { name: 'Save display settings' }).click();
+  await expect.poll(() => state.saved.length).toBe(2);
+  expect(state.saved[1]).toMatchObject({ streamDelaySeconds: 0 });
+});
+
+test('M4-1 OBS countdown follows the server extended viewer end', async ({ page }) => {
+  const frame = await display(page),
+    now = Date.parse(frame.serverTime);
+  frame.data = {
+    ...frame.data,
+    version: frame.data.version + 1,
+    presentationState: 'collecting',
+    reviewState: 'collecting',
+    challengeId: null,
+    challenge: null,
+    qrPayload: null,
+    collectionClosesAt: new Date(now + 20_000).toISOString(),
+  };
+  await page.evaluate((f) => window.syntheticOverlay.emit(f), frame);
+  await expect(page.getByLabel('Collection time remaining')).toHaveText('0:20');
+  await page.clock.fastForward(10_000);
+  await expect(page.getByLabel('Collection time remaining')).toHaveText('0:10');
+  // Keep authoritative stream freshness while advancing through the delayed tail.
+  frame.serverTime = new Date(now + 10_000).toISOString();
+  frame.data.version += 1;
+  await page.evaluate((f) => window.syntheticOverlay.emit(f), frame);
+  await page.clock.fastForward(9_000);
+  await expect(page.getByLabel('Collection time remaining')).toHaveText('0:01');
+  frame.serverTime = new Date(now + 20_000).toISOString();
+  frame.data = {
+    ...frame.data,
+    version: frame.data.version + 1,
+    presentationState: 'collection_closed',
+    reviewState: 'closing',
+    collectionClosesAt: null,
+  };
+  await page.evaluate((f) => window.syntheticOverlay.emit(f), frame);
+  await expect(page.getByLabel('Collection time remaining')).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Ideas closed' })).toBeVisible();
 });

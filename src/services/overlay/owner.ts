@@ -161,7 +161,9 @@ export function createOverlayOwner(session: CreatorSession) {
       }))!.data;
       if (
         result.version <= body.expectedVersion ||
-        JSON.stringify(result.styles) !== JSON.stringify(body.styles)
+        JSON.stringify(result.styles) !== JSON.stringify(body.styles) ||
+        (body.streamDelaySeconds !== undefined &&
+          result.streamDelaySeconds !== body.streamDelaySeconds)
       )
         throw new OverlayError(failure('protocol', 'PREFERENCES_MISMATCH'));
       return result;
