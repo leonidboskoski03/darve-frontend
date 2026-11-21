@@ -3,6 +3,7 @@ import jsQR from 'jsqr';
 import { createCreatorSession, type CreatorSession } from '@/services/creator-session/index';
 import { readOverlayLocation, createOverlayReader } from './reader';
 import { createOverlayOwner, overlayMessage } from './owner';
+import { OverlayPreferencesV2InputSchema } from '@/services/contracts/index';
 import { qrMatrix } from './qr';
 const secret = 's'.repeat(43),
   origin = 'https://api.example.test';
@@ -245,4 +246,14 @@ it('locally encoded exact challenge URL independently decodes with its quiet zon
   }
   expect(qrMatrix('javascript:alert(1)')).toBeNull();
   expect(qrMatrix('https://user:password@example.test/c')).toBeNull();
+});
+
+it.each([-1, 31, 0.5, NaN])('rejects invalid stream delay %s at the frontend boundary', (delay) => {
+  expect(
+    OverlayPreferencesV2InputSchema.safeParse({
+      expectedVersion: 1,
+      streamDelaySeconds: delay,
+      styles: { position: 'bottom_left', scale: 1, opacity: 1, marginX: 0, marginY: 0 },
+    }).success,
+  ).toBe(false);
 });

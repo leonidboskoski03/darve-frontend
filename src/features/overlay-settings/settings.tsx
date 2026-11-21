@@ -10,7 +10,7 @@ import {
   type Selection,
 } from '@/services/overlay/index';
 import { createReportingClient } from '@/services/reporting/index';
-import { OverlayParamsSchema } from '@/services/contracts/index';
+import { OverlayParamsSchema, OverlayPreferencesV2InputSchema } from '@/services/contracts/index';
 import type { CreatorSession } from '@/services/creator-session/index';
 import './settings.css';
 
@@ -470,6 +470,7 @@ function StyleForm({
   busy: boolean;
   save: (value: unknown) => void;
 }) {
+  const [streamDelaySeconds, setStreamDelaySeconds] = useState(value.streamDelaySeconds ?? 0);
   const [styles, setStyles] = useState(value.styles),
     [reviewed, setReviewed] = useState(false);
   return (
@@ -483,10 +484,35 @@ function StyleForm({
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          save({ expectedVersion: value.version, styles });
+          save(
+            OverlayPreferencesV2InputSchema.parse({
+              expectedVersion: value.version,
+              styles,
+              streamDelaySeconds,
+            }),
+          );
         }}
       >
         <div className="obs-style-grid">
+          <label>
+            <span id="stream-delay-label">Stream delay (seconds)</span>
+            <input
+              type="number"
+              required
+              min={0}
+              max={30}
+              step={1}
+              aria-labelledby="stream-delay-label"
+              aria-describedby="stream-delay-help"
+              value={Number.isNaN(streamDelaySeconds) ? '' : streamDelaySeconds}
+              disabled={busy}
+              onChange={(e) => {
+                setReviewed(false);
+                setStreamDelaySeconds(e.target.valueAsNumber);
+              }}
+            />
+            <span id="stream-delay-help">How far behind your stream viewers are.</span>
+          </label>
           <label>
             Position
             <select
