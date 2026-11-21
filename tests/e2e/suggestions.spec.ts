@@ -427,3 +427,57 @@ test('synthetic unconfigured commercial policy is a definite unavailable prerequ
   await expect(page.getByRole('dialog')).toHaveCount(0);
   expect(state.accepts).toHaveLength(1);
 });
+test('C22 shows a pending auto summary, then a compact AI reason without changing the idea order', async ({
+  page,
+}) => {
+  const state = await scenario(page);
+  state.data.items[0].reasonDetails = {
+    version: 1,
+    revision: 1,
+    reasonSource: 'fallback',
+    pending: true,
+    reason: 'One viewer suggested this reviewed challenge.',
+    interpretation: 'Draw a cat.',
+  };
+  await page.goto(fixture);
+  const first = page.getByRole('article', { name: 'Idea 1', exact: true });
+  await expect(first.getByText('Auto summary', { exact: true })).toBeVisible();
+  await expect(first.getByText('Draw a cat.', { exact: true })).toBeVisible();
+  await expect(first.getByRole('button', { name: 'Accept idea 1', exact: true })).toBeEnabled();
+  const headings = await page.getByRole('article').getByRole('heading').allTextContents();
+  state.data.items[0].reasonDetails = {
+    version: 1,
+    revision: 2,
+    reasonSource: 'ai',
+    pending: false,
+    reason: 'The familiar subject makes the drawing challenge easy to follow.',
+    interpretation: 'Sketch a cat on stream.',
+  };
+  await expect(first.getByText('Sketch a cat on stream.', { exact: true })).toBeVisible();
+  await expect(first).toContainText(
+    'The familiar subject makes the drawing challenge easy to follow.',
+  );
+  await expect(first.getByText('Auto summary', { exact: true })).toHaveCount(0);
+  expect(await page.getByRole('article').getByRole('heading').allTextContents()).toEqual(headings);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
+    true,
+  );
+});
+
+test('C22 keeps the muted fallback when enrichment finishes without an AI reason', async ({
+  page,
+}) => {
+  const state = await scenario(page);
+  state.data.items[0].reasonDetails = {
+    version: 1,
+    revision: 2,
+    reasonSource: 'fallback',
+    pending: false,
+    reason: 'A reviewed challenge to consider.',
+    interpretation: 'Draw a cat.',
+  };
+  await page.goto(fixture);
+  const first = page.getByRole('article', { name: 'Idea 1', exact: true });
+  await expect(first.locator('.review-summary.review-muted')).toContainText('Auto summary');
+  await expect(first.getByRole('button', { name: 'Accept idea 1', exact: true })).toBeEnabled();
+});

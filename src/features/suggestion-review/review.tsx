@@ -64,7 +64,10 @@ export function SuggestionReview({
     refetchInterval: (state) =>
       state.state.error
         ? false
-        : ['pending', 'queued', 'running'].includes(
+        : state.state.data?.pages.some((page) =>
+              page.items.some((item) => item.reasonDetails?.pending),
+            ) ||
+            ['pending', 'queued', 'running'].includes(
               state.state.data?.pages[0]?.analysis?.state ?? '',
             )
           ? 2000
@@ -223,8 +226,29 @@ export function SuggestionReview({
                       {item.dismissed ? ' · Dismissed' : ''}
                     </span>
                     <h2>{item.text}</h2>
-                    {item.description && <p>{item.description}</p>}
-                    {item.creativityExplanation && (
+                    {item.reasonDetails ? (
+                      <div
+                        className={
+                          item.reasonDetails.reasonSource === 'fallback'
+                            ? 'review-summary review-muted'
+                            : 'review-summary'
+                        }
+                      >
+                        <p>{item.reasonDetails.interpretation}</p>
+                        <p>
+                          <span className="review-summary-label">
+                            {item.reasonDetails.reasonSource === 'fallback'
+                              ? 'Auto summary'
+                              : 'Why this idea'}
+                          </span>
+                          {' · '}
+                          {item.reasonDetails.reason}
+                        </p>
+                      </div>
+                    ) : (
+                      item.description && <p>{item.description}</p>
+                    )}
+                    {!item.reasonDetails && item.creativityExplanation && (
                       <p className="review-muted">Why recommended: {item.creativityExplanation}</p>
                     )}
                     <Credits item={item} />

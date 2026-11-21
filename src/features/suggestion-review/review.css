@@ -122,3 +122,9 @@
     max-width: none;
   }
 }
+.review-summary p {
+  margin-block: 0.35rem;
+}
+.review-summary-label {
+  font-weight: 600;
+}
