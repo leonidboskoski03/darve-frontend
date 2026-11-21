@@ -113,7 +113,11 @@ export function createSuggestionClient(session: CreatorSession) {
         !SuggestionPageQuerySchema.safeParse({ limit: '50', ...(cursor ? { cursor } : {}) }).success
       )
         invalid();
-      const query = new URLSearchParams({ limit: '50', ...(cursor ? { cursor } : {}) });
+      const query = new URLSearchParams({
+        limit: '50',
+        reasons: '1',
+        ...(cursor ? { cursor } : {}),
+      });
       const { data } = await request({
         path: `${path}?${query}`,
         signal,
