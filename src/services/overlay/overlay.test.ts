@@ -182,7 +182,7 @@ it('reads the current display without supplying an ID or issuing a link', async 
   send.mockResolvedValueOnce(json(envelope(selection))).mockResolvedValueOnce(json(envelope(null)));
   await expect(client.currentSelection()).resolves.toEqual(selection);
   await expect(client.currentSelection()).resolves.toBeNull();
-  expect(send.mock.calls[1]?.[0]).toBe(origin + '/api/overlay-displays/current');
+  expect(send.mock.calls[1]?.[0]).toBe(origin + '/api/overlay-displays/current?viewerLink=1');
   expect(send.mock.calls[1]?.[1]?.method).toBe('GET');
 });
 it('explains link-creation 503 and leaves explicit retry available', async () => {

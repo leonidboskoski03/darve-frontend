@@ -1,6 +1,8 @@
 import {
   PublicChallengeParamsSchema,
   PublicChallengeResponseSchema,
+  ViewerSlugParamsSchema,
+  ViewerLinkResponseSchema,
   CheckoutResponseSchema,
   checkoutConsumerView,
   consumerMoney,
@@ -116,6 +118,22 @@ export function createContributionRuntime(config: {
       };
     },
     refreshPrivate: () => resetPrivate(true),
+    async resolveViewerLink(slug: string, signal: AbortSignal) {
+      const parsed = ViewerSlugParamsSchema.safeParse({ slug });
+      if (!parsed.success) return null;
+      const result = await publicRequest({
+        path: '/api/public/viewer-links/' + parsed.data.slug,
+        signal,
+        schema: ViewerLinkResponseSchema,
+        success: [200],
+      });
+      active();
+      if (result.kind !== 'data')
+        throw new ContributionError(
+          result.kind === 'error' ? result : failure('protocol', 'UNEXPECTED_VIEWER_LINK_RESPONSE'),
+        );
+      return result.data.publicId;
+    },
     async challenge(publicId: string, signal: AbortSignal): Promise<PublicRead> {
       active();
       if (!PublicChallengeParamsSchema.safeParse({ publicId }).success) invalid();

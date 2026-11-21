@@ -107,7 +107,7 @@ export function createOverlayOwner(session: CreatorSession) {
       }),
     async currentSelection(signal?: AbortSignal) {
       return (await request({
-        path: '/api/overlay-displays/current',
+        path: '/api/overlay-displays/current?viewerLink=1',
         schema: CurrentOverlaySelectionResponseSchema,
         success: [200],
         signal,

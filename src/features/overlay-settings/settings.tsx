@@ -271,6 +271,29 @@ export function OverlaySettings({ session }: { session: CreatorSession }) {
         {currentSelection && (
           <>
             <SelectionRead selection={currentSelection} />
+            {currentSelection.viewerUrl && (
+              <div>
+                <label className="ds-field">
+                  <span className="ds-field__label">Public viewer link</span>
+                  <input className="ds-input" value={currentSelection.viewerUrl} readOnly />
+                </label>
+                <Button
+                  tone="secondary"
+                  onClick={() => {
+                    const url = currentSelection.viewerUrl;
+                    if (url)
+                      void copyOverlayAccessLink(url).then((copied) => {
+                        setNotice(
+                          copied ? 'Viewer link copied.' : 'Select the viewer link to copy it.',
+                        );
+                      });
+                  }}
+                >
+                  Copy viewer link
+                </Button>
+                <p>Viewers can open this link to find the open challenge shown on your display.</p>
+              </div>
+            )}
             <p>
               <a href="/dashboard">View this display on the dashboard</a>
             </p>

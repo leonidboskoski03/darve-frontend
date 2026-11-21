@@ -27,6 +27,7 @@ async function display(page: Page, compact = false) {
   await page.setViewportSize({ width: 1920, height: 1080 });
   await page.clock.install();
   const frame = OverlaySnapshotV2ResponseSchema.parse(acceptedFrame(2));
+  frame.data.viewerUrl = 'https://example.test/s/synthetic-creator';
   if (compact) {
     const asset = catalogueTemplate('darve_compact', 1)!;
     frame.data.preferences.template = {
@@ -248,6 +249,7 @@ test('synthetic rendered QR pixels independently decode to the exact selected pu
 }) => {
   const frame = await display(page);
   const svg = page.getByRole('img', { name: 'Scan to view this challenge' });
+  await expect(page.getByText('example.test/s/synthetic-creator', { exact: true })).toBeVisible();
   for (const size of [150, 100]) {
     const pixels = await svg.evaluate(async (node, size) => {
       const image = new Image();
@@ -555,7 +557,14 @@ async function owner(page: Page, withDisplay = true) {
       return;
     }
     if (url.pathname === '/api/overlay-displays/current') {
-      await reply(route, envelope(state.hasDisplay ? state.selection : null));
+      await reply(
+        route,
+        envelope(
+          state.hasDisplay
+            ? { ...state.selection, viewerUrl: 'https://example.test/s/synthetic-creator' }
+            : null,
+        ),
+      );
       return;
     }
     await reply(route, envelope({}), 404);
@@ -818,6 +827,14 @@ test('synthetic private OBS access uses explicit Copy and Show controls without 
   await expect(page.getByLabel('Private browser-source URL')).toHaveAttribute('type', 'text');
   await page.getByRole('button', { name: 'Hide private link' }).click();
   await expect(page.getByLabel('Private browser-source URL')).toHaveAttribute('type', 'password');
+  const viewer = page.getByRole('textbox', { name: 'Public viewer link' });
+  await expect(viewer).not.toBeEditable();
+  await expect(viewer).toHaveValue('https://example.test/s/synthetic-creator');
+  await page.getByRole('button', { name: 'Copy viewer link' }).click();
+  await expect(page.getByText('Viewer link copied.', { exact: true })).toBeVisible();
+  expect(await page.evaluate(() => (window as unknown as { copiedObs: string }).copiedObs)).toBe(
+    'https://example.test/s/synthetic-creator',
+  );
   expect(state.issued).toBe(1);
 });
 test('synthetic blocked clipboard explains the visible private-link fallback without issuing another grant', async ({

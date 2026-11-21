@@ -143,9 +143,9 @@ try {
   });
   await visit(origin + '/contribute/' + waiting.publicId);
   await expect(
-    page.getByRole('heading', { name: 'Contribution availability', exact: true }),
+    page.getByRole('progressbar', { name: 'Funding progress', exact: true }),
   ).toBeVisible();
-  await expect(page.getByRole('status')).toContainText('Payments are not enabled');
+  await expect(page.getByRole('status')).toContainText('Contributions unavailable');
   assert.ok(reads.every((row) => row.method === 'GET' && !row.path.includes('/session')));
   assert.ok(
     reads.filter((row) => row.path.startsWith('/api/public/')).every((row) => !row.cookiePresent),
@@ -226,7 +226,7 @@ try {
     await visit(origin + '/receipts/' + receipt.id);
     await expect(
       page.getByRole('heading', {
-        name: receipt === failed ? 'Checkout failed' : 'Payment not confirmed',
+        name: receipt === failed ? 'Checkout failed' : 'Confirming a payment…',
         exact: true,
       }),
     ).toBeVisible();
@@ -238,11 +238,13 @@ try {
   await api.contributionFixture.settle(unknown.id);
   await guest.addCookies([cookie(unknown.secret)]);
   await visit(origin + '/receipts/' + unknown.id);
+  await expect(page.getByRole('heading', { name: 'Payment confirmed', exact: true })).toBeVisible();
+  await page.getByText('Receipt details', { exact: true }).click();
   await expect(
-    page.getByRole('heading', { name: 'Verified payment recorded', exact: true }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole('heading', { name: 'Payment timing needs review', exact: true }),
+    page.getByRole('heading', {
+      name: 'Payment received, confirming funding eligibility…',
+      exact: true,
+    }),
   ).toBeVisible();
   checks.push(
     'actual trusted financial repository proof retains verified money with unclassified timing and null paidAt',
@@ -251,6 +253,7 @@ try {
   await api.contributionFixture.settle(waiting.id, 'now');
   await guest.addCookies([cookie(waiting.secret)]);
   await visit(origin + '/receipts/' + waiting.id);
+  await page.getByText('Receipt details', { exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Deadline eligible', exact: true })).toBeVisible();
   checks.push(
     'actual canonical eligible receipt uses verified provider-time provenance rather than browser return time',
@@ -262,6 +265,7 @@ try {
   await api.contributionFixture.settle(late.id, 'now');
   await guest.addCookies([cookie(late.secret)]);
   await visit(origin + '/receipts/' + late.id);
+  await page.getByText('Receipt details', { exact: true }).click();
   await expect(
     page.getByRole('heading', { name: 'Received outside the funding deadline', exact: true }),
   ).toBeVisible();
@@ -276,19 +280,18 @@ try {
   ).toBeVisible();
   await guest.addCookies([cookie(waiting.secret)]);
   await visit(origin + '/receipts/' + waiting.id);
-  await expect(
-    page.getByRole('heading', { name: 'Verified payment recorded', exact: true }),
-  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Payment confirmed', exact: true })).toBeVisible();
   checks.push(
     'actual source restriction hides public content while preserving private financial receipt custody',
   );
   stage = 'revoked guest refresh';
   await api.contributionFixture.revoke(waiting.secretHash);
+  await page.getByText('Receipt details', { exact: true }).click();
   await page.getByRole('button', { name: 'Refresh receipt', exact: true }).click();
   await expect(page.getByRole('alert')).toContainText('unavailable in this browser');
-  await expect(
-    page.getByRole('heading', { name: 'Verified payment recorded', exact: true }),
-  ).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Payment confirmed', exact: true })).toHaveCount(
+    0,
+  );
   checks.push('actual revoked guest proof hides previously read private money on refresh');
   stage = 'expired guest proof';
   const expiryChallenge = await accepted(),
