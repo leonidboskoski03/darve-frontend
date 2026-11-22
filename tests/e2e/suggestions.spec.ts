@@ -8,7 +8,11 @@ import {
   reviewIds as ids,
 } from '../../src/services/suggestions/fixture.test-helper';
 import { syntheticSession } from '../../src/services/collection/fixture.test-helper';
-import type { SuggestionPageResponseSchema } from '../../src/services/contracts/index';
+import type {
+  SuggestionPageResponseSchema,
+  UncertainIdeaResponseSchema,
+} from '../../src/services/contracts/index';
+type UncertainIdea = ReturnType<typeof UncertainIdeaResponseSchema.parse>['data'];
 type ReviewPage = ReturnType<typeof SuggestionPageResponseSchema.parse>['data'];
 const fixture = `http://127.0.0.1:4175/tests/fixtures/creator.html?view=review&roundId=${ids.round}`;
 const cors = {
@@ -46,6 +50,7 @@ async function scenario(
   page: Page,
   options: {
     partial?: boolean;
+    uncertain?: UncertainIdea[];
     accept?: (route: Route) => Promise<void>;
     disposition?: (route: Route) => Promise<void>;
     policy?: unknown;
@@ -76,6 +81,28 @@ async function scenario(
     }
     if (state.expired) {
       await json(route, failure('SESSION_REQUIRED'), 401);
+      return;
+    }
+    if (url.pathname.endsWith('/uncertain-ideas')) {
+      await json(
+        route,
+        envelope({ roundId: ids.round, resultVersion: ids.result, items: options.uncertain ?? [] }),
+      );
+      return;
+    }
+    if (url.pathname.includes('/uncertain-ideas/') && url.pathname.endsWith('/decision')) {
+      const item = options.uncertain?.find((i) => url.pathname.includes(i.id));
+      if (!item) {
+        await json(route, failure('RESOURCE_NOT_FOUND'), 404);
+        return;
+      }
+      const body = request.postDataJSON() as {
+        decision: 'allow' | 'skip';
+        expectedVersion: number;
+      };
+      item.state = body.decision === 'allow' ? 'allowed' : 'skipped';
+      item.version = 2;
+      await json(route, envelope(item));
       return;
     }
     if (url.pathname.endsWith('/accept')) {
@@ -480,4 +507,53 @@ test('C22 keeps the muted fallback when enrichment finishes without an AI reason
   const first = page.getByRole('article', { name: 'Idea 1', exact: true });
   await expect(first.locator('.review-summary.review-muted')).toContainText('Auto summary');
   await expect(first.getByRole('button', { name: 'Accept idea 1', exact: true })).toBeEnabled();
+});
+
+test('D12 private review allows or skips ideas and opens the existing challenge terms flow', async ({
+  page,
+}) => {
+  const uncertain: UncertainIdea[] = [3, 4].map((n) => ({
+    id: ids.result + '.g' + n,
+    version: 1,
+    roundId: ids.round,
+    resultVersion: ids.result,
+    analysisRunId: ids.run,
+    snapshotVersion: 3,
+    text: 'Invented private idea ' + n,
+    supporterCount: n,
+    reasonCode: 'policy_review_required',
+    reasonLabel: 'Needs policy check',
+    state: 'pending',
+    selectedChallengeId: null,
+  }));
+  const state = await scenario(page, { uncertain });
+  await page.goto(fixture);
+  const section = page.getByRole('region', { name: 'Needs your call — only you can see this' });
+  await expect(section).toBeVisible();
+  await section
+    .getByRole('article')
+    .first()
+    .getByRole('button', { name: 'Allow', exact: true })
+    .click();
+  await expect(section.getByRole('button', { name: 'Use this challenge' })).toBeEnabled();
+  await section
+    .getByRole('article')
+    .nth(1)
+    .getByRole('button', { name: 'Skip', exact: true })
+    .click();
+  await expect(section.getByText('Skipped', { exact: true })).toBeVisible();
+  expect(state.data.items.map((i) => i.id)).toEqual([ids.result + '.g1', ids.result + '.g2']);
+  await section.getByRole('button', { name: 'Use this challenge' }).click();
+  await expect(
+    page.getByRole('heading', { name: 'Configure challenge', exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText('Invented private idea 3', { exact: true }).last()).toBeVisible();
+  await page.getByLabel('Funding goal', { exact: true }).fill('25.50');
+  await page.getByLabel('Funding duration in seconds', { exact: true }).fill('600');
+  await page.getByRole('button', { name: 'Review exact terms', exact: true }).click();
+  await expect(
+    page.getByRole('heading', { name: 'Confirm challenge terms', exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText('Allowed by you · version 2', { exact: true })).toBeVisible();
+  expect(state.accepts).toHaveLength(0);
 });

@@ -128,3 +128,10 @@
 .review-summary-label {
   font-weight: 600;
 }
+
+.review-uncertain-text {
+  font-size: 1.125rem;
+  line-height: 1.5;
+  font-weight: 600;
+  white-space: pre-wrap;
+}
