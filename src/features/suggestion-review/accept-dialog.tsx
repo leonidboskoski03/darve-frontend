@@ -6,7 +6,7 @@ import { consumerMoney } from '@/services/contracts/index';
 import {
   reviewMessage,
   uncertainReview,
-  type Suggestion,
+  type AcceptanceIdea,
   type ReviewPage,
   type SuggestionClient,
   type AcceptanceAttempt,
@@ -25,8 +25,8 @@ export function AcceptDialog({
 }: {
   client: SuggestionClient;
   page: ReviewPage;
-  item: Suggestion;
-  current: Suggestion | undefined;
+  item: AcceptanceIdea;
+  current: AcceptanceIdea | undefined;
   allowed: boolean;
   onDismiss: () => void;
   onAccepted: (value: AcceptedChallenge) => void;
@@ -70,7 +70,8 @@ export function AcceptDialog({
     current.analysisRunId !== item.analysisRunId ||
     current.snapshotVersion !== item.snapshotVersion ||
     current.selectedChallengeId !== null ||
-    current.dismissed;
+    ('dismissed' in current && current.dismissed) ||
+    ('state' in current && current.state !== 'allowed');
   return (
     <Dialog
       open
@@ -227,7 +228,8 @@ export function AcceptDialog({
             ) : null}
             <dt>Source</dt>
             <dd>
-              Published idea #{item.rank} · version {attempt.input.expectedVersion}
+              {'rank' in item ? `Published idea #${item.rank}` : 'Allowed by you'} · version{' '}
+              {attempt.input.expectedVersion}
             </dd>
           </dl>
           {uncertain ? (

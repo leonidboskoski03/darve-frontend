@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useInfiniteQuery, useMutation } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query';
 import { Pin, X, RotateCcw } from 'lucide-react';
 import { Button } from '@/design-system/button';
 import type { CreatorSession, CreatorSnapshot } from '@/services/creator-session/index';
@@ -7,10 +7,13 @@ import {
   createSuggestionClient,
   reviewMessage,
   type Suggestion,
+  type AcceptanceIdea,
+  type UncertainIdea,
   type ReviewPage,
   type AcceptedChallenge,
 } from '@/services/suggestions/index';
 import { Credits } from './credits';
+import { NeedsYourCall } from './needs-your-call';
 import { AcceptDialog } from './accept-dialog';
 import { ChallengeStatus } from './challenge';
 import { AcceptanceStatus } from './acceptance-status';
@@ -40,7 +43,7 @@ export function SuggestionReview({
   const client = useMemo(() => createSuggestionClient(session), [session]);
   const key = snapshot.scope.key(['suggestions', roundId]);
   const cache = snapshot.scope.queryClient;
-  const [selected, setSelected] = useState<{ item: Suggestion; page: ReviewPage } | null>(null);
+  const [selected, setSelected] = useState<{ item: AcceptanceIdea; page: ReviewPage } | null>(null);
   const [accepted, setAccepted] = useState<Pick<
     AcceptedChallenge,
     'id' | 'roundId' | 'suggestionId' | 'display' | 'chat'
@@ -91,6 +94,10 @@ export function SuggestionReview({
   const refresh = async () => {
     await cache.cancelQueries({ queryKey: key, exact: true });
     await cache.resetQueries({ queryKey: key, exact: true });
+    await cache.invalidateQueries({
+      queryKey: snapshot.scope.key(['uncertain-ideas', roundId]),
+      exact: true,
+    });
   };
   const disposition = useMutation({
     mutationFn: async ({
@@ -109,9 +116,28 @@ export function SuggestionReview({
     onSettled: () => query.refetch(),
   });
   const available = !mixed && !query.isError && first?.analysis?.state === 'succeeded';
-  const canAct = available && !query.isFetching && !disposition.isPending;
+  const uncertain = useQuery({
+    queryKey: snapshot.scope.key(['uncertain-ideas', roundId]),
+    enabled: available,
+    queryFn: ({ signal }) => client.uncertain(roundId, signal),
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
+  const privateItems =
+    uncertain.data && uncertain.data.resultVersion === first?.resultVersion
+      ? uncertain.data.items
+      : [];
+  const decision = useMutation({
+    mutationFn: ({ item, action }: { item: UncertainIdea; action: 'allow' | 'skip' }) =>
+      client.decide(item, action),
+    retry: false,
+    onSettled: () => uncertain.refetch(),
+  });
+  const canAct = available && !query.isFetching && !disposition.isPending && !decision.isPending;
   const roundAccepted =
-    items.some((item) => item.selectedChallengeId !== null) || accepted !== null;
+    privateItems.some((item) => item.selectedChallengeId !== null) ||
+    items.some((item) => item.selectedChallengeId !== null) ||
+    accepted !== null;
   const shown = items.filter(
     (item) =>
       filter === 'all' ||
@@ -125,6 +151,7 @@ export function SuggestionReview({
     setAccepted(result);
     setSelected(null);
     void query.refetch();
+    void uncertain.refetch();
   };
   return (
     <>
@@ -178,8 +205,8 @@ export function SuggestionReview({
         <>
           <p className="review-muted">
             {first.totalSafeCount} safe ideas · {first.recommendedCount} recommended ·{' '}
-            {first.uncertainCount} uncertain · {first.excludedCount} excluded. Only safe ideas are
-            shown.
+            {first.uncertainCount} uncertain · {first.excludedCount} excluded. Uncertain ideas are
+            listed privately below.
           </p>
           {first.analysis?.contextTruncated && (
             <p role="status">Some stream context was truncated during analysis.</p>
@@ -328,6 +355,28 @@ export function SuggestionReview({
               </Button>
             )}
           </section>
+          {uncertain.isPending ? (
+            <p role="status">Loading your private review…</p>
+          ) : uncertain.error ? (
+            <p role="alert">{reviewMessage(uncertain.error)}</p>
+          ) : null}
+          {decision.error ? (
+            <p role="alert">
+              {reviewMessage(decision.error)} Refresh the private review before another decision.
+            </p>
+          ) : null}
+          <NeedsYourCall
+            items={privateItems}
+            busy={!canAct || decision.isPending || uncertain.isFetching || selected !== null}
+            canSelect={!roundAccepted}
+            onView={(item) =>
+              setAccepted({ id: item.selectedChallengeId!, roundId, suggestionId: item.id })
+            }
+            onDecision={(item, action) => decision.mutate({ item, action })}
+            onUse={(item) => {
+              if (page) setSelected({ item, page });
+            }}
+          />
         </>
       )}
       {accepted && (
@@ -348,8 +397,14 @@ export function SuggestionReview({
           client={client}
           page={selected.page}
           item={selected.item}
-          current={available ? items.find((item) => item.id === selected.item.id) : undefined}
-          allowed={!!available && !mixed && !query.isFetching}
+          current={
+            available
+              ? [...items, ...privateItems].find((item) => item.id === selected.item.id)
+              : undefined
+          }
+          allowed={
+            !!available && !mixed && !query.isFetching && !uncertain.isFetching && !roundAccepted
+          }
           onDismiss={() => {
             returnFocus.current = selected.item.id;
             setSelected(null);

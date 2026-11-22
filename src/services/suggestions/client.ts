@@ -1,6 +1,9 @@
 import {
   RoundParamsSchema,
   SuggestionParamsSchema,
+  UncertainIdeaPageResponseSchema,
+  UncertainIdeaResponseSchema,
+  UncertainIdeaDecisionInputSchema,
   SuggestionPageQuerySchema,
   SuggestionPageResponseSchema,
   SuggestionDispositionInputSchema,
@@ -18,6 +21,8 @@ import { failure, type ApiFailure, type JsonRequest } from '@/services/api/index
 import type { CreatorSession } from '@/services/creator-session/index';
 
 export type Suggestion = SuggestionDto;
+export type UncertainIdea = ReturnType<typeof UncertainIdeaResponseSchema.parse>['data'];
+export type AcceptanceIdea = Suggestion | UncertainIdea;
 export type ReviewPage = ReturnType<typeof SuggestionPageResponseSchema.parse>['data'];
 export type AcceptedChallenge = ReturnType<typeof AcceptSuggestionResponseSchema.parse>['data'];
 export type AcceptancePolicy = NonNullable<
@@ -50,6 +55,11 @@ export const uncertainReview = (error: unknown) =>
 export function createSuggestionClient(session: CreatorSession) {
   const scope = session.getSnapshot().scope;
   const receipts = new WeakSet<AcceptanceAttempt>();
+  const allowedIdeas = new Map<string, UncertainIdea>();
+  const decisions = new Map<
+    string,
+    { key: string; expectedVersion: number; decision: 'allow' | 'skip' }
+  >();
   let commanding = false;
   const active = () => {
     const current = session.getSnapshot();
@@ -86,6 +96,67 @@ export function createSuggestionClient(session: CreatorSession) {
   };
   return {
     scope,
+    async uncertain(roundId: string, signal: AbortSignal) {
+      roundPath(roundId);
+      const { data } = await request({
+        path: `/api/rounds/${roundId}/uncertain-ideas`,
+        signal,
+        schema: UncertainIdeaPageResponseSchema,
+        success: [200],
+      });
+      if (
+        data.roundId !== roundId ||
+        data.items.some(
+          (i) =>
+            i.roundId !== roundId ||
+            i.resultVersion !== data.resultVersion ||
+            i.id.split('.')[0] !== data.resultVersion,
+        )
+      )
+        mismatch();
+      for (const i of data.items) if (i.state === 'allowed') allowedIdeas.set(i.id, i);
+      return data;
+    },
+    decide(item: UncertainIdea, decision: 'allow' | 'skip') {
+      return command(async () => {
+        itemPath(item);
+        if (item.state !== 'pending') invalid();
+        const prior = decisions.get(item.id);
+        if (prior && (prior.decision !== decision || prior.expectedVersion !== item.version))
+          invalid('DECISION_UNCONFIRMED');
+        const attempt = prior ?? {
+          key: crypto.randomUUID(),
+          expectedVersion: item.version,
+          decision,
+        };
+        decisions.set(item.id, attempt);
+        const body = UncertainIdeaDecisionInputSchema.parse({
+          expectedVersion: attempt.expectedVersion,
+          decision,
+        });
+        const { data } = await request({
+          path: `/api/rounds/${item.roundId}/uncertain-ideas/${item.id}/decision`,
+          method: 'POST',
+          body,
+          idempotencyKey: attempt.key,
+          schema: UncertainIdeaResponseSchema,
+          success: [200],
+        });
+        if (
+          data.id !== item.id ||
+          data.roundId !== item.roundId ||
+          data.resultVersion !== item.resultVersion ||
+          data.analysisRunId !== item.analysisRunId ||
+          data.snapshotVersion !== item.snapshotVersion ||
+          data.text !== item.text ||
+          data.version !== item.version + 1 ||
+          data.state !== (decision === 'allow' ? 'allowed' : 'skipped')
+        )
+          mismatch();
+        if (data.state === 'allowed') allowedIdeas.set(data.id, data);
+        return data;
+      });
+    },
     async chatStatus(roundId: string, signal: AbortSignal) {
       if (!RoundParamsSchema.safeParse({ id: roundId }).success) invalid();
       const { data } = await request({
@@ -172,7 +243,7 @@ export function createSuggestionClient(session: CreatorSession) {
     },
     prepare(
       page: ReviewPage,
-      item: Suggestion,
+      item: AcceptanceIdea,
       terms: {
         decimal: string;
         currency: string;
@@ -186,9 +257,13 @@ export function createSuggestionClient(session: CreatorSession) {
       if (
         page.analysis?.state !== 'succeeded' ||
         !page.resultVersion ||
-        !page.items.some((value) => value.id === item.id && value.version === item.version) ||
+        !('state' in item
+          ? item.state === 'allowed' &&
+            allowedIdeas.get(item.id)?.version === item.version &&
+            allowedIdeas.get(item.id)?.text === item.text
+          : page.items.some((value) => value.id === item.id && value.version === item.version)) ||
         page.items.some((value) => value.selectedChallengeId !== null) ||
-        item.dismissed ||
+        ('dismissed' in item && item.dismissed) ||
         item.selectedChallengeId ||
         item.id.split('.')[0] !== page.resultVersion ||
         item.analysisRunId !== page.analysis.analysisRunId ||
