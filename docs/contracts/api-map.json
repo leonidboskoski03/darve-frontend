@@ -1,6 +1,6 @@
 {
-  "sourceRevision": "51a2f7e4f1f8c514c50c53cd7682858bf6fe7c0b",
-  "status": "D12-2 adds creator-only uncertain review and final owner decisions, preserving the published top ten and existing acceptance/public/overlay authority. Existing feature mappings retained.",
+  "sourceRevision": "69f5d353873c322bb9595f218b7faeeaa2856d3c",
+  "status": "C42 refreshes uncertain-idea labels in the exact public contract enum. Reason codes, routes, authority and UI behavior stay unchanged; backend keeps reasons v1 default after the measured v2 latency gate failed.",
   "operations": [
     {
       "id": "public-api:GET /api/rounds/:id/analysis/events",

@@ -13,7 +13,7 @@ const idea: UncertainIdea = {
   text: '<b>Take a shot after a death</b>',
   supporterCount: 7,
   reasonCode: 'policy_review_required',
-  reasonLabel: 'Needs policy check',
+  reasonLabel: 'Might break platform rules — your call',
   state: 'pending',
   selectedChallengeId: null,
 };
@@ -34,7 +34,7 @@ it('shows private wording, exact text, supporters and Allow/Skip with no public 
   ).toBeVisible();
   expect(screen.getByText(idea.text)).toBeVisible();
   expect(container.querySelector('b')).toBeNull();
-  expect(screen.getByText('7 supporters · Needs policy check')).toBeVisible();
+  expect(screen.getByText('7 supporters · Might break platform rules — your call')).toBeVisible();
   fireEvent.click(screen.getByRole('button', { name: 'Allow' }));
   expect(decision).toHaveBeenLastCalledWith(idea, 'allow');
   fireEvent.click(screen.getByRole('button', { name: 'Skip' }));

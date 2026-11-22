@@ -1,13 +1,13 @@
 {
   "package": "@darve/contracts",
   "version": "0.0.0",
-  "sourceRevision": "51a2f7e4f1f8c514c50c53cd7682858bf6fe7c0b",
+  "sourceRevision": "69f5d353873c322bb9595f218b7faeeaa2856d3c",
   "sourcePaths": ["packages/contracts", "tsconfig.base.json", "package-lock.json"],
   "sourceFiles": {
     "package-lock.json": "b77404da2bd0ddbc252878d619298376b77c4f4320f31f54ea58f2d06efc61c9",
     "packages/contracts/README.md": "3c38051c93820e6e48e2d7e77491305ed024044614219bf80e9498a675bef693",
     "packages/contracts/package.json": "07f4ed753f678d72edc2f270951b149979cd6b7fae036258984851603b25bf3a",
-    "packages/contracts/src/analysis.ts": "68fddd2652d0fb0e5b73d3b9f4ef5c288e8a1f1939ccfa8ce12a11d5f19d8e56",
+    "packages/contracts/src/analysis.ts": "d1000c593cd1662fa1373591986c1f3f5b88b34d72fd3de02ffdd218cdadb713",
     "packages/contracts/src/challenge.ts": "71de1c387f6fe90677829e8e19891305d42a6b11dc269e72dbb7435f98a41515",
     "packages/contracts/src/coins.ts": "834262acaf49c13e5b6da4fcfbce59438733566670ecebc98b54e6b7b36da01a",
     "packages/contracts/src/collection.ts": "bae6903beaa80ac08137b6874ed7d9f508663afb45452e7a065361dde1f065ac",
@@ -56,13 +56,13 @@
     }
   },
   "artifact": {
-    "filename": "darve-contracts-51a2f7e4f1f8c514c50c53cd7682858bf6fe7c0b.tgz",
-    "sha256": "811fb93f0610207a376dc252b4327be10bf30274e81fc4b389adefa1d21fbedd",
-    "integrity": "sha512-r0TtwgWyx+UzE2T40s8/qN+bKZt9LOIfNpn5/7N9h36rimTaLsltBW5e5vyWXU14KeY1uywGz4y98dDXhfWNdw==",
+    "filename": "darve-contracts-69f5d353873c322bb9595f218b7faeeaa2856d3c.tgz",
+    "sha256": "9897358149e7ff949c9cbbcb08c4beaac0c92fcc99ed7913355cfed17dca12ca",
+    "integrity": "sha512-Ft+Y9ToX6U/QlvSS6vkutRva8qpmVIqJt6LvATgWYF5ac9SbZINNktSjQh4QWNTiGN3/ILeaslrqMWSs+NXoYg==",
     "files": {
       "README.md": "3c38051c93820e6e48e2d7e77491305ed024044614219bf80e9498a675bef693",
-      "dist/analysis.d.ts": "ab71f50556c74d8ee8ac2fbf0c873e271b7645918109298171f3ed3e7ccc4f2d",
-      "dist/analysis.js": "4a770d9671dad36e6ddc27208e89cd653eba028ea2ed0fd96588f1728d1ffe73",
+      "dist/analysis.d.ts": "1d8171164785e37196366255ece10a698eecc5f5b0126b063cda4450c5769459",
+      "dist/analysis.js": "3f31e06dac490bc3af729e7417b4a5d242eb6d098d8a24a9d58de755fda73b6f",
       "dist/challenge.d.ts": "461deadebf948ce4c2d92002c2d49d4d14f4d7eb3ecfa08768dc7316a38b6d27",
       "dist/challenge.js": "89f020aa39f4a8358e429ab79efa2e77adeec5db3d86fdbb1c400fa8aaebb82b",
       "dist/coins.d.ts": "d98808775e81f9c8bfcc34a9eb08c85bd3c02ac9f0e71f234a23ec55e928e9f8",

@@ -244,7 +244,7 @@ it('loads owner-only uncertain ideas and sends an allowed idea through the same 
     text: 'Take a shot after a death',
     supporterCount: 7,
     reasonCode: 'policy_review_required',
-    reasonLabel: 'Needs policy check',
+    reasonLabel: 'Might break platform rules — your call',
     state: 'pending',
     selectedChallengeId: null,
   };
@@ -278,7 +278,7 @@ it('retains the decision idempotency key across a lost response and rejects chan
     text: 'Invented risky stunt',
     supporterCount: 2,
     reasonCode: 'insufficient_context' as const,
-    reasonLabel: 'Not enough context' as const,
+    reasonLabel: 'AI couldn’t tell if this is in-game' as const,
     state: 'pending' as const,
     selectedChallengeId: null,
   };
