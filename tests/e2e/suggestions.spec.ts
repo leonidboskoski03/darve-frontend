@@ -463,12 +463,15 @@ test('C22 shows a pending auto summary, then a compact AI reason without changin
     revision: 1,
     reasonSource: 'fallback',
     pending: true,
-    reason: 'One viewer suggested this reviewed challenge.',
+    reason: 'From chat. Your call if it fits the stream.',
     interpretation: 'Draw a cat.',
   };
   await page.goto(fixture);
   const first = page.getByRole('article', { name: 'Idea 1', exact: true });
   await expect(first.getByText('Auto summary', { exact: true })).toBeVisible();
+  await expect(first.locator('.review-summary.review-muted')).toContainText(
+    'From chat. Your call if it fits the stream.',
+  );
   await expect(first.getByText('Draw a cat.', { exact: true })).toBeVisible();
   await expect(first.getByRole('button', { name: 'Accept idea 1', exact: true })).toBeEnabled();
   const headings = await page.getByRole('article').getByRole('heading').allTextContents();
@@ -500,12 +503,15 @@ test('C22 keeps the muted fallback when enrichment finishes without an AI reason
     revision: 2,
     reasonSource: 'fallback',
     pending: false,
-    reason: 'A reviewed challenge to consider.',
+    reason: 'From chat. Your call if it fits the stream.',
     interpretation: 'Draw a cat.',
   };
   await page.goto(fixture);
   const first = page.getByRole('article', { name: 'Idea 1', exact: true });
   await expect(first.locator('.review-summary.review-muted')).toContainText('Auto summary');
+  await expect(first.locator('.review-summary.review-muted')).toContainText(
+    'From chat. Your call if it fits the stream.',
+  );
   await expect(first.getByRole('button', { name: 'Accept idea 1', exact: true })).toBeEnabled();
 });
 
@@ -522,7 +528,7 @@ test('D12 private review allows or skips ideas and opens the existing challenge 
     text: 'Invented private idea ' + n,
     supporterCount: n,
     reasonCode: 'policy_review_required',
-    reasonLabel: 'Needs policy check',
+    reasonLabel: 'Might break platform rules — your call',
     state: 'pending',
     selectedChallengeId: null,
   }));
