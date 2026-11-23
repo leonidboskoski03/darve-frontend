@@ -121,8 +121,12 @@ export function createCreatorSession(options: {
     }
   }
 
+  // Focus/visibility checks are quiet: an unchanged session keeps its scope, so
+  // switching to OBS and back does not remount pages or discard open reviews.
+  // A changed or ended session still rotates the scope.
   const recheck = () => {
-    if (typeof document === 'undefined' || document.visibilityState !== 'hidden') void inspect();
+    if (typeof document === 'undefined' || document.visibilityState !== 'hidden')
+      void inspect(true);
   };
 
   return {

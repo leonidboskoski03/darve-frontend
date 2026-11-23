@@ -145,6 +145,27 @@ describe('creator authority lifecycle', () => {
     expect(send).toHaveBeenCalledTimes(2);
   });
 
+  it('keeps the same scope when focus finds the same session, and rotates when it ended', async () => {
+    const send = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(json(signedIn))
+      .mockResolvedValueOnce(json(signedIn))
+      .mockResolvedValueOnce(json(signedOut));
+    const session = setup(send);
+    await session.inspect();
+    const scope = session.getSnapshot().scope;
+    window.dispatchEvent(new Event('focus'));
+    await session.inspect();
+    expect(send).toHaveBeenCalledTimes(2);
+    expect(session.getSnapshot().phase).toBe('authenticated');
+    expect(session.getSnapshot().scope).toBe(scope);
+    expect(scope.signal.aborted).toBe(false);
+    window.dispatchEvent(new Event('focus'));
+    await session.inspect();
+    expect(session.getSnapshot().phase).toBe('expired');
+    expect(scope.signal.aborted).toBe(true);
+  });
+
   it('keeps an unconfirmed logout blocked with no automatic replay or focus re-entry', async () => {
     const send = vi
       .fn<typeof fetch>()
