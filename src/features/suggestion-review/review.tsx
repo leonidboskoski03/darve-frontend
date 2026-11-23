@@ -43,6 +43,7 @@ export function SuggestionReview({
   const client = useMemo(() => createSuggestionClient(session), [session]);
   const key = snapshot.scope.key(['suggestions', roundId]);
   const cache = snapshot.scope.queryClient;
+  const [listNotice, setListNotice] = useState<string | null>(null);
   const [selected, setSelected] = useState<{ item: AcceptanceIdea; page: ReviewPage } | null>(null);
   const [accepted, setAccepted] = useState<Pick<
     AcceptedChallenge,
@@ -113,6 +114,14 @@ export function SuggestionReview({
       return client.disposition(item, pinned, dismissed);
     },
     retry: false,
+    onSuccess: (data) =>
+      setListNotice(
+        data.pinned
+          ? `Idea ${data.rank} pinned to the top of this list.`
+          : data.dismissed
+            ? `Idea ${data.rank} dismissed and moved to the bottom.`
+            : `Idea ${data.rank} restored to its ranked place.`,
+      ),
     onSettled: () => query.refetch(),
   });
   const available = !mixed && !query.isError && first?.analysis?.state === 'succeeded';
@@ -138,15 +147,20 @@ export function SuggestionReview({
     privateItems.some((item) => item.selectedChallengeId !== null) ||
     items.some((item) => item.selectedChallengeId !== null) ||
     accepted !== null;
-  const shown = items.filter(
-    (item) =>
-      filter === 'all' ||
-      (filter === 'recommended'
-        ? item.isRecommended
-        : filter === 'pinned'
-          ? item.pinned
-          : item.dismissed),
-  );
+  // Pinned ideas stay on top and dismissed ones sink, keeping rank order within
+  // each group (stable sort), so the list visibly reflects each action.
+  const weight = (item: Suggestion) => (item.pinned ? 0 : item.dismissed ? 2 : 1);
+  const shown = items
+    .filter(
+      (item) =>
+        filter === 'all' ||
+        (filter === 'recommended'
+          ? item.isRecommended
+          : filter === 'pinned'
+            ? item.pinned
+            : item.dismissed),
+    )
+    .sort((a, b) => weight(a) - weight(b));
   const onAccepted = (result: AcceptedChallenge) => {
     setAccepted(result);
     setSelected(null);
@@ -234,6 +248,7 @@ export function SuggestionReview({
               </Button>
             ))}
           </nav>
+          {listNotice && !disposition.error && <p role="status">{listNotice}</p>}
           {disposition.error && (
             <p role="alert">
               {reviewMessage(disposition.error)} Review the refreshed state before another action.

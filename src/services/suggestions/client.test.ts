@@ -291,3 +291,35 @@ it('retains the decision idempotency key across a lost response and rejects chan
   expect(new Headers(send.mock.calls.at(-1)![1]!.headers).get('Idempotency-Key')).toBe(first);
   expect(first).toBeTruthy();
 });
+it('removes the chosen chat pin by notice ID and validates the returned round', async () => {
+  const { client, send } = await setup();
+  const noticeId = '7a3c2f1e-1b2c-4d5e-8f90-123456789abc';
+  const status = (roundId: string) => ({
+    data: {
+      roundId,
+      selection: null,
+      notices: [
+        {
+          id: noticeId,
+          purpose: 'collection_chosen',
+          state: 'unpinning',
+          reasonCode: null,
+          retired: false,
+          cleanupState: 'not_requested',
+        },
+      ],
+    },
+  });
+  await expect(client.unpinChat(ids.round, 'not-a-uuid')).rejects.toBeInstanceOf(ReviewError);
+  send.mockResolvedValueOnce(json(status(ids.round), 202));
+  const result = await client.unpinChat(ids.round, noticeId);
+  expect(result.notices[0]!.state).toBe('unpinning');
+  const [url, init] = send.mock.calls.at(-1)!;
+  expect(url instanceof Request ? url.url : url.toString()).toBe(
+    `https://api.example.test/api/rounds/${ids.round}/chat/unpin`,
+  );
+  expect(init!.method).toBe('POST');
+  expect(JSON.parse(init!.body as string)).toEqual({ noticeId });
+  send.mockResolvedValueOnce(json(status(ids.snapshot), 202));
+  await expect(client.unpinChat(ids.round, noticeId)).rejects.toBeInstanceOf(ReviewError);
+});

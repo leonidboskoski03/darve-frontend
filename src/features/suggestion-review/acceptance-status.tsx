@@ -34,6 +34,8 @@ export function AcceptanceStatus({
   const overlay = useMemo(() => createOverlayOwner(session), [session]);
   const [shown, setShown] = useState(accepted.display?.state === 'shown');
   const [pollUntil] = useState(() => Date.now() + 60_000);
+  // Polling restarts for a short window after the creator removes the pin.
+  const [unpinPollUntil, setUnpinPollUntil] = useState(0);
   const chat = accepted.chat;
   const requested = chat?.state === 'requested' ? chat : null;
   const display = accepted.display;
@@ -43,8 +45,11 @@ export function AcceptanceStatus({
     enabled: requested !== null,
     retry: false,
     refetchInterval: ({ state }) => {
-      if (!requested || Date.now() >= pollUntil) return false;
+      if (!requested) return false;
       const data = state.data;
+      const unpinning = data?.notices.find((notice) => notice.id === requested.pinId);
+      if (Date.now() < unpinPollUntil && unpinning?.state === 'unpinning') return 1500;
+      if (Date.now() >= pollUntil) return false;
       if (!data) return 2000;
       const choice = data.selection;
       if (choice?.id !== requested.choiceId || choice.restricted) return false;
@@ -56,6 +61,11 @@ export function AcceptanceStatus({
         ? 1500
         : false;
     },
+  });
+  const unpin = useMutation({
+    mutationFn: (noticeId: string) => client.unpinChat(accepted.roundId, noticeId),
+    onMutate: () => setUnpinPollUntil(Date.now() + 30_000),
+    onSettled: () => chatQuery.refetch(),
   });
   const select = useMutation({
     mutationFn: async (id: string) => {
@@ -82,15 +92,19 @@ export function AcceptanceStatus({
       chatText = 'This chat choice is no longer active.';
     else if (choice.sendState === 'sent') {
       const suffix =
-        pin?.state === 'pinned' && !pin.retired
-          ? ' (pinned)'
-          : pin?.reasonCode
-            ? ` (${reasons[pin.reasonCode] ?? 'Pin unavailable.'})`
-            : !pin?.retired && (pin?.state === 'pending' || pin?.state === 'pinning')
-              ? ' (pin pending)'
-              : requested.pinId
-                ? ' (pin not confirmed)'
-                : '';
+        pin?.state === 'unpinned'
+          ? ' · Removed from chat ✓'
+          : pin?.state === 'unpinning'
+            ? ' · Removing from chat…'
+            : pin?.state === 'pinned' && !pin.retired
+              ? ' (pinned)'
+              : pin?.reasonCode
+                ? ` (${reasons[pin.reasonCode] ?? 'Pin unavailable.'})`
+                : !pin?.retired && (pin?.state === 'pending' || pin?.state === 'pinning')
+                  ? ' (pin pending)'
+                  : requested.pinId
+                    ? ' (pin not confirmed)'
+                    : '';
       chatText = `Announced in chat ✓${suffix}`;
     } else if (choice.sendState === 'rejected')
       chatText = reasons[choice.sendReason ?? ''] ?? 'DarveBot could not post the announcement.';
@@ -99,6 +113,11 @@ export function AcceptanceStatus({
     else chatText = 'Chat announcement queued…';
   }
 
+  const currentPin = requested
+    ? chatQuery.data?.notices.find((notice) => notice.id === requested.pinId)
+    : undefined;
+  const pinnedNotice =
+    currentPin?.state === 'pinned' && !currentPin.retired && !unpin.isPending ? currentPin : null;
   const status = [
     shown
       ? 'Shown on stream ✓'
@@ -122,6 +141,18 @@ export function AcceptanceStatus({
         >
           Show on stream now?
         </Button>
+      )}
+      {pinnedNotice && (
+        <Button
+          tone="secondary"
+          busy={unpin.isPending}
+          onClick={() => unpin.mutate(pinnedNotice.id)}
+        >
+          Remove from chat
+        </Button>
+      )}
+      {unpin.isError && (
+        <p role="alert">Could not remove the pin from chat. Check chat and try again.</p>
       )}
       {select.isError && (
         <p role="alert">Could not switch the OBS display. Try again or use manual selection.</p>

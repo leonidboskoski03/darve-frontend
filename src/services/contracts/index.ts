@@ -1,5 +1,6 @@
 // Reviewed browser-only artifact. Add further public exports with their first concrete caller.
 export {
+  UnpinCollectionNoticeInputSchema,
   CoinCreatorAccountDataSchema,
   CoinConfigurationInputSchema,
   CoinAdjustmentInputSchema,
