@@ -46,14 +46,19 @@ const gold = 'vec3(1.0, 0.8, 0.45)';
 // Drift: dust motes that wander gently in every direction forever. Each mote
 // follows its own layered sine path (incommensurate speeds, so the pattern never
 // visibly repeats), breathes slightly in size and glow, and motes left of the
-// funding progress take the accent colour.
+// funding progress take the accent colour. With TOUCH (Stardust) a passing comet
+// trail also lights a mote up.
 const driftVertex = /* glsl */ `
 ${shared}
 attribute vec3 aSeed;
 uniform vec3 uDim;
 uniform vec3 uLit;
+#ifdef TOUCH
+uniform sampler2D uTrail;
+#endif
 varying float vLit;
 varying float vGlow;
+varying float vTouch;
 void main() {
   float t = uTime;
   vec2 wander = vec2(
@@ -64,9 +69,15 @@ void main() {
   vec2 p = aSeed.xy + wander * vec2(0.011, 0.045);
   float breath = sin(t * (0.45 + aSeed.z * 0.5) + aSeed.x * 40.0);
   vLit = step(p.x, uProgress);
+#ifdef TOUCH
+  vec3 trail = texture2D(uTrail, p).rgb;
+  vTouch = clamp(trail.r * 0.8 + trail.b * 1.5, 0.0, 1.0);
+#else
+  vTouch = 0.0;
+#endif
   vGlow = 0.8 + 0.2 * breath;
   gl_Position = vec4(p * 2.0 - 1.0, 0.0, 1.0);
-  gl_PointSize = (7.0 + aSeed.z * 5.0) * (1.0 + 0.12 * breath + 0.1 * vLit + 0.12 * uPulse) * uPixel;
+  gl_PointSize = (7.0 + aSeed.z * 5.0) * (1.0 + 0.12 * breath + 0.1 * vLit + 0.12 * uPulse + 0.35 * vTouch) * uPixel;
 }`;
 const driftFragment = /* glsl */ `
 ${shared}
@@ -74,6 +85,7 @@ uniform vec3 uDim;
 uniform vec3 uLit;
 varying float vLit;
 varying float vGlow;
+varying float vTouch;
 void main() {
   float d = length(gl_PointCoord - 0.5);
   if (d > 0.5) discard;
@@ -81,8 +93,8 @@ void main() {
   float core = smoothstep(0.16, 0.0, d);
   float halo = exp(-d * d * 22.0) * 0.45;
   vec3 lit = mix(uLit, ${gold}, max(uGoal, uComplete));
-  vec3 col = mix(uDim, lit, vLit);
-  gl_FragColor = vec4(col, (core + halo * vGlow) * (0.32 + 0.4 * vLit) * vGlow);
+  vec3 col = mix(mix(uDim, lit, vLit), lit, vTouch);
+  gl_FragColor = vec4(col, (core + halo * vGlow) * (0.32 + 0.4 * max(vLit, vTouch)) * vGlow);
 }`;
 
 // Contour: four thin lines gently swaying like map contours; they brighten
@@ -187,25 +199,33 @@ const seeded = (i: number) => {
   return s - Math.floor(s);
 };
 
+/** Drift's dust motes; Stardust passes touch = true and a uTrail uniform. */
+export function createDriftMotes(variant: string, uniforms: Uniforms, touch = false) {
+  const palette = driftPalettes[variant] ?? driftPalettes.drift!;
+  uniforms.uDim = { value: new Vector3(...palette.dim) };
+  uniforms.uLit = { value: new Vector3(...palette.lit) };
+  const count = 80,
+    seed = new Float32Array(count * 3);
+  for (let i = 0; i < count * 3; i++) seed[i] = seeded(i);
+  const geometry = new BufferGeometry();
+  geometry.setAttribute('position', new BufferAttribute(new Float32Array(count * 3), 3));
+  geometry.setAttribute('aSeed', new BufferAttribute(seed, 3));
+  const shader = material(uniforms, driftVertex, driftFragment);
+  if (touch) shader.defines = { TOUCH: '' };
+  const points = new Points(geometry, shader);
+  points.frustumCulled = false;
+  return { points, geometry, material: shader };
+}
+
 export function buildCalm(variant: string, scene: Scene, uniforms: Uniforms): Built {
   const camera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
   const geometries: BufferGeometry[] = [];
   let shader: ShaderMaterial;
   if (variant.startsWith('drift')) {
-    const palette = driftPalettes[variant] ?? driftPalettes.drift!;
-    uniforms.uDim = { value: new Vector3(...palette.dim) };
-    uniforms.uLit = { value: new Vector3(...palette.lit) };
-    const count = 80,
-      seed = new Float32Array(count * 3);
-    for (let i = 0; i < count * 3; i++) seed[i] = seeded(i);
-    const geometry = new BufferGeometry();
-    geometry.setAttribute('position', new BufferAttribute(new Float32Array(count * 3), 3));
-    geometry.setAttribute('aSeed', new BufferAttribute(seed, 3));
-    shader = material(uniforms, driftVertex, driftFragment);
-    const points = new Points(geometry, shader);
-    points.frustumCulled = false;
-    scene.add(points);
-    geometries.push(geometry);
+    const motes = createDriftMotes(variant, uniforms);
+    shader = motes.material;
+    scene.add(motes.points);
+    geometries.push(motes.geometry);
   } else if (familyOf(variant) === 'contour' || familyOf(variant) === 'halo') {
     const contour = familyOf(variant) === 'contour',
       lines = contour ? 4 : 2,

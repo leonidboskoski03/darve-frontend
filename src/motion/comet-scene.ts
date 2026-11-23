@@ -1,14 +1,10 @@
 import {
-  AdditiveBlending,
-  BufferAttribute,
-  BufferGeometry,
   HalfFloatType,
   LinearFilter,
   Mesh,
   NoBlending,
   OrthographicCamera,
   PlaneGeometry,
-  Points,
   Scene,
   ShaderMaterial,
   UnsignedByteType,
@@ -18,7 +14,7 @@ import {
   type IUniform,
   type WebGLRenderer,
 } from 'three';
-import type { Built } from './calm-scenes';
+import { createDriftMotes, type Built } from './calm-scenes';
 import { familyOf, platformOf } from './immersive-variants';
 
 /*
@@ -30,8 +26,8 @@ import { familyOf, platformOf } from './immersive-variants';
  * the variant; goal and completion warm it to gold; a verified contribution
  * releases a small burst at the head.
  *
- * Stardust (Drift + Comet) adds Drift's wandering dust motes; a mote lights up in
- * the comet colour while the trail passes over it.
+ * Stardust (Drift + Comet) adds Drift's own wandering dust motes; a mote also
+ * lights up while the trail passes over it.
  */
 type Rgb = [number, number, number];
 const palettes: Record<string, { color: Rgb; cool: Rgb }> = {
@@ -141,45 +137,6 @@ void main() {
   gl_FragColor = vec4(color, max(color.r, max(color.g, color.b)));
 }`;
 
-// Stardust motes: Drift's endless wander; the trail under a mote lights it up.
-const moteVertex = /* glsl */ `
-attribute vec3 aSeed;
-uniform sampler2D uTrail;
-uniform float uTime;
-uniform float uPixel;
-uniform float uPulse;
-varying float vTouch;
-varying float vGlow;
-void main() {
-  float t = uTime;
-  vec2 wander = vec2(
-    sin(t * (0.21 + aSeed.z * 0.23) + aSeed.x * 31.0) + 0.55 * sin(t * (0.37 + aSeed.y * 0.19) + aSeed.z * 17.0),
-    cos(t * (0.18 + aSeed.y * 0.21) + aSeed.y * 23.0) + 0.55 * cos(t * (0.33 + aSeed.x * 0.17) + aSeed.z * 11.0)
-  );
-  vec2 p = aSeed.xy + wander * vec2(0.011, 0.045);
-  vec3 trail = texture2D(uTrail, p).rgb;
-  vTouch = clamp(trail.r * 0.8 + trail.b * 1.5, 0.0, 1.0);
-  float breath = sin(t * (0.45 + aSeed.z * 0.5) + aSeed.x * 40.0);
-  vGlow = 0.8 + 0.2 * breath;
-  gl_Position = vec4(p * 2.0 - 1.0, 0.0, 1.0);
-  gl_PointSize = (5.0 + aSeed.z * 4.0) * (1.0 + 0.12 * breath + 0.5 * vTouch + 0.1 * uPulse) * uPixel;
-}`;
-const moteFragment = /* glsl */ `
-uniform vec3 uColor;
-uniform float uGoal;
-uniform float uComplete;
-varying float vTouch;
-varying float vGlow;
-void main() {
-  float d = length(gl_PointCoord - 0.5);
-  if (d > 0.5) discard;
-  float core = smoothstep(0.16, 0.0, d);
-  float halo = exp(-d * d * 22.0) * 0.45;
-  vec3 lit = mix(uColor, vec3(1.0, 0.8, 0.45), max(uGoal, uComplete));
-  vec3 col = mix(vec3(0.8, 0.83, 0.92), lit, vTouch);
-  gl_FragColor = vec4(col, (core + halo * vGlow) * (0.26 + 0.6 * vTouch) * vGlow);
-}`;
-
 export function buildComet(
   variant: string,
   scene: Scene,
@@ -241,31 +198,12 @@ export function buildComet(
     depthWrite: false,
   });
   scene.add(new Mesh(quad, display));
-  let motes: { geometry: BufferGeometry; material: ShaderMaterial } | null = null;
-  if (familyOf(variant) === 'stardust') {
-    const count = 70,
-      seed = new Float32Array(count * 3);
-    for (let i = 0; i < count * 3; i++) {
-      const s = Math.sin(i * 12.9898 + 78.233) * 43758.5453;
-      seed[i] = s - Math.floor(s);
-    }
-    const geometry = new BufferGeometry();
-    geometry.setAttribute('position', new BufferAttribute(new Float32Array(count * 3), 3));
-    geometry.setAttribute('aSeed', new BufferAttribute(seed, 3));
-    const material = new ShaderMaterial({
-      uniforms: display.uniforms,
-      vertexShader: moteVertex,
-      fragmentShader: moteFragment,
-      transparent: true,
-      blending: AdditiveBlending,
-      depthTest: false,
-      depthWrite: false,
-    });
-    const points = new Points(geometry, material);
-    points.frustumCulled = false;
-    scene.add(points);
-    motes = { geometry, material };
-  }
+  // Stardust: Drift's motes (same size, glow and progress colour), lit by the trail.
+  const motes =
+    familyOf(variant) === 'stardust'
+      ? createDriftMotes(variant.replace('stardust', 'drift'), display.uniforms, true)
+      : null;
+  if (motes) scene.add(motes.points);
 
   let width = 1,
     height = 1,
