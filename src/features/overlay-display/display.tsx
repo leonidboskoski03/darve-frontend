@@ -151,7 +151,14 @@ export function OverlayDisplay({ reader }: { reader: OverlayReader }) {
                     aria-valuemax={100}
                     aria-valuenow={progress}
                   >
-                    <span style={{ width: `${progress}%` }} />
+                    <span style={{ width: `${progress}%` }}>
+                      {/* Restarts its one-shot glow whenever verified money changes. */}
+                      <i
+                        key={challenge.funding.eligibleGross}
+                        className="obs-progress-pulse"
+                        aria-hidden="true"
+                      />
+                    </span>
                   </div>
                   <span>Deadline-eligible contributions</span>
                 </div>

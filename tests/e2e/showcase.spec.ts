@@ -15,6 +15,10 @@ const templates = [
   'contour',
   'halo',
   'ripple',
+  'drift_twitch',
+  'drift_youtube',
+  'drift_kick',
+  'drift_darve',
 ] as const;
 const scenes = ['collecting', 'funding', 'funded', 'complete'] as const;
 
@@ -66,4 +70,20 @@ test('OBS mode keeps a transparent page and reduced motion stops the render loop
   await page.waitForTimeout(800);
   expect((await canvas.screenshot()).equals(first)).toBe(true);
   await context.close();
+});
+
+test('funding bar glides to a new total instead of jumping', async ({ page }) => {
+  await open(page, 'darve_compact', 'funding');
+  const bar = page.locator('.obs-progress > span');
+  const widths: number[] = [];
+  for (let i = 0; i < 32; i++) {
+    widths.push(Math.round((await bar.boundingBox())!.width));
+    await page.waitForTimeout(120);
+  }
+  const steps = widths
+    .slice(1)
+    .map((value, i) => value - widths[i])
+    .filter((step) => step > 0);
+  // At least one donation step lands and is spread over several frames.
+  expect(steps.length).toBeGreaterThanOrEqual(3);
 });

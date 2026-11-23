@@ -17,7 +17,7 @@
     [data-template^='glass'],
     [data-template='neon'],
     [data-template='classic'],
-    [data-template='drift'],
+    [data-template^='drift'],
     [data-template='contour'],
     [data-template='halo'],
     [data-template='ripple']
@@ -29,7 +29,7 @@
     [data-template^='glass'],
     [data-template='neon'],
     [data-template='classic'],
-    [data-template='drift'],
+    [data-template^='drift'],
     [data-template='contour'],
     [data-template='halo'],
     [data-template='ripple']
@@ -181,7 +181,7 @@
     [data-template^='glass'],
     [data-template='neon'],
     [data-template='classic'],
-    [data-template='drift'],
+    [data-template^='drift'],
     [data-template='contour'],
     [data-template='halo'],
     [data-template='ripple']
@@ -246,7 +246,16 @@
 
 /* Calm templates: quiet dark cards, hairline borders, one soft accent each. */
 .obs-stage:is(
-    [data-template='drift'],
+  [data-template^='drift'],
+  [data-template='contour'],
+  [data-template='halo'],
+  [data-template='ripple']
+) {
+  --obs-sheen-duration: 5s;
+  --obs-sheen-strength: 22%;
+}
+.obs-stage:is(
+    [data-template^='drift'],
     [data-template='contour'],
     [data-template='halo'],
     [data-template='ripple']
@@ -257,7 +266,7 @@
   background: var(--calm-bg);
 }
 .obs-stage:is(
-    [data-template='drift'],
+    [data-template^='drift'],
     [data-template='contour'],
     [data-template='halo'],
     [data-template='ripple']
@@ -270,7 +279,7 @@
   text-transform: uppercase;
 }
 .obs-stage:is(
-    [data-template='drift'],
+    [data-template^='drift'],
     [data-template='contour'],
     [data-template='halo'],
     [data-template='ripple']
@@ -280,7 +289,7 @@
   font-weight: 600;
 }
 .obs-stage:is(
-    [data-template='drift'],
+    [data-template^='drift'],
     [data-template='contour'],
     [data-template='halo'],
     [data-template='ripple']
@@ -291,7 +300,7 @@
   background: rgb(255 255 255 / 10%);
 }
 .obs-stage:is(
-    [data-template='drift'],
+    [data-template^='drift'],
     [data-template='contour'],
     [data-template='halo'],
     [data-template='ripple']
@@ -301,7 +310,7 @@
   background: var(--calm-accent);
 }
 .obs-stage:is(
-    [data-template='drift'],
+    [data-template^='drift'],
     [data-template='contour'],
     [data-template='halo'],
     [data-template='ripple']
@@ -310,7 +319,7 @@
   border-left: 1px solid rgb(255 255 255 / 8%);
   background: rgb(0 0 0 / 25%);
 }
-.obs-stage[data-template='drift'] {
+.obs-stage[data-template^='drift'] {
   --calm-bg: radial-gradient(120% 160% at 20% 0%, #172138 0%, #0b0f1a 60%, #070910 100%);
   --calm-accent: #b9c6ff;
 }
@@ -328,4 +337,22 @@
 .obs-stage[data-template='ripple'] {
   --calm-bg: radial-gradient(120% 160% at 56% 100%, #1a1433 0%, #0b0918 60%, #07060f 100%);
   --calm-accent: #c7b8ff;
+}
+
+/* Drift colour variants: platform colours only (no platform marks); Darve brand. */
+.obs-stage[data-template='drift-twitch'] {
+  --calm-bg: radial-gradient(120% 160% at 20% 0%, #23163f 0%, #110b20 60%, #09060f 100%);
+  --calm-accent: #c4a6ff;
+}
+.obs-stage[data-template='drift-youtube'] {
+  --calm-bg: radial-gradient(120% 160% at 20% 0%, #321519 0%, #170a0c 60%, #0c0506 100%);
+  --calm-accent: #ff9aa2;
+}
+.obs-stage[data-template='drift-kick'] {
+  --calm-bg: radial-gradient(120% 160% at 20% 0%, #142c18 0%, #09160c 60%, #050c06 100%);
+  --calm-accent: #8dfc66;
+}
+.obs-stage[data-template='drift-darve'] {
+  --calm-bg: radial-gradient(120% 160% at 20% 0%, #2c1043 0%, #160822 60%, #0c0513 100%);
+  --calm-accent: #f28bce;
 }

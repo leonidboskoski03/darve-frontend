@@ -8,11 +8,24 @@ export type ImmersiveVariant =
   | 'neon'
   | 'classic'
   | 'drift'
+  | 'drift-twitch'
+  | 'drift-youtube'
+  | 'drift-kick'
+  | 'drift-darve'
   | 'contour'
   | 'halo'
   | 'ripple';
 /** Calm templates: slow loops, small movement, capped frame rate. */
-export const calmVariants: readonly string[] = ['drift', 'contour', 'halo', 'ripple'];
+export const calmVariants: readonly string[] = [
+  'drift',
+  'drift-twitch',
+  'drift-youtube',
+  'drift-kick',
+  'drift-darve',
+  'contour',
+  'halo',
+  'ripple',
+];
 export const immersiveVariants: readonly string[] = [
   'glass',
   'glass-twitch',

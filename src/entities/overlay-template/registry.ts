@@ -11,6 +11,10 @@ import {
   contourAsset,
   haloAsset,
   rippleAsset,
+  driftTwitchAsset,
+  driftYoutubeAsset,
+  driftKickAsset,
+  driftDarveAsset,
 } from './verified-asset';
 type Descriptor = {
   templateId: string;
@@ -42,6 +46,10 @@ const entries = [
   contourAsset,
   haloAsset,
   rippleAsset,
+  driftTwitchAsset,
+  driftYoutubeAsset,
+  driftKickAsset,
+  driftDarveAsset,
 ] as const;
 export function catalogueTemplate(id: string, version: number) {
   return entries.find((entry) => entry.id === id && entry.version === version) ?? null;
