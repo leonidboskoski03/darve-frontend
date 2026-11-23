@@ -4,19 +4,94 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
 const root = fileURLToPath(new URL('../', import.meta.url));
-const sources = [
-  'src/features/overlay-display/display.tsx',
-  'src/features/overlay-display/display.css',
+const font = 'public/fonts/inter-latin.woff2';
+const registry = 'src/entities/overlay-template/registry.ts';
+const display = 'src/features/overlay-display/display.tsx';
+const displayCss = 'src/features/overlay-display/display.css';
+const compactSources = [
+  display,
+  displayCss,
   'src/features/overlay-display/compact.css',
-  'src/entities/overlay-template/registry.ts',
-  'public/fonts/inter-latin.woff2',
+  registry,
+  font,
 ];
-const approval = 'assets/overlay-templates/darve-compact/APPROVAL.md';
-export function assetDigest(read = (file) => readFileSync(resolve(root, file))) {
+const immersiveSources = [
+  display,
+  displayCss,
+  'src/features/overlay-display/immersive.css',
+  'src/motion/overlay-scene.tsx',
+  'src/motion/lazy-overlay-scene.tsx',
+  'src/motion/immersive-variants.ts',
+  'src/motion/calm-scenes.ts',
+  'src/motion/comet-scene.ts',
+  'src/design-system/assets/darve-logo-96.png',
+  registry,
+  font,
+];
+// Standalone and Darve Compact colour variants: plain CSS on the safe card.
+const colourSources = [
+  display,
+  displayCss,
+  'src/features/overlay-display/compact.css',
+  'src/features/overlay-display/immersive.css',
+  'src/design-system/assets/darve-logo-96.png',
+  registry,
+  font,
+];
+const platformNames = { twitch: 'Twitch', youtube: 'YouTube', kick: 'Kick', darve: 'Darve' };
+const camel = (id) => id.replace(/_(\w)/g, (_, letter) => letter.toUpperCase());
+const experimental = (id, displayName, variant, sources) => ({
+  id,
+  displayName,
+  dir: id.replace(/_/g, '-'),
+  exportName: camel(id) + 'Asset',
+  variant,
+  experimental: true,
+  sources,
+});
+// Every style family: its default look plus one colour variant per platform and Darve.
+const families = [
+  { prefix: 'standalone', name: 'Standalone', sources: colourSources },
+  { prefix: 'compact', name: 'Compact', sources: colourSources },
+  { prefix: 'glass', name: 'Glass', base: ['minimal_glass', 'Minimal Glass'] },
+  { prefix: 'neon', name: 'Neon', base: ['neon_pulse', 'Neon Pulse'] },
+  { prefix: 'classic', name: 'Classic', base: ['classic', 'Classic'] },
+  { prefix: 'drift', name: 'Drift', base: ['drift', 'Drift'] },
+  { prefix: 'contour', name: 'Contour', base: ['contour', 'Contour'] },
+  { prefix: 'halo', name: 'Halo', base: ['halo', 'Halo'] },
+  { prefix: 'ripple', name: 'Ripple', base: ['ripple', 'Ripple'] },
+  { prefix: 'comet', name: 'Comet', base: ['comet', 'Comet'] },
+  { prefix: 'stardust', name: 'Stardust', base: ['stardust', 'Stardust'] },
+];
+/** Each renderer is bound to its exact source bytes and its approval record. */
+export const templateAssets = [
+  {
+    id: 'darve_compact',
+    displayName: 'Darve Compact',
+    dir: 'darve-compact',
+    exportName: 'compactAsset',
+    variant: 'compact',
+    experimental: false,
+    sources: compactSources,
+  },
+  ...families.flatMap(({ prefix, name, base, sources = immersiveSources }) => [
+    ...(base ? [experimental(base[0], base[1], prefix, sources)] : []),
+    ...Object.entries(platformNames).map(([platform, label]) =>
+      experimental(prefix + '_' + platform, name + ' · ' + label, prefix + '-' + platform, sources),
+    ),
+  ]),
+];
+export function assetDigest(
+  read = (file) => readFileSync(resolve(root, file)),
+  sources = compactSources,
+  id = 'darve_compact',
+) {
   const hash = createHash('sha256');
+  // The compact digest predates multi-template custody; keep its exact input.
+  if (id !== 'darve_compact') hash.update('template:' + id + '\n');
   for (const file of sources) {
     const raw = read(file),
-      value = file.endsWith('.woff2')
+      value = /.(woff2|png)$/.test(file)
         ? raw
         : Buffer.from(raw.toString('utf8').replace(/\r\n/g, '\n'));
     hash.update(file + '\n' + value.length + '\n');
@@ -24,46 +99,75 @@ export function assetDigest(read = (file) => readFileSync(resolve(root, file))) 
   }
   return hash.digest('hex');
 }
-export function readTemplateAsset() {
+function manifest(asset) {
   return {
-    id: 'darve_compact',
-    displayName: 'Darve Compact',
+    id: asset.id,
+    displayName: asset.displayName,
     version: 1,
-    rendererKey: 'darve_compact',
-    assetHash: assetDigest(),
+    rendererKey: asset.id,
+    assetHash: assetDigest(undefined, asset.sources, asset.id),
     approvalHash: createHash('sha256')
-      .update(readFileSync(resolve(root, approval), 'utf8').replace(/\r\n/g, '\n'))
+      .update(
+        readFileSync(
+          resolve(root, `assets/overlay-templates/${asset.dir}/APPROVAL.md`),
+          'utf8',
+        ).replace(/\r\n/g, '\n'),
+      )
       .digest('hex'),
   };
 }
-export function verifyTemplateAsset() {
-  const actual = readTemplateAsset();
-  assert.deepEqual(
-    JSON.parse(
-      readFileSync(resolve(root, 'assets/overlay-templates/darve-compact/manifest.json'), 'utf8'),
-    ),
-    actual,
+export function readTemplateAsset() {
+  return manifest(templateAssets[0]);
+}
+function generated() {
+  return (
+    '// Generated by tools/template-assets.mjs; checked against source and approval custody.\n' +
+    templateAssets
+      .map((asset) => {
+        const value = manifest(asset);
+        return `export const ${asset.exportName} = { id: '${asset.id}', version: 1, key: '${asset.id}', hash: '${value.assetHash}', name: '${asset.displayName}', variant: '${asset.variant}', experimental: ${asset.experimental} } as const;\n`;
+      })
+      .join('') +
+    'export const verifiedAssets = [' +
+    templateAssets.map((asset) => asset.exportName).join(', ') +
+    '] as const;\n'
   );
+}
+export function verifyTemplateAssets() {
   const code = readFileSync(
     resolve(root, 'src/entities/overlay-template/verified-asset.ts'),
     'utf8',
   );
-  assert(code.includes("hash: '" + actual.assetHash + "'"));
-  return actual;
+  return templateAssets.map((asset) => {
+    const actual = manifest(asset);
+    assert.deepEqual(
+      JSON.parse(
+        readFileSync(resolve(root, `assets/overlay-templates/${asset.dir}/manifest.json`), 'utf8'),
+      ),
+      actual,
+      `${asset.id} manifest does not match its source/approval bytes`,
+    );
+    assert(code.includes("hash: '" + actual.assetHash + "'"), `${asset.id} registry hash is stale`);
+    return actual;
+  });
+}
+export function verifyTemplateAsset() {
+  return verifyTemplateAssets()[0];
 }
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const asset = readTemplateAsset();
   if (process.argv[2] === 'generate') {
-    writeFileSync(
-      resolve(root, 'assets/overlay-templates/darve-compact/manifest.json'),
-      JSON.stringify(asset, null, 2) + '\n',
-    );
-    writeFileSync(
-      resolve(root, 'src/entities/overlay-template/verified-asset.ts'),
-      `// Generated by tools/template-assets.mjs; checked against source and approval custody.\nexport const compactAsset = { id: 'darve_compact', version: 1, key: 'darve_compact', hash: '${asset.assetHash}', name: 'Darve Compact', variant: 'compact' } as const;\n`,
-    );
+    for (const asset of templateAssets)
+      writeFileSync(
+        resolve(root, `assets/overlay-templates/${asset.dir}/manifest.json`),
+        JSON.stringify(manifest(asset), null, 2) + '\n',
+      );
+    writeFileSync(resolve(root, 'src/entities/overlay-template/verified-asset.ts'), generated());
   } else {
-    verifyTemplateAsset();
-    console.log('Verified Darve Compact source/approval/hash custody.');
+    verifyTemplateAssets();
+    console.log(
+      'Verified template source/approval/hash custody: ' +
+        templateAssets.map((asset) => asset.id).join(', ') +
+        '.',
+    );
   }
 }

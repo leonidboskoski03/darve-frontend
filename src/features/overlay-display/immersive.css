@@ -1,0 +1,452 @@
+/* Experimental OBS cards (owner-requested showcase, not founder-approved).
+   One shared layout: every immersive card keeps the standard card geometry
+   (size, padding, title, 6 px bar, QR panel, 18 px corners). Styles change only
+   colours and effects through --t-* variables; platform variants change only the
+   --p-* colours. The WebGL scene sits behind the unchanged safe card DOM, each
+   card keeps a CSS backdrop if WebGL is unavailable, and the QR stays black on
+   white for scanning. Plain selectors only (no nesting/color-mix) for older OBS
+   browser sources. */
+.obs-scene {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.obs-scene canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Platform colours (colours only, never platform marks) and the Darve brand. */
+.obs-stage[data-template$='-twitch'] {
+  --p-accent: #9146ff;
+  --p-soft: #cbb2ff;
+  --p-mid: #2a1a4d;
+  --p-deep: #0e0819;
+  --p-line: rgb(145 70 255 / 50%);
+  --p-glow: rgb(145 70 255 / 55%);
+  --p-faint: rgb(145 70 255 / 20%);
+}
+.obs-stage[data-template$='-youtube'] {
+  --p-accent: #ff2e3f;
+  --p-soft: #ffb0b6;
+  --p-mid: #3a1218;
+  --p-deep: #140507;
+  --p-line: rgb(255 46 63 / 50%);
+  --p-glow: rgb(255 46 63 / 55%);
+  --p-faint: rgb(255 46 63 / 20%);
+}
+.obs-stage[data-template$='-kick'] {
+  --p-accent: #53fc18;
+  --p-soft: #c4ffad;
+  --p-mid: #12301a;
+  --p-deep: #050f07;
+  --p-line: rgb(83 252 24 / 45%);
+  --p-glow: rgb(83 252 24 / 45%);
+  --p-faint: rgb(83 252 24 / 16%);
+}
+.obs-stage[data-template$='-darve'] {
+  --p-accent: #bd178b;
+  --p-soft: #f28bce;
+  --p-mid: #3d1462;
+  --p-deep: #140724;
+  --p-line: rgb(242 139 206 / 45%);
+  --p-glow: rgb(242 139 206 / 55%);
+  --p-faint: rgb(242 139 206 / 18%);
+}
+/* Darve brand variants carry the Darve mark beside the status line. */
+.obs-stage[data-template$='-darve'] .obs-status::before {
+  content: '';
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  margin-right: 8px;
+  border-radius: 5px;
+  vertical-align: -4px;
+  background: url('@/design-system/assets/darve-logo-96.png') center / cover;
+}
+
+/* Shared immersive layout: same geometry as the standard card. */
+.obs-stage:is(
+    [data-template^='glass'],
+    [data-template^='neon'],
+    [data-template^='classic'],
+    [data-template^='drift'],
+    [data-template^='contour'],
+    [data-template^='halo'],
+    [data-template^='ripple'],
+    [data-template^='comet'],
+    [data-template^='stardust']
+  )
+  .obs-card {
+  isolation: isolate;
+  border: 1px solid var(--t-border, rgb(255 255 255 / 10%));
+  border-radius: 18px;
+  background: var(--t-bg, #0a0b10);
+  box-shadow: var(--t-shadow, none);
+}
+.obs-stage:is(
+    [data-template^='glass'],
+    [data-template^='neon'],
+    [data-template^='classic'],
+    [data-template^='drift'],
+    [data-template^='contour'],
+    [data-template^='halo'],
+    [data-template^='ripple'],
+    [data-template^='comet'],
+    [data-template^='stardust']
+  )
+  :is(.obs-main, .obs-qr) {
+  position: relative;
+  z-index: 1;
+}
+.obs-stage:is(
+    [data-template^='glass'],
+    [data-template^='neon'],
+    [data-template^='classic'],
+    [data-template^='drift'],
+    [data-template^='contour'],
+    [data-template^='halo'],
+    [data-template^='ripple'],
+    [data-template^='comet'],
+    [data-template^='stardust']
+  )
+  .obs-main {
+  background: var(--t-shade, none);
+}
+.obs-stage:is(
+    [data-template^='glass'],
+    [data-template^='neon'],
+    [data-template^='classic'],
+    [data-template^='drift'],
+    [data-template^='contour'],
+    [data-template^='halo'],
+    [data-template^='ripple'],
+    [data-template^='comet'],
+    [data-template^='stardust']
+  )
+  .obs-status {
+  color: var(--t-status, #dfe8ff);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-shadow: var(--t-status-shadow, none);
+}
+.obs-stage:is(
+    [data-template^='glass'],
+    [data-template^='neon'],
+    [data-template^='classic'],
+    [data-template^='drift'],
+    [data-template^='contour'],
+    [data-template^='halo'],
+    [data-template^='ripple'],
+    [data-template^='comet'],
+    [data-template^='stardust']
+  )
+  .obs-time {
+  color: var(--t-time, inherit);
+  text-shadow: var(--t-time-shadow, none);
+}
+.obs-stage:is(
+    [data-template^='glass'],
+    [data-template^='neon'],
+    [data-template^='classic'],
+    [data-template^='drift'],
+    [data-template^='contour'],
+    [data-template^='halo'],
+    [data-template^='ripple'],
+    [data-template^='comet'],
+    [data-template^='stardust']
+  )
+  .obs-main
+  h1 {
+  text-shadow: var(--t-title-shadow, 0 1px 10px rgb(0 0 0 / 45%));
+}
+.obs-stage:is(
+    [data-template^='glass'],
+    [data-template^='neon'],
+    [data-template^='classic'],
+    [data-template^='drift'],
+    [data-template^='contour'],
+    [data-template^='halo'],
+    [data-template^='ripple'],
+    [data-template^='comet'],
+    [data-template^='stardust']
+  )
+  :is(.obs-credits > span, .obs-funding > span, .obs-funding > div > span, .obs-subtitle) {
+  color: var(--t-muted, #c3c9d8);
+}
+.obs-stage:is(
+    [data-template^='glass'],
+    [data-template^='neon'],
+    [data-template^='classic'],
+    [data-template^='drift'],
+    [data-template^='contour'],
+    [data-template^='halo'],
+    [data-template^='ripple'],
+    [data-template^='comet'],
+    [data-template^='stardust']
+  )
+  .obs-progress {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--t-track, rgb(255 255 255 / 12%));
+}
+.obs-stage:is(
+    [data-template^='glass'],
+    [data-template^='neon'],
+    [data-template^='classic'],
+    [data-template^='drift'],
+    [data-template^='contour'],
+    [data-template^='halo'],
+    [data-template^='ripple'],
+    [data-template^='comet'],
+    [data-template^='stardust']
+  )
+  .obs-progress
+  > span {
+  background: var(--t-bar, #aaa0ff);
+  box-shadow: 0 0 12px var(--t-bar-glow, transparent);
+}
+.obs-stage:is(
+    [data-template^='glass'],
+    [data-template^='neon'],
+    [data-template^='classic'],
+    [data-template^='drift'],
+    [data-template^='contour'],
+    [data-template^='halo'],
+    [data-template^='ripple'],
+    [data-template^='comet'],
+    [data-template^='stardust']
+  )
+  .obs-qr {
+  border-left: 1px solid var(--t-qr-line, rgb(255 255 255 / 10%));
+  background: var(--t-qr-bg, rgb(0 0 0 / 25%));
+}
+.obs-stage:is(
+    [data-template^='glass'],
+    [data-template^='neon'],
+    [data-template^='classic'],
+    [data-template^='drift'],
+    [data-template^='contour'],
+    [data-template^='halo'],
+    [data-template^='ripple'],
+    [data-template^='comet'],
+    [data-template^='stardust']
+  )
+  .obs-qr
+  > strong {
+  color: var(--t-qr-title, inherit);
+}
+/* Goal reached and declared completion share a warm gold everywhere. */
+.obs-stage:is(
+    [data-template^='glass'],
+    [data-template^='neon'],
+    [data-template^='classic'],
+    [data-template^='drift'],
+    [data-template^='contour'],
+    [data-template^='halo'],
+    [data-template^='ripple'],
+    [data-template^='comet'],
+    [data-template^='stardust']
+  ):is([data-funding='funded'], [data-performance='declared_complete'])
+  .obs-progress
+  > span {
+  background: linear-gradient(90deg, #f0b44c, #ffe29a);
+  box-shadow: 0 0 14px rgb(255 205 110 / 70%);
+}
+
+/* Minimal Glass: frosted surfaces over slow liquid light. */
+.obs-stage[data-template^='glass'] {
+  --t-border: rgb(255 255 255 / 22%);
+  --t-bg: radial-gradient(
+    120% 140% at 10% 0%,
+    var(--glass-light, #2a3f8f) 0%,
+    var(--glass-deep, #0c1230) 55%,
+    var(--glass-deepest, #070a1a) 100%
+  );
+  --t-shadow: 0 18px 50px var(--glass-shadow, rgb(5 10 40 / 45%));
+  --t-status: var(--glass-status, #dfe8ff);
+  --t-muted: #e6ecff;
+  --t-title-shadow: 0 1px 12px rgb(10 20 60 / 50%);
+  --t-track: rgb(255 255 255 / 15%);
+  --t-bar: linear-gradient(90deg, var(--glass-bar-from, #9fd0ff), var(--glass-bar-to, #c9b6ff));
+  --t-bar-glow: var(--glass-bar-glow, rgb(160 200 255 / 70%));
+  --t-qr-bg: transparent;
+  --t-qr-line: transparent;
+}
+/* Two floating frosted panes drawn behind the content, so the text and QR keep
+   the shared layout positions while the glass blurs the light underneath. */
+.obs-stage[data-template^='glass'] :is(.obs-main, .obs-qr)::before {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  z-index: -1;
+  border: 1px solid rgb(255 255 255 / 20%);
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgb(255 255 255 / 14%), rgb(255 255 255 / 5%));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 25%);
+  backdrop-filter: blur(14px) saturate(150%);
+  pointer-events: none;
+}
+.obs-stage[data-template^='glass'] .obs-qr::before {
+  left: 0;
+  background: rgb(255 255 255 / 10%);
+}
+.obs-stage[data-template='glass-twitch'] {
+  --glass-light: #3b2470;
+  --glass-deep: #1d1238;
+  --glass-deepest: #0e0819;
+  --glass-shadow: rgb(25 10 60 / 45%);
+  --glass-status: #e4d7ff;
+  --glass-bar-from: #9146ff;
+  --glass-bar-to: #cbb2ff;
+  --glass-bar-glow: rgb(145 70 255 / 60%);
+}
+.obs-stage[data-template='glass-youtube'] {
+  --glass-light: #5a1620;
+  --glass-deep: #2a0b10;
+  --glass-deepest: #140507;
+  --glass-shadow: rgb(60 8 14 / 45%);
+  --glass-status: #ffdfe1;
+  --glass-bar-from: #ff2e3f;
+  --glass-bar-to: #ffb0b6;
+  --glass-bar-glow: rgb(255 46 63 / 55%);
+}
+.obs-stage[data-template='glass-kick'] {
+  --glass-light: #174a1c;
+  --glass-deep: #0c2410;
+  --glass-deepest: #050f07;
+  --glass-shadow: rgb(8 40 12 / 45%);
+  --glass-status: #dcffd0;
+  --glass-bar-from: #53fc18;
+  --glass-bar-to: #c4ffad;
+  --glass-bar-glow: rgb(83 252 24 / 45%);
+}
+.obs-stage[data-template='glass-darve'] {
+  --glass-light: #5b1a86;
+  --glass-deep: #2a0f4a;
+  --glass-deepest: #140724;
+  --glass-shadow: rgb(50 8 60 / 45%);
+  --glass-status: #ffd6ef;
+  --glass-bar-from: #9c006d;
+  --glass-bar-to: #f28bce;
+  --glass-bar-glow: rgb(242 139 206 / 55%);
+}
+
+/* Neon Pulse: synthwave grid, glowing frame, bright funding tube. */
+.obs-stage[data-template^='neon'] {
+  --t-border: var(--p-accent, #ff2bd6);
+  --t-bg: linear-gradient(180deg, var(--p-mid, #14002a) 0%, var(--p-deep, #05000c) 60%);
+  --t-shadow:
+    0 0 18px var(--p-glow, rgb(255 43 214 / 55%)),
+    inset 0 0 18px var(--p-faint, rgb(255 43 214 / 25%));
+  --t-shade: linear-gradient(90deg, rgb(5 0 12 / 72%), rgb(5 0 12 / 25%) 70%, transparent);
+  --t-status: var(--p-soft, #5ff3ff);
+  --t-status-shadow: 0 0 8px var(--p-accent, #18e6ff);
+  --t-time: var(--p-soft, #ff63e0);
+  --t-time-shadow: 0 0 10px var(--p-accent, #ff2bd6);
+  --t-title-shadow: 0 0 14px var(--p-glow, rgb(255 80 220 / 55%));
+  --t-muted: var(--p-soft, #d7b8ff);
+  --t-track: var(--p-faint, rgb(255 43 214 / 18%));
+  --t-bar: var(--p-soft, #26e8ff);
+  --t-bar-glow: var(--p-soft, #26e8ff);
+  --t-qr-bg: rgb(5 0 12 / 78%);
+  --t-qr-line: var(--p-line, rgb(255 43 214 / 50%));
+  --t-qr-title: var(--p-soft, #ff63e0);
+}
+
+/* Classic: a turning particle orbit with warm accents. */
+.obs-stage[data-template^='classic'] {
+  --t-border: var(--p-line, rgb(233 199 123 / 45%));
+  --t-bg: radial-gradient(
+    130% 160% at 85% 50%,
+    var(--p-mid, #1a1e33) 0%,
+    var(--p-deep, #0a0b14) 55%,
+    #06070c 100%
+  );
+  --t-shade: linear-gradient(90deg, rgb(6 7 12 / 70%) 0%, rgb(6 7 12 / 35%) 60%, transparent 85%);
+  --t-status: var(--p-soft, #e9c77b);
+  --t-track: var(--p-faint, rgb(233 199 123 / 18%));
+  --t-bar: linear-gradient(90deg, var(--p-accent, #b8924a), var(--p-soft, #f3d58f));
+  --t-qr-bg: rgb(6 7 12 / 85%);
+  --t-qr-line: var(--p-line, rgb(233 199 123 / 25%));
+  --t-qr-title: var(--p-soft, #e9c77b);
+}
+
+/* Calm templates: quiet dark cards, hairline borders, one soft accent each. */
+.obs-stage:is(
+  [data-template^='drift'],
+  [data-template^='contour'],
+  [data-template^='halo'],
+  [data-template^='ripple']
+) {
+  --obs-sheen-duration: 5s;
+  --obs-sheen-strength: 22%;
+  --t-bg: var(--calm-bg);
+  --t-status: var(--calm-accent);
+  --t-bar: var(--calm-accent);
+  --t-track: rgb(255 255 255 / 10%);
+  --t-qr-line: rgb(255 255 255 / 8%);
+}
+.obs-stage[data-template^='drift'] {
+  --calm-bg: radial-gradient(120% 160% at 20% 0%, #172138 0%, #0b0f1a 60%, #070910 100%);
+  --calm-accent: #b9c6ff;
+}
+.obs-stage[data-template^='contour'] {
+  --calm-bg: linear-gradient(180deg, #0e1719 0%, #080d0e 100%);
+  --calm-accent: #7fe0d0;
+}
+.obs-stage[data-template^='halo'] {
+  --calm-bg: linear-gradient(90deg, #17141b 0%, #0b0a0d 70%);
+  --calm-accent: #ecdcc0;
+}
+.obs-stage[data-template^='ripple'] {
+  --calm-bg: radial-gradient(120% 160% at 56% 100%, #1a1433 0%, #0b0918 60%, #07060f 100%);
+  --calm-accent: #c7b8ff;
+}
+/* Calm platform variants share one recipe built from the platform colours. */
+.obs-stage:is(
+  [data-template^='drift-'],
+  [data-template^='contour-'],
+  [data-template^='halo-'],
+  [data-template^='ripple-']
+) {
+  --calm-bg: radial-gradient(120% 160% at 20% 0%, var(--p-mid) 0%, var(--p-deep) 65%, #050507 100%);
+  --calm-accent: var(--p-soft);
+}
+
+/* Comet and Stardust (Drift + Comet): one continuous surface; the light flows
+   behind the QR area too. */
+.obs-stage:is([data-template^='comet'], [data-template^='stardust']) {
+  --t-border: rgb(255 255 255 / 9%);
+  --t-bg: radial-gradient(130% 170% at 50% 0%, var(--p-mid, #10142a) 0%, #06070d 65%);
+  --t-shade: radial-gradient(90% 120% at 0% 50%, rgb(5 6 12 / 50%), transparent 70%);
+  --t-status: var(--p-soft, #9db6ff);
+  --t-bar: var(--p-soft, #9db6ff);
+  --t-bar-glow: var(--p-soft, #9db6ff);
+  --t-track: rgb(255 255 255 / 10%);
+  --t-qr-bg: transparent;
+  --t-qr-line: transparent;
+}
+
+/* Standalone and Darve Compact colour variants keep their own approved geometry. */
+.obs-stage:is([data-template^='standalone-'], [data-template^='compact-']) .obs-card {
+  border-color: var(--p-line);
+  background: linear-gradient(160deg, var(--p-mid) 0%, var(--p-deep) 75%);
+}
+.obs-stage[data-template^='compact-'] .obs-card {
+  border-left-color: var(--p-accent);
+}
+.obs-stage:is([data-template^='standalone-'], [data-template^='compact-'])
+  :is(.obs-status, .obs-qr > strong) {
+  color: var(--p-soft);
+}
+.obs-stage:is([data-template^='standalone-'], [data-template^='compact-']) .obs-progress > span {
+  background: var(--p-soft);
+}
+.obs-stage:is([data-template^='standalone-'], [data-template^='compact-']) .obs-qr {
+  border-left-color: var(--p-faint);
+}

@@ -1,1 +1,1 @@
-export { catalogueTemplate, resolveOverlayTemplate } from './registry';
+export { catalogueTemplate, registeredTemplates, resolveOverlayTemplate } from './registry';
