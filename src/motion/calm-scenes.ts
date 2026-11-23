@@ -25,6 +25,8 @@ export type Built = {
   material: ShaderMaterial;
   dispose: () => void;
   resize: (width: number, height: number) => void;
+  /** Optional per-frame simulation step (seconds since start), run before drawing. */
+  tick?: (seconds: number) => void;
 };
 type Uniforms = Record<string, IUniform>;
 

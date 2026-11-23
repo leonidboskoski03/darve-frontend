@@ -15,6 +15,11 @@ import {
   driftYoutubeAsset,
   driftKickAsset,
   driftDarveAsset,
+  cometAsset,
+  cometTwitchAsset,
+  cometYoutubeAsset,
+  cometKickAsset,
+  cometDarveAsset,
 } from './verified-asset';
 type Descriptor = {
   templateId: string;
@@ -50,6 +55,11 @@ const entries = [
   driftYoutubeAsset,
   driftKickAsset,
   driftDarveAsset,
+  cometAsset,
+  cometTwitchAsset,
+  cometYoutubeAsset,
+  cometKickAsset,
+  cometDarveAsset,
 ] as const;
 export function catalogueTemplate(id: string, version: number) {
   return entries.find((entry) => entry.id === id && entry.version === version) ?? null;

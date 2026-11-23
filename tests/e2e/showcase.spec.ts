@@ -19,6 +19,11 @@ const templates = [
   'drift_youtube',
   'drift_kick',
   'drift_darve',
+  'comet',
+  'comet_twitch',
+  'comet_youtube',
+  'comet_kick',
+  'comet_darve',
 ] as const;
 const scenes = ['collecting', 'funding', 'funded', 'complete'] as const;
 

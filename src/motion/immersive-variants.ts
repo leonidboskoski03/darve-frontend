@@ -14,7 +14,12 @@ export type ImmersiveVariant =
   | 'drift-darve'
   | 'contour'
   | 'halo'
-  | 'ripple';
+  | 'ripple'
+  | 'comet'
+  | 'comet-twitch'
+  | 'comet-youtube'
+  | 'comet-kick'
+  | 'comet-darve';
 /** Calm templates: slow loops, small movement, capped frame rate. */
 export const calmVariants: readonly string[] = [
   'drift',
@@ -35,6 +40,11 @@ export const immersiveVariants: readonly string[] = [
   'neon',
   'classic',
   ...calmVariants,
+  'comet',
+  'comet-twitch',
+  'comet-youtube',
+  'comet-kick',
+  'comet-darve',
 ];
 export function isImmersiveVariant(value: string): value is ImmersiveVariant {
   return immersiveVariants.includes(value);

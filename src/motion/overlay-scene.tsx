@@ -19,6 +19,7 @@ import {
 import { useMotionPreference } from './use-motion-preference';
 import { calmVariants, type ImmersiveVariant } from './immersive-variants';
 import { buildCalm, type Built } from './calm-scenes';
+import { buildComet } from './comet-scene';
 
 gsap.registerPlugin(useGSAP);
 
@@ -225,7 +226,7 @@ const glassPalettes: Record<string, Palette> = {
   },
 };
 
-function build(variant: ImmersiveVariant, pixel: number): Built {
+function build(variant: ImmersiveVariant, pixel: number, renderer: WebGLRenderer): Built {
   const scene = new Scene();
   const palette = glassPalettes[variant] ?? glassPalettes.glass!;
   const uniforms = {
@@ -243,6 +244,7 @@ function build(variant: ImmersiveVariant, pixel: number): Built {
     uCircles: { value: palette.circles },
   };
   if (calmVariants.includes(variant)) return buildCalm(variant, scene, uniforms);
+  if (variant.startsWith('comet')) return buildComet(variant, scene, uniforms, renderer);
   if (variant === 'classic') {
     const count = 1600;
     const frac = new Float32Array(count),
@@ -336,7 +338,7 @@ export function OverlayScene({ variant, progress, funded, complete, pulseKey }: 
     renderer.setClearColor(0x000000, 0);
     renderer.domElement.setAttribute('aria-hidden', 'true');
     element.appendChild(renderer.domElement);
-    const built = build(variant, pixel);
+    const built = build(variant, pixel, renderer);
     const draw = () => renderer.render(built.scene, built.camera);
     // useGSAP runs before this effect on mount, so seed the current values here.
     const initial = built.material.uniforms;
@@ -354,6 +356,11 @@ export function OverlayScene({ variant, progress, funded, complete, pulseKey }: 
     const observer = new ResizeObserver(size);
     observer.observe(element);
     size();
+    // Reduced motion: settle a still snapshot of simulated scenes once.
+    if (reduced && built.tick) {
+      for (let i = 1; i <= 150; i++) built.tick(i / 60);
+      draw();
+    }
     let frame = 0,
       last = 0;
     const started = performance.now();
@@ -364,7 +371,9 @@ export function OverlayScene({ variant, progress, funded, complete, pulseKey }: 
       if (document.visibilityState === 'hidden') return;
       if (now - last >= interval) {
         last = now;
-        built.material.uniforms.uTime!.value = (now - started) / 1000;
+        const seconds = (now - started) / 1000;
+        built.material.uniforms.uTime!.value = seconds;
+        built.tick?.(seconds);
         draw();
       }
       frame = requestAnimationFrame(loop);

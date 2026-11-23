@@ -205,6 +205,16 @@ const families: { label: string; ids: Partial<Record<Colour, string>> }[] = [
   { label: 'Contour', ids: { default: 'contour' } },
   { label: 'Halo', ids: { default: 'halo' } },
   { label: 'Ripple', ids: { default: 'ripple' } },
+  {
+    label: 'Comet',
+    ids: {
+      default: 'comet',
+      twitch: 'comet_twitch',
+      youtube: 'comet_youtube',
+      kick: 'comet_kick',
+      darve: 'comet_darve',
+    },
+  },
 ];
 const sceneLabels: Record<Scene, string> = {
   collecting: 'Collecting',

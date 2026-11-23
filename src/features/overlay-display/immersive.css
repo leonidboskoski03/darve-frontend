@@ -20,7 +20,8 @@
     [data-template^='drift'],
     [data-template='contour'],
     [data-template='halo'],
-    [data-template='ripple']
+    [data-template='ripple'],
+    [data-template^='comet']
   )
   .obs-card {
   isolation: isolate;
@@ -32,7 +33,8 @@
     [data-template^='drift'],
     [data-template='contour'],
     [data-template='halo'],
-    [data-template='ripple']
+    [data-template='ripple'],
+    [data-template^='comet']
   )
   :is(.obs-main, .obs-qr) {
   position: relative;
@@ -184,7 +186,8 @@
     [data-template^='drift'],
     [data-template='contour'],
     [data-template='halo'],
-    [data-template='ripple']
+    [data-template='ripple'],
+    [data-template^='comet']
   ):is([data-funding='funded'], [data-performance='declared_complete'])
   .obs-progress
   > span {
@@ -355,4 +358,54 @@
 .obs-stage[data-template='drift-darve'] {
   --calm-bg: radial-gradient(120% 160% at 20% 0%, #2c1043 0%, #160822 60%, #0c0513 100%);
   --calm-accent: #f28bce;
+}
+
+/* Comet: a deep, quiet card so the travelling light reads; text sits on a soft shade. */
+.obs-stage[data-template^='comet'] .obs-card {
+  border: 1px solid rgb(255 255 255 / 9%);
+  border-radius: 16px;
+  background: var(--comet-bg, radial-gradient(130% 170% at 50% 0%, #10142a 0%, #06070d 65%));
+}
+.obs-stage[data-template^='comet'] .obs-main {
+  background: radial-gradient(90% 120% at 0% 50%, rgb(5 6 12 / 55%), transparent 70%);
+}
+.obs-stage[data-template^='comet'] .obs-status {
+  color: var(--comet-accent, #9db6ff);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.obs-stage[data-template^='comet'] .obs-main h1 {
+  font-weight: 600;
+  text-shadow: 0 1px 10px rgb(0 0 0 / 55%);
+}
+.obs-stage[data-template^='comet'] .obs-progress {
+  height: 5px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 10%);
+}
+.obs-stage[data-template^='comet'] .obs-progress > span {
+  background: var(--comet-accent, #9db6ff);
+  box-shadow: 0 0 10px var(--comet-accent, #9db6ff);
+}
+.obs-stage[data-template^='comet'] .obs-qr {
+  border-left: 1px solid rgb(255 255 255 / 8%);
+  background: rgb(4 5 10 / 70%);
+}
+.obs-stage[data-template='comet-twitch'] {
+  --comet-bg: radial-gradient(130% 170% at 50% 0%, #1b1033 0%, #08060f 65%);
+  --comet-accent: #b48cff;
+}
+.obs-stage[data-template='comet-youtube'] {
+  --comet-bg: radial-gradient(130% 170% at 50% 0%, #2a0d12 0%, #0c0507 65%);
+  --comet-accent: #ff7a85;
+}
+.obs-stage[data-template='comet-kick'] {
+  --comet-bg: radial-gradient(130% 170% at 50% 0%, #0f2614 0%, #050c07 65%);
+  --comet-accent: #7dfc50;
+}
+.obs-stage[data-template='comet-darve'] {
+  --comet-bg: radial-gradient(130% 170% at 50% 0%, #260d3c 0%, #0c0514 65%);
+  --comet-accent: #f28bce;
 }
