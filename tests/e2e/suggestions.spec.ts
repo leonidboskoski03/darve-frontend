@@ -267,8 +267,13 @@ test('synthetic pin, dismiss and restore are explicit versioned metadata actions
   await page.goto(fixture);
   await page.getByRole('button', { name: 'Pin idea 1', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Unpin idea 1', exact: true })).toBeEnabled();
+  await expect(page.getByText('Idea 1 pinned to the top of this list.')).toBeVisible();
+  const ideas = page.getByRole('region', { name: 'Viewer ideas' }).getByRole('article');
+  await expect(ideas.first()).toHaveAttribute('aria-label', 'Idea 1');
   await page.getByRole('button', { name: 'Dismiss idea 1', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Accept idea 1', exact: true })).toBeDisabled();
+  await expect(page.getByText('Idea 1 dismissed and moved to the bottom.')).toBeVisible();
+  await expect(ideas.last()).toHaveAttribute('aria-label', 'Idea 1');
   await page.getByRole('button', { name: 'Restore idea 1', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Accept idea 1', exact: true })).toBeEnabled();
   expect(state.patches).toEqual([

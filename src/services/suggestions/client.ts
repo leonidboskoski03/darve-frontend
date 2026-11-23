@@ -11,6 +11,7 @@ import {
   AcceptSuggestionInputSchema,
   AcceptSuggestionResponseSchema,
   CollectionChatResponseSchema,
+  UnpinCollectionNoticeInputSchema,
   ChallengeResponseSchema,
   ChallengeAcceptancePolicyResponseSchema,
   contributionAmountMinor,
@@ -167,6 +168,32 @@ export function createSuggestionClient(session: CreatorSession) {
       });
       if (data.roundId !== roundId) mismatch();
       return data;
+    },
+    // Removes DarveBot's pinned chat notice. The backend fences by notice ID and
+    // reports the unpin outcome through the same chat status projection.
+    unpinChat(roundId: string, noticeId: string) {
+      return command(async () => {
+        if (!RoundParamsSchema.safeParse({ id: roundId }).success) invalid();
+        const body = UnpinCollectionNoticeInputSchema.safeParse({ noticeId });
+        if (!body.success) invalid();
+        // 202: the unpin is queued; the body is the current chat projection.
+        active();
+        const result = await session.request({
+          path: `/api/rounds/${roundId}/chat/unpin`,
+          method: 'POST',
+          body: body.data,
+          schema: CollectionChatResponseSchema,
+          success: [202],
+        });
+        active();
+        if (result.kind !== 'data' && result.kind !== 'pending')
+          throw new ReviewError(
+            result.kind === 'error' ? result : failure('protocol', 'UNEXPECTED_REVIEW_RESPONSE'),
+          );
+        const { data } = result.data;
+        if (data.roundId !== roundId) mismatch();
+        return data;
+      });
     },
     async acceptancePolicy(signal: AbortSignal) {
       return (
