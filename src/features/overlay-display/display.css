@@ -62,6 +62,10 @@ body {
   align-items: center;
   gap: 16px;
 }
+/* Fixed row height: the heading stays put when the countdown is hidden. */
+.obs-top {
+  min-height: 26px;
+}
 .obs-status {
   color: #c2bbff;
   font-size: 13px;

@@ -165,7 +165,8 @@ test('compact approved renderer preserves transparency and QR pixels at broadcas
 }) => {
   const frame = await display(page, true);
   await expect(page.locator('.obs-stage')).toHaveAttribute('data-template', 'compact');
-  await expect(page.locator('.obs-card')).toHaveCSS('width', '840px');
+  // Owner change 2026-11-23: Compact shares the standard 960px card size.
+  await expect(page.locator('.obs-card')).toHaveCSS('width', '960px');
   for (const size of [150, 100]) {
     const pixels = await page
       .getByRole('img', { name: 'Scan to view this challenge' })

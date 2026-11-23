@@ -61,7 +61,8 @@
   display: inline-block;
   width: 18px;
   height: 18px;
-  margin-right: 8px;
+  /* Negative block margins keep the logo from making the status line taller. */
+  margin: -3px 8px -3px 0;
   border-radius: 5px;
   vertical-align: -4px;
   background: url('@/design-system/assets/darve-logo-96.png') center / cover;
@@ -438,7 +439,7 @@
   background: linear-gradient(160deg, var(--p-mid) 0%, var(--p-deep) 75%);
 }
 .obs-stage[data-template^='compact-'] .obs-card {
-  border-left-color: var(--p-accent);
+  box-shadow: inset 6px 0 0 var(--p-accent);
 }
 .obs-stage:is([data-template^='standalone-'], [data-template^='compact-'])
   :is(.obs-status, .obs-qr > strong) {
