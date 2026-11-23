@@ -298,6 +298,49 @@ test('review is unchecked, keyboard operable and cancelled without a request', a
   );
   expect(state.posts).toEqual([]);
 });
+// The review renders above the catalogue; it must be revealed below the
+// sticky top bar when opened from a Review button further down the list.
+const uncovered = (heading: ReturnType<Page['getByRole']>) =>
+  heading.evaluate((element) => {
+    const box = element.getBoundingClientRect();
+    return element.contains(document.elementFromPoint(box.left + 8, box.top + box.height / 2));
+  });
+test('a review opened far down the list is brought into view below the top bar', async ({
+  page,
+}) => {
+  const state = await scenario(page);
+  await page.setViewportSize({ width: 1280, height: 520 });
+  await page.goto(base);
+  const button = page.getByRole('button', { name: 'Review Synthetic premium', exact: true });
+  await button.scrollIntoViewIfNeeded();
+  await button.click();
+  const heading = page.getByRole('heading', { name: 'Review redemption', exact: true });
+  await expect(heading).toBeFocused();
+  await expect(heading).toBeInViewport({ ratio: 1 });
+  expect(await uncovered(heading)).toBe(true);
+  await expect(confirm(page)).toBeInViewport();
+  await page.getByRole('button', { name: 'Cancel review' }).click();
+  await expect(button).toBeFocused();
+  expect(state.posts).toEqual([]);
+});
+test('template selection review is brought into view and cancel returns to Select', async ({
+  page,
+}) => {
+  const state = await scenario(page);
+  state.compactOwned = true;
+  await page.setViewportSize({ width: 1280, height: 520 });
+  await page.goto(base);
+  const select = page.getByRole('button', { name: 'Select Darve Compact', exact: true });
+  await select.scrollIntoViewIfNeeded();
+  await select.click();
+  const heading = page.getByRole('heading', { name: 'Review OBS template' });
+  await expect(heading).toBeFocused();
+  await expect(heading).toBeInViewport({ ratio: 1 });
+  expect(await uncovered(heading)).toBe(true);
+  await page.getByRole('button', { name: 'Cancel selection' }).click();
+  await expect(select).toBeFocused();
+  expect(state.posts).toEqual([]);
+});
 test('price race requires a fresh review of the new exact cost', async ({ page }) => {
   const state = await scenario(page);
   state.mode = 'price';
