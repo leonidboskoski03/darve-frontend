@@ -168,6 +168,51 @@ function createShowcaseReader() {
   };
 }
 
+// Templates grouped by style; Glass and Drift also come in colour variants.
+type Colour = 'default' | 'twitch' | 'youtube' | 'kick' | 'darve';
+const colours: { id: Colour; label: string }[] = [
+  { id: 'default', label: 'Default' },
+  { id: 'twitch', label: 'Twitch' },
+  { id: 'youtube', label: 'YouTube' },
+  { id: 'kick', label: 'Kick' },
+  { id: 'darve', label: 'Darve' },
+];
+const families: { label: string; ids: Partial<Record<Colour, string>> }[] = [
+  { label: 'Standalone', ids: { default: 'standalone' } },
+  { label: 'Compact', ids: { default: 'darve_compact' } },
+  {
+    label: 'Glass',
+    ids: {
+      default: 'minimal_glass',
+      twitch: 'glass_twitch',
+      youtube: 'glass_youtube',
+      kick: 'glass_kick',
+      darve: 'glass_darve',
+    },
+  },
+  { label: 'Neon', ids: { default: 'neon_pulse' } },
+  { label: 'Classic', ids: { default: 'classic' } },
+  {
+    label: 'Drift',
+    ids: {
+      default: 'drift',
+      twitch: 'drift_twitch',
+      youtube: 'drift_youtube',
+      kick: 'drift_kick',
+      darve: 'drift_darve',
+    },
+  },
+  { label: 'Contour', ids: { default: 'contour' } },
+  { label: 'Halo', ids: { default: 'halo' } },
+  { label: 'Ripple', ids: { default: 'ripple' } },
+];
+const sceneLabels: Record<Scene, string> = {
+  collecting: 'Collecting',
+  funding: 'Funding',
+  funded: 'Goal',
+  complete: 'Complete',
+};
+
 export function Showcase() {
   const params = new URLSearchParams(window.location.search);
   const templates = registeredTemplates();
@@ -183,6 +228,10 @@ export function Showcase() {
   );
   const [tick, setTick] = useState(0);
   const controls = params.get('controls') !== '0';
+  const family =
+    families.find((value) => Object.values(value.ids).includes(templateId)) ?? families[0]!;
+  const colour = (Object.entries(family.ids).find(([, id]) => id === templateId)?.[0] ??
+    'default') as Colour;
   const showcase = useMemo(() => createShowcaseReader(), []);
 
   useEffect(() => {
@@ -214,23 +263,38 @@ export function Showcase() {
     <div className={controls ? 'showcase showcase-framed' : 'showcase'}>
       {controls && (
         <header className="showcase-controls" aria-label="Template showcase controls">
-          <strong>OBS template showcase · invented data</strong>
-          <div role="group" aria-label="Template">
-            {templates.map((value) => (
+          <p className="showcase-title">
+            OBS templates <span>invented data · experimental styles not approved</span>
+          </p>
+          <div className="showcase-row" role="group" aria-label="Template">
+            {families.map((value) => (
               <button
-                key={value.id}
+                key={value.label}
                 type="button"
-                aria-pressed={value.id === templateId}
-                onClick={() => setTemplateId(value.id)}
+                aria-pressed={value === family}
+                onClick={() => setTemplateId(value.ids[colour] ?? value.ids.default!)}
               >
-                {value.name}
-                {value.experimental ? ' (experimental)' : ''}
+                {value.label}
               </button>
             ))}
           </div>
-          <div role="group" aria-label="Scene">
+          {Object.keys(family.ids).length > 1 && (
+            <div className="showcase-row" role="group" aria-label="Colour">
+              {colours.map((value) => (
+                <button
+                  key={value.id}
+                  type="button"
+                  aria-pressed={value.id === colour}
+                  onClick={() => setTemplateId(family.ids[value.id]!)}
+                >
+                  {value.label}
+                </button>
+              ))}
+            </div>
+          )}
+          <div className="showcase-row" role="group" aria-label="Scene">
             <button type="button" aria-pressed={auto} onClick={() => setAuto(true)}>
-              Auto play
+              Auto
             </button>
             {scenes.map((value) => (
               <button
@@ -242,7 +306,7 @@ export function Showcase() {
                   setScene(value);
                 }}
               >
-                {value}
+                {sceneLabels[value]}
               </button>
             ))}
           </div>

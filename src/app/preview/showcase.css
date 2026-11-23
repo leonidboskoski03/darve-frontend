@@ -10,37 +10,51 @@
   position: fixed;
   top: 16px;
   left: 16px;
-  right: 16px;
   z-index: 10;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px 18px;
-  align-items: center;
-  padding: 12px 14px;
-  border: 1px solid #2f3a52;
+  display: grid;
+  gap: 8px;
+  max-width: calc(100vw - 32px);
+  padding: 12px;
+  border: 1px solid rgb(255 255 255 / 8%);
   border-radius: 12px;
-  background: rgb(10 13 22 / 85%);
+  background: rgb(10 13 22 / 80%);
   color: #e8ecf6;
   font:
-    13px Inter,
+    12px Inter,
     system-ui,
     sans-serif;
 }
-.showcase-controls > div {
+.showcase-title {
+  margin: 0 0 2px;
+  font-weight: 600;
+}
+.showcase-title span {
+  margin-left: 6px;
+  color: #7f889e;
+  font-weight: 400;
+}
+.showcase-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-}
-.showcase-controls button {
-  padding: 6px 10px;
-  border: 1px solid #3a4763;
+  gap: 2px;
+  width: fit-content;
+  padding: 2px;
   border-radius: 8px;
-  background: #141a29;
-  color: inherit;
+  background: rgb(255 255 255 / 5%);
+}
+.showcase-row button {
+  padding: 5px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #aab2c5;
   font: inherit;
   cursor: pointer;
 }
-.showcase-controls button[aria-pressed='true'] {
-  border-color: #8fb3ff;
-  background: #23304d;
+.showcase-row button:hover {
+  color: #e8ecf6;
+}
+.showcase-row button[aria-pressed='true'] {
+  background: rgb(255 255 255 / 12%);
+  color: #fff;
 }
