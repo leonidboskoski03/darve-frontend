@@ -1,6 +1,6 @@
 # Compact · Twitch v1 — experimental showcase
 
-**Status: experimental, NOT founder-approved.** Requested by the Darve owner on 2026-11-23: colour variants for every OBS template with one shared layout. This is Darve Compact, keeping its approved compact geometry, in Twitch-matching purple (platform colour only, no Twitch mark). It must not be priced, offered to creators or activated until a founder approval record replaces this file.
+**Status: experimental, NOT founder-approved.** Requested by the Darve owner on 2026-11-23: colour variants for every OBS template with one shared layout. This is Darve Compact, in the shared standard card layout, in Twitch-matching purple (platform colour only, no Twitch mark). It must not be priced, offered to creators or activated until a founder approval record replaces this file.
 
 Original project-authored CSS on the existing safe card component. No external artwork, third-party template, remote font or downloaded script is included. Inter keeps its bundled font licence; the Darve logo is Darve's own asset. Platform variants use colours only and no platform logos or trademarks.
 

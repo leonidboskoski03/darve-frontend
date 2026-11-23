@@ -82,12 +82,19 @@ test('every colour variant renders its scene and the funding QR without errors',
   }
 });
 
-test('every immersive template and variant shares the standard card layout', async ({ page }) => {
-  test.setTimeout(120_000);
+test('every template and variant shares the standard card layout in every scene', async ({
+  page,
+}) => {
+  test.setTimeout(300_000);
   const layout = async () =>
     page.evaluate(async () => {
-      // Measure with the bundled font loaded, not fallback metrics.
+      // Measure with the bundled font loaded, not fallback metrics, and in the
+      // resting layout: the entrance is presentation only (the bar sheen loops).
       await document.fonts.ready;
+      document
+        .getAnimations()
+        .filter((animation) => animation.effect?.getComputedTiming().endTime !== Infinity)
+        .forEach((animation) => animation.finish());
       return [
         '.obs-card',
         '.obs-top',
@@ -97,7 +104,9 @@ test('every immersive template and variant shares the standard card layout', asy
         '.obs-qr',
         '.obs-qr svg',
       ].map((selector) => {
-        const box = document.querySelector(selector)!.getBoundingClientRect();
+        const element = document.querySelector(selector);
+        if (!element) return [selector, 'absent'];
+        const box = element.getBoundingClientRect();
         return [
           selector,
           Math.round(box.x),
@@ -107,11 +116,13 @@ test('every immersive template and variant shares the standard card layout', asy
         ];
       });
     });
-  await open(page, 'standalone', 'funding');
-  const standard = await layout();
-  for (const template of [...immersive, ...variants]) {
-    await open(page, template, 'funding');
-    expect(await layout(), template).toEqual(standard);
+  for (const scene of scenes) {
+    await open(page, 'standalone', scene);
+    const standard = await layout();
+    for (const template of ['darve_compact', ...immersive, ...variants, ...colourOnly]) {
+      await open(page, template, scene);
+      expect(await layout(), `${template} ${scene}`).toEqual(standard);
+    }
   }
 });
 

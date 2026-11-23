@@ -444,23 +444,7 @@ export function OverlayScene({ variant, progress, funded, complete, pulseKey }: 
     { dependencies: [progress, funded, complete, pulseKey, reduced, variant] },
   );
 
-  // One entrance for the card content (never the card itself: its transform
-  // carries the creator's scale setting).
-  useGSAP(
-    () => {
-      const card = host.current?.parentElement;
-      if (!card || reduced) return;
-      // Slide only: text must stay fully readable even if frames stall.
-      gsap.from(card.querySelectorAll('.obs-main > *, .obs-qr'), {
-        y: calmVariants.includes(variant) ? 6 : 14,
-        duration: 0.8,
-        stagger: 0.08,
-        ease: 'power3.out',
-        clearProps: 'transform',
-      });
-    },
-    { dependencies: [variant] },
-  );
-
+  // The content entrance lives in immersive.css: this scene is lazy-loaded, so
+  // a script entrance would start after the text is already painted and jump.
   return <div ref={host} className="obs-scene" data-variant={variant} />;
 }
