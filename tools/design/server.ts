@@ -269,6 +269,28 @@ export function designPreview(origin: string): Plugin {
       });
     if (path === roundPath + '/suggestions' && method === 'GET')
       return reply(c.SuggestionPageResponseSchema, preview.ideas);
+    // One sample "needs your call" idea for the uncertain-review design.
+    if (path === roundPath + '/uncertain-ideas' && method === 'GET')
+      return reply(c.UncertainIdeaPageResponseSchema, {
+        roundId: reviewIds.round,
+        resultVersion: reviewIds.result,
+        items: [
+          {
+            id: reviewIds.result + '.g11',
+            version: 1,
+            roundId: reviewIds.round,
+            resultVersion: reviewIds.result,
+            analysisRunId: reviewIds.run,
+            snapshotVersion: 3,
+            text: 'Draw the next scene with your eyes closed',
+            supporterCount: 4,
+            reasonCode: 'policy_review_required',
+            reasonLabel: 'Might break platform rules — your call',
+            state: 'pending',
+            selectedChallengeId: null,
+          },
+        ],
+      });
     if (path === '/api/rounds/acceptance-policy' && method === 'GET')
       return reply(c.ChallengeAcceptancePolicyResponseSchema, {
         policy: acceptancePolicyFixture(),
@@ -357,6 +379,11 @@ export function designPreview(origin: string): Plugin {
         201,
       );
     if (path === '/api/overlay-grants/' + grantId && method === 'DELETE') return empty();
+    if (path === '/api/overlay-displays/current' && method === 'GET')
+      return reply(c.CurrentOverlaySelectionResponseSchema, {
+        ...preview.selection,
+        viewerUrl: origin + '/s/avery-draws',
+      });
     const display = '/api/overlay-displays/' + displayId;
     if (path === display && method === 'GET')
       return reply(c.OverlaySelectionResponseSchema, preview.selection);

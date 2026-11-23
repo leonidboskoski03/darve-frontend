@@ -34,6 +34,12 @@ Keep changes to the look, layout, interaction design, and visible wording. Leave
 5. **Payouts.** Make verified, pending and needs-attention statuses clear at a glance.
 6. **Overall density (B28).** Start with the screens above, then review the workspace and history. Give each screen one clear primary action and tuck technical details behind an expandable control.
 
+## New since 23 November
+
+- **OBS templates.** Open **http://127.0.0.1:5178/tests/fixtures/showcase.html** while the preview runs. The top buttons switch style (Standalone, Compact, Glass, Neon, Classic, Drift, Contour, Halo, Ripple, Comet, Stardust), colour (Default, Twitch, YouTube, Kick, Darve) and scene. Every template shares one 960 × 236 card layout. Styles live in `src/features/overlay-display` (CSS) and `src/motion` (animated backgrounds). All templates except Darve Compact are experimental and need your approval; Darve Compact's new size also needs your confirmation. No template is priced or sold until you approve it.
+- **Templates page** (**Design states → Templates**). Coin cost, ownership, the review before redeeming and the OBS template choice. Its review box opens above the catalogue.
+- **Review ideas** now includes a "needs your call" idea that the streamer can allow or dismiss.
+
 ## Save and share your work
 
 Open a second terminal in the same folder. Run `git status --short` first. In your editor, review your changes, then stage just the files you want to share. In the command below, replace `path/to/file` with the actual path for each file you changed.
