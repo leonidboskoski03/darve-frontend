@@ -168,7 +168,7 @@ function createShowcaseReader() {
   };
 }
 
-// Templates grouped by style; Glass and Drift also come in colour variants.
+// Templates grouped by style; every style comes in five colours.
 type Colour = 'default' | 'twitch' | 'youtube' | 'kick' | 'darve';
 const colours: { id: Colour; label: string }[] = [
   { id: 'default', label: 'Default' },
@@ -177,45 +177,29 @@ const colours: { id: Colour; label: string }[] = [
   { id: 'kick', label: 'Kick' },
   { id: 'darve', label: 'Darve' },
 ];
-const families: { label: string; ids: Partial<Record<Colour, string>> }[] = [
-  { label: 'Standalone', ids: { default: 'standalone' } },
-  { label: 'Compact', ids: { default: 'darve_compact' } },
-  {
-    label: 'Glass',
-    ids: {
-      default: 'minimal_glass',
-      twitch: 'glass_twitch',
-      youtube: 'glass_youtube',
-      kick: 'glass_kick',
-      darve: 'glass_darve',
-    },
+const families: { label: string; ids: Record<Colour, string> }[] = (
+  [
+    ['Standalone', 'standalone', 'standalone'],
+    ['Compact', 'compact', 'darve_compact'],
+    ['Glass', 'glass', 'minimal_glass'],
+    ['Neon', 'neon', 'neon_pulse'],
+    ['Classic', 'classic', 'classic'],
+    ['Drift', 'drift', 'drift'],
+    ['Contour', 'contour', 'contour'],
+    ['Halo', 'halo', 'halo'],
+    ['Ripple', 'ripple', 'ripple'],
+    ['Comet', 'comet', 'comet'],
+  ] as const
+).map(([label, prefix, base]) => ({
+  label,
+  ids: {
+    default: base,
+    twitch: prefix + '_twitch',
+    youtube: prefix + '_youtube',
+    kick: prefix + '_kick',
+    darve: prefix + '_darve',
   },
-  { label: 'Neon', ids: { default: 'neon_pulse' } },
-  { label: 'Classic', ids: { default: 'classic' } },
-  {
-    label: 'Drift',
-    ids: {
-      default: 'drift',
-      twitch: 'drift_twitch',
-      youtube: 'drift_youtube',
-      kick: 'drift_kick',
-      darve: 'drift_darve',
-    },
-  },
-  { label: 'Contour', ids: { default: 'contour' } },
-  { label: 'Halo', ids: { default: 'halo' } },
-  { label: 'Ripple', ids: { default: 'ripple' } },
-  {
-    label: 'Comet',
-    ids: {
-      default: 'comet',
-      twitch: 'comet_twitch',
-      youtube: 'comet_youtube',
-      kick: 'comet_kick',
-      darve: 'comet_darve',
-    },
-  },
-];
+}));
 const sceneLabels: Record<Scene, string> = {
   collecting: 'Collecting',
   funding: 'Funding',
@@ -282,26 +266,24 @@ export function Showcase() {
                 key={value.label}
                 type="button"
                 aria-pressed={value === family}
-                onClick={() => setTemplateId(value.ids[colour] ?? value.ids.default!)}
+                onClick={() => setTemplateId(value.ids[colour])}
               >
                 {value.label}
               </button>
             ))}
           </div>
-          {Object.keys(family.ids).length > 1 && (
-            <div className="showcase-row" role="group" aria-label="Colour">
-              {colours.map((value) => (
-                <button
-                  key={value.id}
-                  type="button"
-                  aria-pressed={value.id === colour}
-                  onClick={() => setTemplateId(family.ids[value.id]!)}
-                >
-                  {value.label}
-                </button>
-              ))}
-            </div>
-          )}
+          <div className="showcase-row" role="group" aria-label="Colour">
+            {colours.map((value) => (
+              <button
+                key={value.id}
+                type="button"
+                aria-pressed={value.id === colour}
+                onClick={() => setTemplateId(family.ids[value.id])}
+              >
+                {value.label}
+              </button>
+            ))}
+          </div>
           <div className="showcase-row" role="group" aria-label="Scene">
             <button type="button" aria-pressed={auto} onClick={() => setAuto(true)}>
               Auto

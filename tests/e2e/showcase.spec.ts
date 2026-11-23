@@ -3,28 +3,22 @@ import { expect, test, type Page } from '@playwright/test';
 // Experimental immersive OBS templates (owner-requested showcase) rendered by the
 // real OBS display from invented, contract-valid frames.
 const origin = 'http://127.0.0.1:4175';
-const templates = [
+const immersive = [
   'minimal_glass',
   'neon_pulse',
   'classic',
-  'glass_twitch',
-  'glass_youtube',
-  'glass_kick',
-  'glass_darve',
   'drift',
   'contour',
   'halo',
   'ripple',
-  'drift_twitch',
-  'drift_youtube',
-  'drift_kick',
-  'drift_darve',
   'comet',
-  'comet_twitch',
-  'comet_youtube',
-  'comet_kick',
-  'comet_darve',
 ] as const;
+const prefixes = ['glass', 'neon', 'classic', 'drift', 'contour', 'halo', 'ripple', 'comet'];
+const platforms = ['twitch', 'youtube', 'kick', 'darve'];
+const variants = prefixes.flatMap((prefix) => platforms.map((platform) => prefix + '_' + platform));
+const colourOnly = ['standalone', 'compact'].flatMap((prefix) =>
+  platforms.map((platform) => prefix + '_' + platform),
+);
 const scenes = ['collecting', 'funding', 'funded', 'complete'] as const;
 
 async function open(page: Page, template: string, scene: string) {
@@ -40,7 +34,7 @@ async function open(page: Page, template: string, scene: string) {
   return errors;
 }
 
-for (const template of templates)
+for (const template of immersive)
   test(`${template} renders every scene over a WebGL backdrop with readable, safe text`, async ({
     page,
   }) => {
@@ -61,6 +55,54 @@ for (const template of templates)
       expect(errors).toEqual([]);
     }
   });
+
+test('every colour variant renders its scene and the funding QR without errors', async ({
+  page,
+}) => {
+  test.setTimeout(120_000);
+  for (const template of [...variants, ...colourOnly]) {
+    const errors = await open(page, template, 'funding');
+    await expect(page.locator('.obs-scene canvas')).toHaveCount(
+      colourOnly.includes(template) ? 0 : 1,
+    );
+    await expect(page.locator('.obs-main h1')).toHaveCSS('opacity', '1');
+    await expect(page.locator('.obs-qr')).toHaveCount(1);
+    expect(errors, template).toEqual([]);
+  }
+});
+
+test('every immersive template and variant shares the standard card layout', async ({ page }) => {
+  test.setTimeout(120_000);
+  const layout = async () =>
+    page.evaluate(async () => {
+      // Measure with the bundled font loaded, not fallback metrics.
+      await document.fonts.ready;
+      return [
+        '.obs-card',
+        '.obs-top',
+        '.obs-main h1',
+        '.obs-bottom',
+        '.obs-progress',
+        '.obs-qr',
+        '.obs-qr svg',
+      ].map((selector) => {
+        const box = document.querySelector(selector)!.getBoundingClientRect();
+        return [
+          selector,
+          Math.round(box.x),
+          Math.round(box.y),
+          Math.round(box.width),
+          Math.round(box.height),
+        ];
+      });
+    });
+  await open(page, 'standalone', 'funding');
+  const standard = await layout();
+  for (const template of [...immersive, ...variants]) {
+    await open(page, template, 'funding');
+    expect(await layout(), template).toEqual(standard);
+  }
+});
 
 test('OBS mode keeps a transparent page and reduced motion stops the render loop', async ({
   browser,

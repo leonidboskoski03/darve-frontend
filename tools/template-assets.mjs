@@ -28,6 +28,40 @@ const immersiveSources = [
   registry,
   font,
 ];
+// Standalone and Darve Compact colour variants: plain CSS on the safe card.
+const colourSources = [
+  display,
+  displayCss,
+  'src/features/overlay-display/compact.css',
+  'src/features/overlay-display/immersive.css',
+  'src/design-system/assets/darve-logo-96.png',
+  registry,
+  font,
+];
+const platformNames = { twitch: 'Twitch', youtube: 'YouTube', kick: 'Kick', darve: 'Darve' };
+const camel = (id) => id.replace(/_(\w)/g, (_, letter) => letter.toUpperCase());
+const experimental = (id, displayName, variant, sources) => ({
+  id,
+  displayName,
+  dir: id.replace(/_/g, '-'),
+  exportName: camel(id) + 'Asset',
+  variant,
+  experimental: true,
+  sources,
+});
+// Every style family: its default look plus one colour variant per platform and Darve.
+const families = [
+  { prefix: 'standalone', name: 'Standalone', sources: colourSources },
+  { prefix: 'compact', name: 'Compact', sources: colourSources },
+  { prefix: 'glass', name: 'Glass', base: ['minimal_glass', 'Minimal Glass'] },
+  { prefix: 'neon', name: 'Neon', base: ['neon_pulse', 'Neon Pulse'] },
+  { prefix: 'classic', name: 'Classic', base: ['classic', 'Classic'] },
+  { prefix: 'drift', name: 'Drift', base: ['drift', 'Drift'] },
+  { prefix: 'contour', name: 'Contour', base: ['contour', 'Contour'] },
+  { prefix: 'halo', name: 'Halo', base: ['halo', 'Halo'] },
+  { prefix: 'ripple', name: 'Ripple', base: ['ripple', 'Ripple'] },
+  { prefix: 'comet', name: 'Comet', base: ['comet', 'Comet'] },
+];
 /** Each renderer is bound to its exact source bytes and its approval record. */
 export const templateAssets = [
   {
@@ -39,186 +73,12 @@ export const templateAssets = [
     experimental: false,
     sources: compactSources,
   },
-  {
-    id: 'minimal_glass',
-    displayName: 'Minimal Glass',
-    dir: 'minimal-glass',
-    exportName: 'minimalGlassAsset',
-    variant: 'glass',
-    experimental: true,
-    sources: immersiveSources,
-  },
-  {
-    id: 'neon_pulse',
-    displayName: 'Neon Pulse',
-    dir: 'neon-pulse',
-    exportName: 'neonPulseAsset',
-    variant: 'neon',
-    experimental: true,
-    sources: immersiveSources,
-  },
-  {
-    id: 'classic',
-    displayName: 'Classic',
-    dir: 'classic',
-    exportName: 'classicAsset',
-    variant: 'classic',
-    experimental: true,
-    sources: immersiveSources,
-  },
-  {
-    id: 'glass_twitch',
-    displayName: 'Glass · Twitch',
-    dir: 'glass-twitch',
-    exportName: 'glassTwitchAsset',
-    variant: 'glass-twitch',
-    experimental: true,
-    sources: immersiveSources,
-  },
-  {
-    id: 'glass_youtube',
-    displayName: 'Glass · YouTube',
-    dir: 'glass-youtube',
-    exportName: 'glassYoutubeAsset',
-    variant: 'glass-youtube',
-    experimental: true,
-    sources: immersiveSources,
-  },
-  {
-    id: 'glass_kick',
-    displayName: 'Glass · Kick',
-    dir: 'glass-kick',
-    exportName: 'glassKickAsset',
-    variant: 'glass-kick',
-    experimental: true,
-    sources: immersiveSources,
-  },
-  {
-    id: 'glass_darve',
-    displayName: 'Glass · Darve',
-    dir: 'glass-darve',
-    exportName: 'glassDarveAsset',
-    variant: 'glass-darve',
-    experimental: true,
-    sources: immersiveSources,
-  },
-  {
-    id: 'drift',
-    displayName: 'Drift',
-    dir: 'drift',
-    exportName: 'driftAsset',
-    variant: 'drift',
-    experimental: true,
-    sources: immersiveSources,
-  },
-  {
-    id: 'contour',
-    displayName: 'Contour',
-    dir: 'contour',
-    exportName: 'contourAsset',
-    variant: 'contour',
-    experimental: true,
-    sources: immersiveSources,
-  },
-  {
-    id: 'halo',
-    displayName: 'Halo',
-    dir: 'halo',
-    exportName: 'haloAsset',
-    variant: 'halo',
-    experimental: true,
-    sources: immersiveSources,
-  },
-  {
-    id: 'ripple',
-    displayName: 'Ripple',
-    dir: 'ripple',
-    exportName: 'rippleAsset',
-    variant: 'ripple',
-    experimental: true,
-    sources: immersiveSources,
-  },
-  {
-    id: 'drift_twitch',
-    displayName: 'Drift · Twitch',
-    dir: 'drift-twitch',
-    exportName: 'driftTwitchAsset',
-    variant: 'drift-twitch',
-    experimental: true,
-    sources: immersiveSources,
-  },
-  {
-    id: 'drift_youtube',
-    displayName: 'Drift · YouTube',
-    dir: 'drift-youtube',
-    exportName: 'driftYoutubeAsset',
-    variant: 'drift-youtube',
-    experimental: true,
-    sources: immersiveSources,
-  },
-  {
-    id: 'drift_kick',
-    displayName: 'Drift · Kick',
-    dir: 'drift-kick',
-    exportName: 'driftKickAsset',
-    variant: 'drift-kick',
-    experimental: true,
-    sources: immersiveSources,
-  },
-  {
-    id: 'drift_darve',
-    displayName: 'Drift · Darve',
-    dir: 'drift-darve',
-    exportName: 'driftDarveAsset',
-    variant: 'drift-darve',
-    experimental: true,
-    sources: immersiveSources,
-  },
-  {
-    id: 'comet',
-    displayName: 'Comet',
-    dir: 'comet',
-    exportName: 'cometAsset',
-    variant: 'comet',
-    experimental: true,
-    sources: immersiveSources,
-  },
-  {
-    id: 'comet_twitch',
-    displayName: 'Comet · Twitch',
-    dir: 'comet-twitch',
-    exportName: 'cometTwitchAsset',
-    variant: 'comet-twitch',
-    experimental: true,
-    sources: immersiveSources,
-  },
-  {
-    id: 'comet_youtube',
-    displayName: 'Comet · YouTube',
-    dir: 'comet-youtube',
-    exportName: 'cometYoutubeAsset',
-    variant: 'comet-youtube',
-    experimental: true,
-    sources: immersiveSources,
-  },
-  {
-    id: 'comet_kick',
-    displayName: 'Comet · Kick',
-    dir: 'comet-kick',
-    exportName: 'cometKickAsset',
-    variant: 'comet-kick',
-    experimental: true,
-    sources: immersiveSources,
-  },
-  {
-    id: 'comet_darve',
-    displayName: 'Comet · Darve',
-    dir: 'comet-darve',
-    exportName: 'cometDarveAsset',
-    variant: 'comet-darve',
-    experimental: true,
-    sources: immersiveSources,
-  },
+  ...families.flatMap(({ prefix, name, base, sources = immersiveSources }) => [
+    ...(base ? [experimental(base[0], base[1], prefix, sources)] : []),
+    ...Object.entries(platformNames).map(([platform, label]) =>
+      experimental(prefix + '_' + platform, name + ' · ' + label, prefix + '-' + platform, sources),
+    ),
+  ]),
 ];
 export function assetDigest(
   read = (file) => readFileSync(resolve(root, file)),
@@ -266,7 +126,10 @@ function generated() {
         const value = manifest(asset);
         return `export const ${asset.exportName} = { id: '${asset.id}', version: 1, key: '${asset.id}', hash: '${value.assetHash}', name: '${asset.displayName}', variant: '${asset.variant}', experimental: ${asset.experimental} } as const;\n`;
       })
-      .join('')
+      .join('') +
+    'export const verifiedAssets = [' +
+    templateAssets.map((asset) => asset.exportName).join(', ') +
+    '] as const;\n'
   );
 }
 export function verifyTemplateAssets() {

@@ -1,3 +1,4 @@
+import { familyOf } from './immersive-variants';
 import {
   AdditiveBlending,
   BufferAttribute,
@@ -31,6 +32,8 @@ export type Built = {
 type Uniforms = Record<string, IUniform>;
 
 const shared = /* glsl */ `
+uniform vec3 uA1;
+uniform vec3 uA2;
 uniform float uTime;
 uniform float uProgress;
 uniform float uPulse;
@@ -104,8 +107,8 @@ ${shared}
 varying float vLit;
 varying float vEdge;
 void main() {
-  vec3 lit = mix(vec3(0.5, 0.92, 0.86), ${gold}, max(uGoal, uComplete));
-  vec3 col = mix(vec3(0.6, 0.68, 0.76), lit, vLit);
+  vec3 lit = mix(uA2, ${gold}, max(uGoal, uComplete));
+  vec3 col = mix(uA1, lit, vLit);
   gl_FragColor = vec4(col, vEdge * (0.14 + 0.46 * vLit + 0.18 * uPulse));
 }`;
 
@@ -132,8 +135,8 @@ varying float vLit;
 varying float vRing;
 void main() {
   float breath = 0.5 + 0.5 * sin(uTime * 0.45);
-  vec3 lit = mix(vec3(0.96, 0.9, 0.8), ${gold}, max(uGoal, uComplete));
-  vec3 col = mix(vec3(0.8, 0.78, 0.74), lit, vLit);
+  vec3 lit = mix(uA2, ${gold}, max(uGoal, uComplete));
+  vec3 col = mix(uA1, lit, vLit);
   float alpha = mix(0.16 + 0.04 * breath, 0.55 + 0.15 * breath + 0.2 * uPulse, vLit);
   gl_FragColor = vec4(col, alpha * (1.0 - 0.5 * vRing));
 }`;
@@ -155,7 +158,7 @@ void main() {
   float rippling = step(0.001, uPulse);
   float radius = (1.0 - uPulse) * aspect * 0.55;
   float ring = exp(-pow((length(p) - radius) * 22.0, 2.0)) * uPulse * rippling;
-  vec3 col = mix(vec3(0.78, 0.72, 1.0), ${gold}, max(uGoal, uComplete));
+  vec3 col = mix(uA2, ${gold}, max(uGoal, uComplete));
   gl_FragColor = vec4(col, ring * 0.45);
 }`;
 
@@ -203,8 +206,8 @@ export function buildCalm(variant: string, scene: Scene, uniforms: Uniforms): Bu
     points.frustumCulled = false;
     scene.add(points);
     geometries.push(geometry);
-  } else if (variant === 'contour' || variant === 'halo') {
-    const contour = variant === 'contour',
+  } else if (familyOf(variant) === 'contour' || familyOf(variant) === 'halo') {
+    const contour = familyOf(variant) === 'contour',
       lines = contour ? 4 : 2,
       steps = contour ? 180 : 140;
     shader = material(

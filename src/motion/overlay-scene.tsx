@@ -17,7 +17,7 @@ import {
   WebGLRenderer,
 } from 'three';
 import { useMotionPreference } from './use-motion-preference';
-import { calmVariants, type ImmersiveVariant } from './immersive-variants';
+import { calmVariants, familyColours, type ImmersiveVariant } from './immersive-variants';
 import { buildCalm, type Built } from './calm-scenes';
 import { buildComet } from './comet-scene';
 
@@ -111,6 +111,8 @@ void main() {
 // from the left as funding grows; each contribution sends a pulse forward.
 const neonFragment = /* glsl */ `
 ${uniformsHeader}
+uniform vec3 uA1;
+uniform vec3 uA2;
 float gridLine(float coord, float width) {
   float d = abs(fract(coord) - 0.5);
   return smoothstep(0.5 - width, 0.5, d);
@@ -120,8 +122,8 @@ void main() {
   float aspect = uResolution.x / uResolution.y;
   float horizon = 0.46;
   vec3 col = mix(vec3(0.015, 0.0, 0.045), vec3(0.16, 0.01, 0.2), smoothstep(0.0, 1.0, uv.y));
-  vec3 magenta = vec3(1.0, 0.16, 0.74);
-  vec3 cyan = vec3(0.16, 0.92, 1.0);
+  vec3 magenta = uA1;
+  vec3 cyan = uA2;
   vec3 gold = vec3(1.0, 0.8, 0.38);
   vec2 sp = vec2((uv.x - 0.8) * aspect, uv.y - horizon - 0.04);
   float sun = smoothstep(0.34, 0.0, length(sp));
@@ -171,6 +173,8 @@ void main() {
   gl_PointSize = (2.8 + vLit * 2.8 + uPulse * 2.4) * uPixel * (3.4 / -mv.z);
 }`;
 const classicFragment = /* glsl */ `
+uniform vec3 uA1;
+uniform vec3 uA2;
 uniform float uGoal;
 uniform float uComplete;
 varying float vLit;
@@ -179,8 +183,8 @@ void main() {
   float d = length(gl_PointCoord - 0.5);
   if (d > 0.5) discard;
   float a = smoothstep(0.5, 0.0, d);
-  vec3 dim = vec3(0.55, 0.6, 0.82);
-  vec3 lit = mix(vec3(0.62, 0.78, 1.0), vec3(1.0, 0.8, 0.42), max(uGoal, uComplete));
+  vec3 dim = uA1;
+  vec3 lit = mix(uA2, vec3(1.0, 0.8, 0.42), max(uGoal, uComplete));
   vec3 col = mix(dim, lit, vLit) * (0.85 + 0.3 * vSeed);
   gl_FragColor = vec4(col, a * (0.62 + 0.38 * vLit));
 }`;
@@ -242,10 +246,12 @@ function build(variant: ImmersiveVariant, pixel: number, renderer: WebGLRenderer
     uHigh: { value: new Vector3(...palette.high) },
     uTint: { value: new Vector3(...palette.tint) },
     uCircles: { value: palette.circles },
+    uA1: { value: new Vector3(...familyColours(variant).a1) },
+    uA2: { value: new Vector3(...familyColours(variant).a2) },
   };
   if (calmVariants.includes(variant)) return buildCalm(variant, scene, uniforms);
   if (variant.startsWith('comet')) return buildComet(variant, scene, uniforms, renderer);
-  if (variant === 'classic') {
+  if (variant.startsWith('classic')) {
     const count = 1600;
     const frac = new Float32Array(count),
       seed = new Float32Array(count),
