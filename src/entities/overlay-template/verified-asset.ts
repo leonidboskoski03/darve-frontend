@@ -3,7 +3,35 @@ export const compactAsset = {
   id: 'darve_compact',
   version: 1,
   key: 'darve_compact',
-  hash: '26997a548c25be59d305866a735876b4db359d8bb3152703160377c9791e39b2',
+  hash: 'ac7bfb975dc9f5cd3a4cd1edbf9d03e6cea9aa98c58ab7630a0f5b3b9dfbfaae',
   name: 'Darve Compact',
   variant: 'compact',
+  experimental: false,
+} as const;
+export const minimalGlassAsset = {
+  id: 'minimal_glass',
+  version: 1,
+  key: 'minimal_glass',
+  hash: 'bf727db6a5fdc3642d5fce759ec2284e0f30a231e6412a7651dcdab5996e084f',
+  name: 'Minimal Glass',
+  variant: 'glass',
+  experimental: true,
+} as const;
+export const neonPulseAsset = {
+  id: 'neon_pulse',
+  version: 1,
+  key: 'neon_pulse',
+  hash: 'b08da9e2a735c686bb85f15b3f41f5f19329087b2258595cf16c5a4047ed54f6',
+  name: 'Neon Pulse',
+  variant: 'neon',
+  experimental: true,
+} as const;
+export const classicAsset = {
+  id: 'classic',
+  version: 1,
+  key: 'classic',
+  hash: 'c7ac6c187bc69c18b7c5c36e16f1a87574cea06b07ce17d1bd69fd670e349365',
+  name: 'Classic',
+  variant: 'classic',
+  experimental: true,
 } as const;

@@ -76,6 +76,7 @@ const rejected = [
   ['type import', "type X = import('@/app/providers').X;"],
   ['escape', "import { x } from '../../../darve-backend/private';"],
   ['engine bypass', "import { gsap } from 'gsap';"],
+  ['webgl engine bypass', "import { WebGLRenderer } from 'three';"],
   ['require bypass', "const x = require('@/app/providers');"],
   ['network bypass', "fetch('/api/private');"],
   ['member bypass', "window.fetch('/api/private');"],

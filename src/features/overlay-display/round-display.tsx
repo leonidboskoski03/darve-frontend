@@ -5,6 +5,8 @@ import { resolveOverlayTemplate } from '@/entities/overlay-template/index';
 import type { OverlayReader } from '@/services/overlay/index';
 import { OverlayDisplay as ChallengeDisplay } from './display';
 import './viewer-link.css';
+import { LazyOverlayScene } from '@/motion/lazy-overlay-scene';
+import { isImmersiveVariant } from '@/motion/immersive-variants';
 
 export function OverlayDisplay({ reader }: { reader: OverlayReader }) {
   const value = useSyncExternalStore(reader.subscribe, reader.getSnapshot);
@@ -64,6 +66,15 @@ export function OverlayDisplay({ reader }: { reader: OverlayReader }) {
       }
     >
       <article className="obs-card" aria-label="Darve broadcast challenge">
+        {isImmersiveVariant(template.variant) && (
+          <LazyOverlayScene
+            variant={template.variant}
+            progress={0}
+            funded={false}
+            complete={false}
+            pulseKey="collection"
+          />
+        )}
         <div className="obs-main">
           <div className="obs-top">
             <strong className="obs-status">{status}</strong>

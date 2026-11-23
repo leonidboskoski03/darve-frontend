@@ -68,7 +68,7 @@ export const architectureRule = {
         );
       }
       if (
-        ['gsap', '@gsap/react', 'framer-motion'].some(
+        ['gsap', '@gsap/react', 'framer-motion', 'three'].some(
           (pkg) => source === pkg || source.startsWith(`${pkg}/`),
         )
       ) {
