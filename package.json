@@ -48,7 +48,7 @@
     "local:creator": "node tools/local-creator-session.mjs"
   },
   "dependencies": {
-    "@darve/contracts": "file:vendor/contracts/darve-contracts-69f5d353873c322bb9595f218b7faeeaa2856d3c.tgz",
+    "@darve/contracts": "file:vendor/contracts/darve-contracts-68b589da23be755dfadafc12ee651398664fcbfa.tgz",
     "@gsap/react": "2.1.2",
     "@tanstack/react-query": "5.104.5",
     "framer-motion": "14.6.0",
