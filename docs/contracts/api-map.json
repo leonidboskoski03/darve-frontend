@@ -1,6 +1,6 @@
 {
-  "sourceRevision": "69f5d353873c322bb9595f218b7faeeaa2856d3c",
-  "status": "C42 refreshes uncertain-idea labels in the exact public contract enum. Reason codes, routes, authority and UI behavior stay unchanged; backend keeps reasons v1 default after the measured v2 latency gate failed.",
+  "sourceRevision": "68b589da23be755dfadafc12ee651398664fcbfa",
+  "status": "Funding revision 0 now means no funding event is recorded yet, so a freshly accepted challenge is valid in the public, OBS v2 snapshot and OBS event contracts before its first contribution. Routes, authority and UI behavior stay unchanged. Existing feature mappings retained.",
   "operations": [
     {
       "id": "public-api:GET /api/rounds/:id/analysis/events",
