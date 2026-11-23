@@ -171,7 +171,8 @@ body {
   font-family: Inter;
   src: url('/fonts/inter-latin.woff2') format('woff2');
   font-weight: 100 900;
-  font-display: swap;
+  /* Block, not swap: drawing a fallback font first made the text jump. */
+  font-display: block;
 }
 
 /* Funding bar motion on every template: it glides to new totals (no jump),

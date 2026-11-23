@@ -89,11 +89,12 @@ test('every template and variant shares the standard card layout in every scene'
   const layout = async () =>
     page.evaluate(async () => {
       // Measure with the bundled font loaded, not fallback metrics, and in the
-      // resting layout: entrance tweens are presentation only.
+      // resting layout: the entrance is presentation only (the bar sheen loops).
       await document.fonts.ready;
       document
-        .querySelectorAll<HTMLElement>('.obs-main *, .obs-qr')
-        .forEach((element) => (element.style.transform = 'none'));
+        .getAnimations()
+        .filter((animation) => animation.effect?.getComputedTiming().endTime !== Infinity)
+        .forEach((animation) => animation.finish());
       return [
         '.obs-card',
         '.obs-top',

@@ -451,3 +451,53 @@
 .obs-stage:is([data-template^='standalone-'], [data-template^='compact-']) .obs-qr {
   border-left-color: var(--p-faint);
 }
+
+/* Entrance: the content slides up once, in CSS so it starts on the very first
+   painted frame (the WebGL scene loads later; a late script entrance made the
+   text jump down and back). Slide only: text stays readable if frames stall.
+   Calm styles move less. New content (the QR when funding opens) slides in too. */
+.obs-stage:is(
+    [data-template^='glass'],
+    [data-template^='neon'],
+    [data-template^='classic'],
+    [data-template^='drift'],
+    [data-template^='contour'],
+    [data-template^='halo'],
+    [data-template^='ripple'],
+    [data-template^='comet'],
+    [data-template^='stardust']
+  )
+  :is(.obs-main > *, .obs-qr) {
+  animation: obs-rise 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.obs-stage:is(
+  [data-template^='drift'],
+  [data-template^='contour'],
+  [data-template^='halo'],
+  [data-template^='ripple']
+) {
+  --obs-rise: 6px;
+}
+.obs-stage .obs-main > :nth-child(2) {
+  animation-delay: 0.08s;
+}
+.obs-stage .obs-main > :nth-child(n + 3) {
+  animation-delay: 0.16s;
+}
+.obs-stage .obs-qr {
+  animation-delay: 0.24s;
+}
+@keyframes obs-rise {
+  from {
+    transform: translateY(var(--obs-rise, 14px));
+  }
+  to {
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .obs-stage .obs-main > *,
+  .obs-stage .obs-qr {
+    animation: none;
+  }
+}
