@@ -1,4 +1,17 @@
-import { classicAsset, compactAsset, minimalGlassAsset, neonPulseAsset } from './verified-asset';
+import {
+  classicAsset,
+  compactAsset,
+  minimalGlassAsset,
+  neonPulseAsset,
+  glassTwitchAsset,
+  glassYoutubeAsset,
+  glassKickAsset,
+  glassDarveAsset,
+  driftAsset,
+  contourAsset,
+  haloAsset,
+  rippleAsset,
+} from './verified-asset';
 type Descriptor = {
   templateId: string;
   assetVersion: number;
@@ -20,6 +33,15 @@ const entries = [
   minimalGlassAsset,
   neonPulseAsset,
   classicAsset,
+  // Minimal Glass colour variants and calm templates (owner-requested, experimental).
+  glassTwitchAsset,
+  glassYoutubeAsset,
+  glassKickAsset,
+  glassDarveAsset,
+  driftAsset,
+  contourAsset,
+  haloAsset,
+  rippleAsset,
 ] as const;
 export function catalogueTemplate(id: string, version: number) {
   return entries.find((entry) => entry.id === id && entry.version === version) ?? null;

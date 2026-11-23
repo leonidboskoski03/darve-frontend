@@ -13,11 +13,12 @@ import {
   Scene,
   ShaderMaterial,
   Vector2,
+  Vector3,
   WebGLRenderer,
-  type Camera,
 } from 'three';
 import { useMotionPreference } from './use-motion-preference';
-import type { ImmersiveVariant } from './immersive-variants';
+import { calmVariants, type ImmersiveVariant } from './immersive-variants';
+import { buildCalm, type Built } from './calm-scenes';
 
 gsap.registerPlugin(useGSAP);
 
@@ -72,6 +73,11 @@ varying vec2 vUv;`;
 // band fills from the left with funding progress; goal and completion warm it.
 const glassFragment = /* glsl */ `
 ${uniformsHeader}
+uniform vec3 uDeep;
+uniform vec3 uMid;
+uniform vec3 uHigh;
+uniform vec3 uTint;
+uniform float uCircles;
 ${noise}
 void main() {
   vec2 uv = vUv;
@@ -80,18 +86,22 @@ void main() {
   vec2 q = vec2(fbm(p + t), fbm(p + vec2(5.2, 1.3) - t));
   vec2 r = vec2(fbm(p + 2.0 * q + vec2(1.7, 9.2) + t * 1.3), fbm(p + 2.0 * q + vec2(8.3, 2.8) - t));
   float f = fbm(p + 2.0 * r);
-  vec3 deep = vec3(0.03, 0.05, 0.13);
-  vec3 blue = vec3(0.22, 0.42, 0.95);
-  vec3 violet = vec3(0.72, 0.52, 1.0);
   vec3 gold = vec3(1.0, 0.8, 0.45);
-  vec3 col = mix(deep, blue, clamp(f * 1.35, 0.0, 1.0));
-  col = mix(col, violet, clamp(length(q) * 0.6, 0.0, 1.0) * 0.5);
+  vec3 col = mix(uDeep, uMid, clamp(f * 1.35, 0.0, 1.0));
+  col = mix(col, uHigh, clamp(length(q) * 0.6, 0.0, 1.0) * 0.5);
+  // Darve mark motif: two large soft discs drifting very slowly, as in the logo.
+  vec2 a = uv * vec2(uResolution.x / uResolution.y, 1.0);
+  float aspect = uResolution.x / uResolution.y;
+  vec2 c1 = vec2(aspect * (0.78 + 0.03 * sin(uTime * 0.05)), 0.95 + 0.04 * cos(uTime * 0.04));
+  vec2 c2 = vec2(aspect * (0.18 + 0.03 * cos(uTime * 0.045)), -0.15 + 0.04 * sin(uTime * 0.05));
+  float discs = smoothstep(0.92, 0.88, length(a - c1)) + smoothstep(1.05, 1.01, length(a - c2));
+  col += uCircles * 0.07 * discs * vec3(1.0);
   float fill = smoothstep(uProgress + 0.03, uProgress - 0.03, uv.x);
   float edge = exp(-pow((uv.x - uProgress) * 28.0, 2.0)) * step(0.001, uProgress);
-  col += fill * 0.1 * vec3(0.6, 0.8, 1.0) + edge * 0.35 * vec3(0.8, 0.9, 1.0);
+  col += fill * 0.1 * uTint + edge * 0.35 * mix(uTint, vec3(1.0), 0.5);
   col = mix(col, col + gold * 0.16, uGoal * 0.7);
   col = mix(col, gold * 0.6 + col * 0.4, uComplete * 0.45);
-  col += uPulse * 0.22 * vec3(0.75, 0.88, 1.0);
+  col += uPulse * 0.22 * mix(uTint, vec3(1.0), 0.375);
   col *= 0.78 + 0.22 * smoothstep(1.25, 0.25, length(uv - 0.5));
   gl_FragColor = vec4(col, 1.0);
 }`;
@@ -174,16 +184,50 @@ void main() {
   gl_FragColor = vec4(col, a * (0.62 + 0.38 * vLit));
 }`;
 
-type Built = {
-  scene: Scene;
-  camera: Camera;
-  material: ShaderMaterial;
-  dispose: () => void;
-  resize: (width: number, height: number) => void;
+type Palette = { deep: number[]; mid: number[]; high: number[]; tint: number[]; circles: number };
+// Minimal Glass palettes. The original keeps its exact colours; platform
+// variants use only platform colours (never marks); Darve adds its logo discs.
+const glassPalettes: Record<string, Palette> = {
+  glass: {
+    deep: [0.03, 0.05, 0.13],
+    mid: [0.22, 0.42, 0.95],
+    high: [0.72, 0.52, 1.0],
+    tint: [0.6, 0.8, 1.0],
+    circles: 0,
+  },
+  'glass-twitch': {
+    deep: [0.078, 0.051, 0.149],
+    mid: [0.24, 0.12, 0.46],
+    high: [0.5, 0.4, 0.74],
+    tint: [0.8, 0.7, 1.0],
+    circles: 0,
+  },
+  'glass-youtube': {
+    deep: [0.1, 0.04, 0.047],
+    mid: [0.4, 0.06, 0.1],
+    high: [0.66, 0.34, 0.38],
+    tint: [1.0, 0.75, 0.78],
+    circles: 0,
+  },
+  'glass-kick': {
+    deep: [0.03, 0.08, 0.04],
+    mid: [0.08, 0.28, 0.06],
+    high: [0.4, 0.6, 0.34],
+    tint: [0.75, 1.0, 0.65],
+    circles: 0,
+  },
+  'glass-darve': {
+    deep: [0.11, 0.043, 0.2],
+    mid: [0.3, 0.08, 0.42],
+    high: [0.52, 0.08, 0.38],
+    tint: [0.95, 0.55, 0.81],
+    circles: 1,
+  },
 };
 
 function build(variant: ImmersiveVariant, pixel: number): Built {
   const scene = new Scene();
+  const palette = glassPalettes[variant] ?? glassPalettes.glass!;
   const uniforms = {
     uTime: { value: 0 },
     uProgress: { value: 0 },
@@ -192,7 +236,13 @@ function build(variant: ImmersiveVariant, pixel: number): Built {
     uComplete: { value: 0 },
     uResolution: { value: new Vector2(1, 1) },
     uPixel: { value: pixel },
+    uDeep: { value: new Vector3(...palette.deep) },
+    uMid: { value: new Vector3(...palette.mid) },
+    uHigh: { value: new Vector3(...palette.high) },
+    uTint: { value: new Vector3(...palette.tint) },
+    uCircles: { value: palette.circles },
   };
+  if (calmVariants.includes(variant)) return buildCalm(variant, scene, uniforms);
   if (variant === 'classic') {
     const count = 1600;
     const frac = new Float32Array(count),
@@ -243,7 +293,7 @@ function build(variant: ImmersiveVariant, pixel: number): Built {
   const material = new ShaderMaterial({
     uniforms,
     vertexShader: vertexQuad,
-    fragmentShader: variant === 'glass' ? glassFragment : neonFragment,
+    fragmentShader: variant.startsWith('glass') ? glassFragment : neonFragment,
     depthTest: false,
     depthWrite: false,
   });
@@ -304,13 +354,19 @@ export function OverlayScene({ variant, progress, funded, complete, pulseKey }: 
     const observer = new ResizeObserver(size);
     observer.observe(element);
     size();
-    let frame = 0;
+    let frame = 0,
+      last = 0;
     const started = performance.now();
-    const loop = () => {
+    // Calm templates render at most 30 fps to keep the streaming GPU light.
+    const interval = calmVariants.includes(variant) ? 1000 / 30 : 0;
+    const loop = (now: number) => {
       frame = 0;
       if (document.visibilityState === 'hidden') return;
-      built.material.uniforms.uTime!.value = (performance.now() - started) / 1000;
-      draw();
+      if (now - last >= interval) {
+        last = now;
+        built.material.uniforms.uTime!.value = (now - started) / 1000;
+        draw();
+      }
       frame = requestAnimationFrame(loop);
     };
     const resume = () => {
@@ -355,14 +411,16 @@ export function OverlayScene({ variant, progress, funded, complete, pulseKey }: 
         gsap.fromTo(
           u.uPulse!,
           { value: 1 },
-          { value: 0, duration: 1.6, ease: 'power3.out', overwrite: true },
+          calmVariants.includes(variant)
+            ? { value: 0, duration: 2.6, ease: 'sine.out', overwrite: true }
+            : { value: 0, duration: 1.6, ease: 'power3.out', overwrite: true },
         );
         const card = host.current?.parentElement;
         const amount = card?.querySelector('.obs-funding strong');
         if (amount)
           gsap.fromTo(
             amount,
-            { scale: 1.12, transformOrigin: 'left center' },
+            { scale: calmVariants.includes(variant) ? 1.04 : 1.12, transformOrigin: 'left center' },
             { scale: 1, duration: 0.7, ease: 'back.out(3)', clearProps: 'transform' },
           );
       }
@@ -378,7 +436,7 @@ export function OverlayScene({ variant, progress, funded, complete, pulseKey }: 
       if (!card || reduced) return;
       // Slide only: text must stay fully readable even if frames stall.
       gsap.from(card.querySelectorAll('.obs-main > *, .obs-qr'), {
-        y: 14,
+        y: calmVariants.includes(variant) ? 6 : 14,
         duration: 0.8,
         stagger: 0.08,
         ease: 'power3.out',

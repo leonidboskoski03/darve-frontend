@@ -3,7 +3,19 @@ import { expect, test, type Page } from '@playwright/test';
 // Experimental immersive OBS templates (owner-requested showcase) rendered by the
 // real OBS display from invented, contract-valid frames.
 const origin = 'http://127.0.0.1:4175';
-const templates = ['minimal_glass', 'neon_pulse', 'classic'] as const;
+const templates = [
+  'minimal_glass',
+  'neon_pulse',
+  'classic',
+  'glass_twitch',
+  'glass_youtube',
+  'glass_kick',
+  'glass_darve',
+  'drift',
+  'contour',
+  'halo',
+  'ripple',
+] as const;
 const scenes = ['collecting', 'funding', 'funded', 'complete'] as const;
 
 async function open(page: Page, template: string, scene: string) {
@@ -46,7 +58,7 @@ test('OBS mode keeps a transparent page and reduced motion stops the render loop
 }) => {
   const context = await browser.newContext({ reducedMotion: 'reduce' });
   const page = await context.newPage();
-  await open(page, 'neon_pulse', 'collecting');
+  await open(page, 'ripple', 'funding');
   await expect(page.locator('body')).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
   await page.addStyleTag({ content: '.obs-main, .obs-qr { visibility: hidden !important; }' });
   const canvas = page.locator('.obs-scene canvas');

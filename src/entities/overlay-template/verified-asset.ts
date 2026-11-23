@@ -3,7 +3,7 @@ export const compactAsset = {
   id: 'darve_compact',
   version: 1,
   key: 'darve_compact',
-  hash: 'ac7bfb975dc9f5cd3a4cd1edbf9d03e6cea9aa98c58ab7630a0f5b3b9dfbfaae',
+  hash: '68764ecaa1e901e4cc7f63e57dbdb3913ef2d3382cd54b09b073173d8fa87c55',
   name: 'Darve Compact',
   variant: 'compact',
   experimental: false,
@@ -12,7 +12,7 @@ export const minimalGlassAsset = {
   id: 'minimal_glass',
   version: 1,
   key: 'minimal_glass',
-  hash: 'bf727db6a5fdc3642d5fce759ec2284e0f30a231e6412a7651dcdab5996e084f',
+  hash: '330df725f361417c33840bbbf7997f6c1cc87cd2b683df2720d16191e0833377',
   name: 'Minimal Glass',
   variant: 'glass',
   experimental: true,
@@ -21,7 +21,7 @@ export const neonPulseAsset = {
   id: 'neon_pulse',
   version: 1,
   key: 'neon_pulse',
-  hash: 'b08da9e2a735c686bb85f15b3f41f5f19329087b2258595cf16c5a4047ed54f6',
+  hash: 'e89758a3c3d528ec1f0b419095df3aebf3eeceed4ed6bae02070b43072915551',
   name: 'Neon Pulse',
   variant: 'neon',
   experimental: true,
@@ -30,8 +30,80 @@ export const classicAsset = {
   id: 'classic',
   version: 1,
   key: 'classic',
-  hash: 'c7ac6c187bc69c18b7c5c36e16f1a87574cea06b07ce17d1bd69fd670e349365',
+  hash: 'b5139007ab0451df043d8e3a56bc3e48bf8b5d14bee2f10013f3bde1f3b90ed7',
   name: 'Classic',
   variant: 'classic',
+  experimental: true,
+} as const;
+export const glassTwitchAsset = {
+  id: 'glass_twitch',
+  version: 1,
+  key: 'glass_twitch',
+  hash: '14b47cb066b0d8ef71d86357d6af518aa824f068c136b449422b445e47698bb7',
+  name: 'Glass · Twitch',
+  variant: 'glass-twitch',
+  experimental: true,
+} as const;
+export const glassYoutubeAsset = {
+  id: 'glass_youtube',
+  version: 1,
+  key: 'glass_youtube',
+  hash: '1b5ed7535c9f34eca8eb85c09bee8f9be0146ba095e9fe884da3fa78acaa79d1',
+  name: 'Glass · YouTube',
+  variant: 'glass-youtube',
+  experimental: true,
+} as const;
+export const glassKickAsset = {
+  id: 'glass_kick',
+  version: 1,
+  key: 'glass_kick',
+  hash: '9f6e20157d6ef6138ae8b6224cd76f56cd3910fd9471df66fcd5b4a1390b28b0',
+  name: 'Glass · Kick',
+  variant: 'glass-kick',
+  experimental: true,
+} as const;
+export const glassDarveAsset = {
+  id: 'glass_darve',
+  version: 1,
+  key: 'glass_darve',
+  hash: '228e5384b3f5de5680da06c27cc3b3c02a53adad849a25c7a5a973f3b7483511',
+  name: 'Glass · Darve',
+  variant: 'glass-darve',
+  experimental: true,
+} as const;
+export const driftAsset = {
+  id: 'drift',
+  version: 1,
+  key: 'drift',
+  hash: '4de1e145a03c5a92076d8652bbd18d50accd33511885f9adf0b61c7d712a2135',
+  name: 'Drift',
+  variant: 'drift',
+  experimental: true,
+} as const;
+export const contourAsset = {
+  id: 'contour',
+  version: 1,
+  key: 'contour',
+  hash: '48e2f94ee00209c534446e72a6c528d58dbd801a323b187ea6c1831bd108fcf0',
+  name: 'Contour',
+  variant: 'contour',
+  experimental: true,
+} as const;
+export const haloAsset = {
+  id: 'halo',
+  version: 1,
+  key: 'halo',
+  hash: 'b596c6cba05a4931bc6fb327286d6b1a5568d9f2e7d51cb09d3fd8157becfa60',
+  name: 'Halo',
+  variant: 'halo',
+  experimental: true,
+} as const;
+export const rippleAsset = {
+  id: 'ripple',
+  version: 1,
+  key: 'ripple',
+  hash: 'd9d28ab415e5d069cd3cbde5715ec12b721ad5e66c2062c97468c96d0b358ff6',
+  name: 'Ripple',
+  variant: 'ripple',
   experimental: true,
 } as const;

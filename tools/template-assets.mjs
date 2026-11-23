@@ -22,6 +22,8 @@ const immersiveSources = [
   'src/motion/overlay-scene.tsx',
   'src/motion/lazy-overlay-scene.tsx',
   'src/motion/immersive-variants.ts',
+  'src/motion/calm-scenes.ts',
+  'src/design-system/assets/darve-logo-96.png',
   registry,
   font,
 ];
@@ -63,6 +65,78 @@ export const templateAssets = [
     experimental: true,
     sources: immersiveSources,
   },
+  {
+    id: 'glass_twitch',
+    displayName: 'Glass · Twitch',
+    dir: 'glass-twitch',
+    exportName: 'glassTwitchAsset',
+    variant: 'glass-twitch',
+    experimental: true,
+    sources: immersiveSources,
+  },
+  {
+    id: 'glass_youtube',
+    displayName: 'Glass · YouTube',
+    dir: 'glass-youtube',
+    exportName: 'glassYoutubeAsset',
+    variant: 'glass-youtube',
+    experimental: true,
+    sources: immersiveSources,
+  },
+  {
+    id: 'glass_kick',
+    displayName: 'Glass · Kick',
+    dir: 'glass-kick',
+    exportName: 'glassKickAsset',
+    variant: 'glass-kick',
+    experimental: true,
+    sources: immersiveSources,
+  },
+  {
+    id: 'glass_darve',
+    displayName: 'Glass · Darve',
+    dir: 'glass-darve',
+    exportName: 'glassDarveAsset',
+    variant: 'glass-darve',
+    experimental: true,
+    sources: immersiveSources,
+  },
+  {
+    id: 'drift',
+    displayName: 'Drift',
+    dir: 'drift',
+    exportName: 'driftAsset',
+    variant: 'drift',
+    experimental: true,
+    sources: immersiveSources,
+  },
+  {
+    id: 'contour',
+    displayName: 'Contour',
+    dir: 'contour',
+    exportName: 'contourAsset',
+    variant: 'contour',
+    experimental: true,
+    sources: immersiveSources,
+  },
+  {
+    id: 'halo',
+    displayName: 'Halo',
+    dir: 'halo',
+    exportName: 'haloAsset',
+    variant: 'halo',
+    experimental: true,
+    sources: immersiveSources,
+  },
+  {
+    id: 'ripple',
+    displayName: 'Ripple',
+    dir: 'ripple',
+    exportName: 'rippleAsset',
+    variant: 'ripple',
+    experimental: true,
+    sources: immersiveSources,
+  },
 ];
 export function assetDigest(
   read = (file) => readFileSync(resolve(root, file)),
@@ -74,7 +148,7 @@ export function assetDigest(
   if (id !== 'darve_compact') hash.update('template:' + id + '\n');
   for (const file of sources) {
     const raw = read(file),
-      value = file.endsWith('.woff2')
+      value = /.(woff2|png)$/.test(file)
         ? raw
         : Buffer.from(raw.toString('utf8').replace(/\r\n/g, '\n'));
     hash.update(file + '\n' + value.length + '\n');
