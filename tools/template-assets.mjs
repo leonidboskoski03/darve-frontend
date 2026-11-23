@@ -61,6 +61,7 @@ const families = [
   { prefix: 'halo', name: 'Halo', base: ['halo', 'Halo'] },
   { prefix: 'ripple', name: 'Ripple', base: ['ripple', 'Ripple'] },
   { prefix: 'comet', name: 'Comet', base: ['comet', 'Comet'] },
+  { prefix: 'stardust', name: 'Stardust', base: ['stardust', 'Stardust'] },
 ];
 /** Each renderer is bound to its exact source bytes and its approval record. */
 export const templateAssets = [

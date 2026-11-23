@@ -12,8 +12,19 @@ const immersive = [
   'halo',
   'ripple',
   'comet',
+  'stardust',
 ] as const;
-const prefixes = ['glass', 'neon', 'classic', 'drift', 'contour', 'halo', 'ripple', 'comet'];
+const prefixes = [
+  'glass',
+  'neon',
+  'classic',
+  'drift',
+  'contour',
+  'halo',
+  'ripple',
+  'comet',
+  'stardust',
+];
 const platforms = ['twitch', 'youtube', 'kick', 'darve'];
 const variants = prefixes.flatMap((prefix) => platforms.map((platform) => prefix + '_' + platform));
 const colourOnly = ['standalone', 'compact'].flatMap((prefix) =>

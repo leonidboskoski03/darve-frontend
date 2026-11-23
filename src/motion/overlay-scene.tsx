@@ -250,7 +250,8 @@ function build(variant: ImmersiveVariant, pixel: number, renderer: WebGLRenderer
     uA2: { value: new Vector3(...familyColours(variant).a2) },
   };
   if (calmVariants.includes(variant)) return buildCalm(variant, scene, uniforms);
-  if (variant.startsWith('comet')) return buildComet(variant, scene, uniforms, renderer);
+  if (variant.startsWith('comet') || variant.startsWith('stardust'))
+    return buildComet(variant, scene, uniforms, renderer);
   if (variant.startsWith('classic')) {
     const count = 1600;
     const frac = new Float32Array(count),

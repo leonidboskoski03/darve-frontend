@@ -1,10 +1,14 @@
 import {
+  AdditiveBlending,
+  BufferAttribute,
+  BufferGeometry,
   HalfFloatType,
   LinearFilter,
   Mesh,
   NoBlending,
   OrthographicCamera,
   PlaneGeometry,
+  Points,
   Scene,
   ShaderMaterial,
   UnsignedByteType,
@@ -15,6 +19,7 @@ import {
   type WebGLRenderer,
 } from 'three';
 import type { Built } from './calm-scenes';
+import { familyOf, platformOf } from './immersive-variants';
 
 /*
  * Comet (experimental, owner-requested): a glowing light that travels across the
@@ -24,18 +29,22 @@ import type { Built } from './calm-scenes';
  * fluid simulation, so it stays light enough for an OBS source. Colours follow
  * the variant; goal and completion warm it to gold; a verified contribution
  * releases a small burst at the head.
+ *
+ * Stardust (Drift + Comet) adds Drift's wandering dust motes; a mote lights up in
+ * the comet colour while the trail passes over it.
  */
 type Rgb = [number, number, number];
 const palettes: Record<string, { color: Rgb; cool: Rgb }> = {
-  comet: { color: [0.37, 0.55, 1.0], cool: [0.24, 0.3, 1.0] },
-  'comet-twitch': { color: [0.57, 0.27, 1.0], cool: [0.36, 0.17, 0.82] },
-  'comet-youtube': { color: [1.0, 0.23, 0.29], cool: [0.77, 0.07, 0.16] },
-  'comet-kick': { color: [0.33, 0.99, 0.09], cool: [0.12, 0.66, 0.29] },
-  'comet-darve': { color: [0.95, 0.55, 0.81], cool: [0.61, 0.0, 0.43] },
+  default: { color: [0.37, 0.55, 1.0], cool: [0.24, 0.3, 1.0] },
+  twitch: { color: [0.57, 0.27, 1.0], cool: [0.36, 0.17, 0.82] },
+  youtube: { color: [1.0, 0.23, 0.29], cool: [0.77, 0.07, 0.16] },
+  kick: { color: [0.33, 0.99, 0.09], cool: [0.12, 0.66, 0.29] },
+  darve: { color: [0.95, 0.55, 0.81], cool: [0.61, 0.0, 0.43] },
 };
-const linger = 3.2; // seconds the light stays visible
-const trailPx = 2.2; // radius of the freshly drawn line
-const resolution = 0.5; // trail buffer scale relative to the canvas
+// A thin, compact, smooth light: fine line, short tail, tight glow.
+const linger = 1.9; // seconds the light stays visible
+const trailPx = 1.1; // radius of the freshly drawn line (CSS px)
+const resolution = 0.75; // trail buffer scale relative to the canvas
 
 const quadVertex = /* glsl */ `
 varying vec2 vUv;
@@ -93,8 +102,8 @@ void main() {
   float line = exp(-r2 / (uRadius * uRadius)) * uDraw;
   float wide = exp(-r2 / (uWide * uWide)) * uDraw;
   vec2 head = p - vec2(uB.x * uAspect, uB.y);
-  float burst = exp(-dot(head, head) / (uRadius * uRadius * 40.0)) * uBurst;
-  light += vec3(1.8, 1.8, 0.0) * line + vec3(0.0, 0.0, 0.22) * wide + vec3(1.6, 1.0, 0.6) * burst;
+  float burst = exp(-dot(head, head) / (uRadius * uRadius * 60.0)) * uBurst;
+  light += vec3(1.6, 1.6, 0.0) * line + vec3(0.0, 0.0, 0.12) * wide + vec3(1.2, 0.8, 0.45) * burst;
   gl_FragColor = vec4(min(light, vec3(8.0)), 1.0);
 }`;
 
@@ -124,13 +133,51 @@ void main() {
   for (int i = 0; i < 16; i++) {
     float angle = float(i) * 0.3927;
     vec2 dir = vec2(cos(angle), sin(angle)) * uTexel;
-    glow += shade(texture2D(uTrail, vUv + dir * 1.5).rgb) * 0.5;
-    glow += shade(texture2D(uTrail, vUv + dir * 4.0).rgb) * 0.32;
-    glow += shade(texture2D(uTrail, vUv + dir * 8.0).rgb) * 0.18;
-    glow += shade(texture2D(uTrail, vUv + dir * 14.0).rgb) * 0.1;
+    glow += shade(texture2D(uTrail, vUv + dir * 1.2).rgb) * 0.5;
+    glow += shade(texture2D(uTrail, vUv + dir * 3.0).rgb) * 0.3;
+    glow += shade(texture2D(uTrail, vUv + dir * 6.0).rgb) * 0.14;
   }
-  vec3 color = 1.0 - exp(-(light * 1.2 + glow * 0.11));
+  vec3 color = 1.0 - exp(-(light * 1.15 + glow * 0.085));
   gl_FragColor = vec4(color, max(color.r, max(color.g, color.b)));
+}`;
+
+// Stardust motes: Drift's endless wander; the trail under a mote lights it up.
+const moteVertex = /* glsl */ `
+attribute vec3 aSeed;
+uniform sampler2D uTrail;
+uniform float uTime;
+uniform float uPixel;
+uniform float uPulse;
+varying float vTouch;
+varying float vGlow;
+void main() {
+  float t = uTime;
+  vec2 wander = vec2(
+    sin(t * (0.21 + aSeed.z * 0.23) + aSeed.x * 31.0) + 0.55 * sin(t * (0.37 + aSeed.y * 0.19) + aSeed.z * 17.0),
+    cos(t * (0.18 + aSeed.y * 0.21) + aSeed.y * 23.0) + 0.55 * cos(t * (0.33 + aSeed.x * 0.17) + aSeed.z * 11.0)
+  );
+  vec2 p = aSeed.xy + wander * vec2(0.011, 0.045);
+  vec3 trail = texture2D(uTrail, p).rgb;
+  vTouch = clamp(trail.r * 0.8 + trail.b * 1.5, 0.0, 1.0);
+  float breath = sin(t * (0.45 + aSeed.z * 0.5) + aSeed.x * 40.0);
+  vGlow = 0.8 + 0.2 * breath;
+  gl_Position = vec4(p * 2.0 - 1.0, 0.0, 1.0);
+  gl_PointSize = (5.0 + aSeed.z * 4.0) * (1.0 + 0.12 * breath + 0.5 * vTouch + 0.1 * uPulse) * uPixel;
+}`;
+const moteFragment = /* glsl */ `
+uniform vec3 uColor;
+uniform float uGoal;
+uniform float uComplete;
+varying float vTouch;
+varying float vGlow;
+void main() {
+  float d = length(gl_PointCoord - 0.5);
+  if (d > 0.5) discard;
+  float core = smoothstep(0.16, 0.0, d);
+  float halo = exp(-d * d * 22.0) * 0.45;
+  vec3 lit = mix(uColor, vec3(1.0, 0.8, 0.45), max(uGoal, uComplete));
+  vec3 col = mix(vec3(0.8, 0.83, 0.92), lit, vTouch);
+  gl_FragColor = vec4(col, (core + halo * vGlow) * (0.26 + 0.6 * vTouch) * vGlow);
 }`;
 
 export function buildComet(
@@ -139,7 +186,7 @@ export function buildComet(
   uniforms: Record<string, IUniform>,
   renderer: WebGLRenderer,
 ): Built {
-  const palette = palettes[variant] ?? palettes.comet!;
+  const palette = palettes[platformOf(variant)] ?? palettes.default!;
   const half =
     renderer.extensions.has('EXT_color_buffer_float') ||
     renderer.extensions.has('EXT_color_buffer_half_float');
@@ -167,7 +214,7 @@ export function buildComet(
     uBurst: { value: 0 },
     uTime: { value: 0 },
     uDt: { value: 1 / 60 },
-    uFlow: { value: 0.13 },
+    uFlow: { value: 0.08 },
   };
   const trail = new ShaderMaterial({
     uniforms: trailUniforms,
@@ -194,6 +241,31 @@ export function buildComet(
     depthWrite: false,
   });
   scene.add(new Mesh(quad, display));
+  let motes: { geometry: BufferGeometry; material: ShaderMaterial } | null = null;
+  if (familyOf(variant) === 'stardust') {
+    const count = 70,
+      seed = new Float32Array(count * 3);
+    for (let i = 0; i < count * 3; i++) {
+      const s = Math.sin(i * 12.9898 + 78.233) * 43758.5453;
+      seed[i] = s - Math.floor(s);
+    }
+    const geometry = new BufferGeometry();
+    geometry.setAttribute('position', new BufferAttribute(new Float32Array(count * 3), 3));
+    geometry.setAttribute('aSeed', new BufferAttribute(seed, 3));
+    const material = new ShaderMaterial({
+      uniforms: display.uniforms,
+      vertexShader: moteVertex,
+      fragmentShader: moteFragment,
+      transparent: true,
+      blending: AdditiveBlending,
+      depthTest: false,
+      depthWrite: false,
+    });
+    const points = new Points(geometry, material);
+    points.frustumCulled = false;
+    scene.add(points);
+    motes = { geometry, material };
+  }
 
   let width = 1,
     height = 1,
@@ -202,8 +274,8 @@ export function buildComet(
   // The head spring-follows a slow wandering target across the whole card.
   const emitter = { x: 0.5, y: 0.5, vx: 0, vy: 0, primed: false };
   const targetAt = (t: number) => ({
-    x: 0.5 + 0.46 * Math.sin(t * 0.41 + 0.7 * Math.sin(t * 0.23)),
-    y: 0.5 + 0.4 * Math.sin(t * 0.83 + 1.1) * Math.cos(t * 0.21),
+    x: 0.5 + 0.44 * Math.sin(t * 0.33 + 0.6 * Math.sin(t * 0.19)),
+    y: 0.5 + 0.36 * Math.sin(t * 0.67 + 1.1) * Math.cos(t * 0.17),
   });
 
   return {
@@ -222,7 +294,7 @@ export function buildComet(
       (display.uniforms.uTexel!.value as Vector2).set(1 / tw, 1 / th);
       trailUniforms.uAspect.value = w / Math.max(h, 1);
       trailUniforms.uRadius.value = trailPx / Math.max(h, 1);
-      trailUniforms.uWide.value = (trailPx * 5 + 6) / Math.max(h, 1);
+      trailUniforms.uWide.value = (trailPx * 3 + 3) / Math.max(h, 1);
     },
     tick(seconds) {
       const dt = last ? Math.min(1 / 20, Math.max(1 / 240, seconds - last)) : 1 / 60;
@@ -231,7 +303,7 @@ export function buildComet(
       if (!emitter.primed) Object.assign(emitter, { x: goal.x, y: goal.y, primed: true });
       const px = emitter.x,
         py = emitter.y;
-      const omega = 7,
+      const omega = 5,
         steps = Math.max(1, Math.ceil(dt / 0.004)),
         step = dt / steps;
       for (let k = 0; k < steps; k++) {
@@ -270,6 +342,8 @@ export function buildComet(
       quad.dispose();
       trail.dispose();
       display.dispose();
+      motes?.geometry.dispose();
+      motes?.material.dispose();
     },
   };
 }

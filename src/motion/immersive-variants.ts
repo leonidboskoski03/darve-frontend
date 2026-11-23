@@ -15,6 +15,7 @@ const immersiveFamilies = [
   'halo',
   'ripple',
   'comet',
+  'stardust',
 ];
 const calmFamilies = ['drift', 'contour', 'halo', 'ripple'];
 const withPlatforms = (families: string[]) =>

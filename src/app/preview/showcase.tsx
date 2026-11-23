@@ -189,6 +189,7 @@ const families: { label: string; ids: Record<Colour, string> }[] = (
     ['Halo', 'halo', 'halo'],
     ['Ripple', 'ripple', 'ripple'],
     ['Comet', 'comet', 'comet'],
+    ['Stardust', 'stardust', 'stardust'],
   ] as const
 ).map(([label, prefix, base]) => ({
   label,

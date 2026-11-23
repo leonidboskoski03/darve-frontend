@@ -76,7 +76,8 @@
     [data-template^='contour'],
     [data-template^='halo'],
     [data-template^='ripple'],
-    [data-template^='comet']
+    [data-template^='comet'],
+    [data-template^='stardust']
   )
   .obs-card {
   isolation: isolate;
@@ -93,7 +94,8 @@
     [data-template^='contour'],
     [data-template^='halo'],
     [data-template^='ripple'],
-    [data-template^='comet']
+    [data-template^='comet'],
+    [data-template^='stardust']
   )
   :is(.obs-main, .obs-qr) {
   position: relative;
@@ -107,7 +109,8 @@
     [data-template^='contour'],
     [data-template^='halo'],
     [data-template^='ripple'],
-    [data-template^='comet']
+    [data-template^='comet'],
+    [data-template^='stardust']
   )
   .obs-main {
   background: var(--t-shade, none);
@@ -120,7 +123,8 @@
     [data-template^='contour'],
     [data-template^='halo'],
     [data-template^='ripple'],
-    [data-template^='comet']
+    [data-template^='comet'],
+    [data-template^='stardust']
   )
   .obs-status {
   color: var(--t-status, #dfe8ff);
@@ -138,7 +142,8 @@
     [data-template^='contour'],
     [data-template^='halo'],
     [data-template^='ripple'],
-    [data-template^='comet']
+    [data-template^='comet'],
+    [data-template^='stardust']
   )
   .obs-time {
   color: var(--t-time, inherit);
@@ -152,7 +157,8 @@
     [data-template^='contour'],
     [data-template^='halo'],
     [data-template^='ripple'],
-    [data-template^='comet']
+    [data-template^='comet'],
+    [data-template^='stardust']
   )
   .obs-main
   h1 {
@@ -166,7 +172,8 @@
     [data-template^='contour'],
     [data-template^='halo'],
     [data-template^='ripple'],
-    [data-template^='comet']
+    [data-template^='comet'],
+    [data-template^='stardust']
   )
   :is(.obs-credits > span, .obs-funding > span, .obs-funding > div > span, .obs-subtitle) {
   color: var(--t-muted, #c3c9d8);
@@ -179,7 +186,8 @@
     [data-template^='contour'],
     [data-template^='halo'],
     [data-template^='ripple'],
-    [data-template^='comet']
+    [data-template^='comet'],
+    [data-template^='stardust']
   )
   .obs-progress {
   height: 6px;
@@ -194,7 +202,8 @@
     [data-template^='contour'],
     [data-template^='halo'],
     [data-template^='ripple'],
-    [data-template^='comet']
+    [data-template^='comet'],
+    [data-template^='stardust']
   )
   .obs-progress
   > span {
@@ -209,7 +218,8 @@
     [data-template^='contour'],
     [data-template^='halo'],
     [data-template^='ripple'],
-    [data-template^='comet']
+    [data-template^='comet'],
+    [data-template^='stardust']
   )
   .obs-qr {
   border-left: 1px solid var(--t-qr-line, rgb(255 255 255 / 10%));
@@ -223,7 +233,8 @@
     [data-template^='contour'],
     [data-template^='halo'],
     [data-template^='ripple'],
-    [data-template^='comet']
+    [data-template^='comet'],
+    [data-template^='stardust']
   )
   .obs-qr
   > strong {
@@ -238,7 +249,8 @@
     [data-template^='contour'],
     [data-template^='halo'],
     [data-template^='ripple'],
-    [data-template^='comet']
+    [data-template^='comet'],
+    [data-template^='stardust']
   ):is([data-funding='funded'], [data-performance='declared_complete'])
   .obs-progress
   > span {
@@ -392,8 +404,9 @@
   --calm-accent: var(--p-soft);
 }
 
-/* Comet: one continuous surface; the light flows behind the QR area too. */
-.obs-stage[data-template^='comet'] {
+/* Comet and Stardust (Drift + Comet): one continuous surface; the light flows
+   behind the QR area too. */
+.obs-stage:is([data-template^='comet'], [data-template^='stardust']) {
   --t-border: rgb(255 255 255 / 9%);
   --t-bg: radial-gradient(130% 170% at 50% 0%, var(--p-mid, #10142a) 0%, #06070d 65%);
   --t-shade: radial-gradient(90% 120% at 0% 50%, rgb(5 6 12 / 50%), transparent 70%);
