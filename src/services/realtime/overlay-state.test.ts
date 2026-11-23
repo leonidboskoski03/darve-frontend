@@ -14,6 +14,7 @@ import {
   acceptedFrame,
   iso,
 } from './fixtures.test-support';
+import { OverlaySnapshotResponseSchema, OverlaySnapshotV2ResponseSchema } from '../contracts/index';
 
 describe.each([1, 2] as const)('overlay protocol %s consumer', (protocol) => {
   const initial = () =>
@@ -82,6 +83,26 @@ describe.each([1, 2] as const)('overlay protocol %s consumer', (protocol) => {
     state = applyEvent(state, makeEvent(accepted, 'overlay.changed'), 400);
     expect(JSON.stringify(overlayView(state, 400, true))).not.toContain('Synthetic challenge');
     expect(overlayView(state, 400, true).presentation?.qrPayload).toBeNull();
+  });
+  it('shows a freshly accepted challenge with no funding event yet (revision 0) and its QR', () => {
+    const fresh = structuredClone(acceptedFrame(protocol));
+    fresh.data.challenge!.funding = {
+      ...fresh.data.challenge!.funding,
+      revision: 0,
+      confirmedGross: '0',
+      eligibleGross: '0',
+    };
+    // The same contract the OBS subscription uses to validate server frames.
+    const parsed = (
+      protocol === 1 ? OverlaySnapshotResponseSchema : OverlaySnapshotV2ResponseSchema
+    ).parse(fresh);
+    const view = overlayView(
+      applySnapshot(createOverlayState(displayId, protocol), parsed, 100),
+      1100,
+      true,
+    );
+    expect(view.snapshot?.challenge?.funding.revision).toBe(0);
+    expect(view.presentation?.qrPayload).toBe('https://example.test/c/synthetic');
   });
   it('keeps exact totals, QR identity, immutable deadlines and monotonic 15-second freshness', () => {
     const frame = acceptedFrame(protocol);

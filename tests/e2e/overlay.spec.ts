@@ -27,6 +27,7 @@ async function display(page: Page, compact = false) {
   await page.setViewportSize({ width: 1920, height: 1080 });
   await page.clock.install();
   const frame = OverlaySnapshotV2ResponseSchema.parse(acceptedFrame(2));
+  frame.data.viewerUrl = 'https://example.test/s/synthetic-creator';
   if (compact) {
     const asset = catalogueTemplate('darve_compact', 1)!;
     frame.data.preferences.template = {
@@ -119,12 +120,53 @@ async function display(page: Page, compact = false) {
   await expect(page.getByRole('heading', { name: 'Synthetic challenge' })).toBeVisible();
   return frame;
 }
+test('OBS reflects early close and the server review state without retaining a countdown', async ({
+  page,
+}) => {
+  const frame = await display(page);
+  const clock = Date.parse(frame.serverTime);
+  frame.data = {
+    ...frame.data,
+    version: frame.data.version + 1,
+    presentationState: 'collecting',
+    reviewState: 'collecting',
+    collectionClosesAt: new Date(clock + 30_000).toISOString(),
+    challengeId: null,
+    challenge: null,
+    qrPayload: null,
+  };
+  frame.serverTime = new Date(clock + 1_000).toISOString();
+  await page.evaluate((value) => window.syntheticOverlay.emit(value), frame);
+  await expect(page.getByLabel('Collection time remaining')).toHaveText(/^0:(28|29)$/);
+
+  const transitions = [
+    ['collection_closed', 'closing', 'Ideas closed'],
+    ['analysis_running', 'delayed', 'Analysis is delayed'],
+    ['analysis_failed', 'analysis_failed', 'Analysis could not finish'],
+    ['choosing', 'ready', 'Ideas are ready for review'],
+    ['choosing', 'fallback', 'Showing previously reviewed ideas in fallback order'],
+  ] as const;
+  for (const [presentationState, reviewState, message] of transitions) {
+    frame.data = {
+      ...frame.data,
+      version: frame.data.version + 1,
+      presentationState,
+      reviewState,
+      collectionClosesAt: null,
+    };
+    frame.serverTime = new Date(Date.parse(frame.serverTime) + 1_000).toISOString();
+    await page.evaluate((value) => window.syntheticOverlay.emit(value), frame);
+    await expect(page.getByRole('heading', { name: message })).toBeVisible();
+    await expect(page.getByLabel('Collection time remaining')).toHaveCount(0);
+  }
+});
 test('compact approved renderer preserves transparency and QR pixels at broadcast sizes', async ({
   page,
 }) => {
   const frame = await display(page, true);
   await expect(page.locator('.obs-stage')).toHaveAttribute('data-template', 'compact');
-  await expect(page.locator('.obs-card')).toHaveCSS('width', '840px');
+  // Owner change 2026-11-23: Compact shares the standard 960px card size.
+  await expect(page.locator('.obs-card')).toHaveCSS('width', '960px');
   for (const size of [150, 100]) {
     const pixels = await page
       .getByRole('img', { name: 'Scan to view this challenge' })
@@ -208,6 +250,7 @@ test('synthetic rendered QR pixels independently decode to the exact selected pu
 }) => {
   const frame = await display(page);
   const svg = page.getByRole('img', { name: 'Scan to view this challenge' });
+  await expect(page.getByText('example.test/s/synthetic-creator', { exact: true })).toBeVisible();
   for (const size of [150, 100]) {
     const pixels = await svg.evaluate(async (node, size) => {
       const image = new Image();
@@ -275,10 +318,25 @@ test('synthetic selected source removal and unsupported templates do not retain 
   await page.evaluate((frame) => window.syntheticOverlay.emit(frame), frame);
   await expect(page.locator('.obs-card')).toHaveCount(0);
 });
-test('synthetic funded and declared projections remain distinct and suppress contribution QR', async ({
+test('synthetic OBS updates partial funding and suppresses the QR only when the goal is reached', async ({
   page,
 }) => {
   const frame = await display(page);
+  const challenge = frame.data.challenge!;
+  challenge.terms.goal = { amountMinor: '2000', currency: 'USD' };
+  challenge.funding = {
+    ...challenge.funding,
+    revision: challenge.funding.revision + 1,
+    confirmedGross: '500',
+    eligibleGross: '500',
+    unclassifiedGross: '0',
+  };
+  frame.data.version++;
+  await page.evaluate((frame) => window.syntheticOverlay.emit(frame), frame);
+  await expect(page.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '25');
+  await expect(page.locator('.obs-funding strong')).toContainText('5.00');
+  await expect(page.getByRole('img')).toBeVisible();
+
   frame.data.version++;
   frame.data.presentationState = 'accepted_closed';
   frame.data.qrPayload = null;
@@ -326,9 +384,25 @@ const cors = {
   'access-control-allow-methods': 'GET,POST,PATCH,PUT,DELETE,OPTIONS',
 };
 async function owner(page: Page, withDisplay = true) {
+  // The fixture rewrites its URL to the real route. Serve the same fixture on a true reload.
+  await page.route(
+    (url) => url.origin === origin && url.pathname === '/obs',
+    async (route) => {
+      const response = await route.fetch({ url: origin + '/tests/fixtures/creator.html?view=obs' });
+      await route.fulfill({ response });
+    },
+  );
+  await page.addInitScript(() => {
+    if (location.pathname !== '/obs') return;
+    const params = new URLSearchParams(location.search);
+    params.set('view', 'obs');
+    history.replaceState(history.state, '', '/obs?' + params.toString());
+  });
   const frame = OverlaySnapshotV2ResponseSchema.parse(acceptedFrame(2));
   const state = {
     issued: 0,
+    hasDisplay: withDisplay,
+    issueFailure: null as 500 | 503 | 'network' | 'malformed-503' | null,
     selected: [] as unknown[],
     saved: [] as unknown[],
     revoked: 0,
@@ -386,12 +460,16 @@ async function owner(page: Page, withDisplay = true) {
     }
     if (url.pathname === '/api/overlay-preferences') {
       if (method === 'PATCH') {
-        const body = request.postDataJSON() as { styles: typeof state.preferences.styles };
+        const body = request.postDataJSON() as {
+          styles: typeof state.preferences.styles;
+          streamDelaySeconds?: number;
+        };
         state.saved.push(request.postDataJSON());
         state.preferences = {
           ...state.preferences,
           version: state.preferences.version + 1,
           styles: body.styles,
+          streamDelaySeconds: body.streamDelaySeconds ?? state.preferences.streamDelaySeconds ?? 0,
         };
       }
       await reply(route, {
@@ -403,6 +481,35 @@ async function owner(page: Page, withDisplay = true) {
     }
     if (url.pathname === '/api/overlay-grants') {
       state.issued++;
+      if (state.issueFailure === 'network') {
+        await route.abort('failed');
+        return;
+      }
+      if (state.issueFailure === 'malformed-503') {
+        await reply(route, {}, 503);
+        return;
+      }
+      if (state.issueFailure) {
+        await reply(
+          route,
+          {
+            schemaVersion: 1,
+            serverTime: frame.serverTime,
+            error: {
+              code: 'SERVICE_UNAVAILABLE',
+              message: 'private',
+              requestId: 'test',
+              retryable: true,
+              retryAfterSeconds: 1,
+              issues: [],
+              refetch: null,
+            },
+          },
+          state.issueFailure,
+        );
+        return;
+      }
+      state.hasDisplay = true;
       state.selection = { ...state.selection, displayId: state.issueDisplayId };
       await reply(
         route,
@@ -454,8 +561,15 @@ async function owner(page: Page, withDisplay = true) {
       await reply(route, envelope(state.selection));
       return;
     }
-    if (url.pathname.startsWith('/api/overlay-displays/')) {
-      await reply(route, envelope(state.selection));
+    if (url.pathname === '/api/overlay-displays/current') {
+      await reply(
+        route,
+        envelope(
+          state.hasDisplay
+            ? { ...state.selection, viewerUrl: 'https://example.test/s/synthetic-creator' }
+            : null,
+        ),
+      );
       return;
     }
     await reply(route, envelope({}), 404);
@@ -469,7 +583,7 @@ async function owner(page: Page, withDisplay = true) {
   return state;
 }
 
-test('synthetic OBS refresh without a selected display reads available settings without inventing a display lookup', async ({
+test('synthetic OBS refresh with no owner display reads settings without creating a display', async ({
   page,
 }) => {
   const state = await owner(page, false);
@@ -583,7 +697,7 @@ test('synthetic OBS display changes cannot carry a checked selection review into
   state.issueDisplayId = foreignId;
   await page.getByRole('checkbox', { name: /I understand this read-only link/ }).check();
   await page.getByRole('button', { name: 'Create private OBS link' }).click();
-  await expect(page).toHaveURL(new RegExp('displayId=' + foreignId));
+  await expect(page.getByLabel('Private browser-source URL')).toHaveValue(new RegExp(foreignId));
   await expect(page.getByText('Current display: idle · version 1')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Confirm display selection' })).toHaveCount(0);
   expect(state.selected).toEqual([]);
@@ -600,6 +714,71 @@ test('synthetic OBS display changes cannot carry a checked selection review into
       expectedVersion: 1,
     },
   ]);
+});
+test('OBS link remains blocked until reviewed and a 503 can be retried', async ({ page }) => {
+  const state = await owner(page, false);
+  state.issueFailure = 503;
+  const create = page.getByRole('button', { name: 'Create private OBS link' });
+  await expect(create).toBeDisabled();
+  await expect(create).toHaveCSS('opacity', '0.45');
+  await expect(page.getByText('Tick the box above to enable link creation.')).toBeVisible();
+  await expect(page.getByText(/shorter address only works in the same OBS browser/)).toBeVisible();
+  await page.getByRole('checkbox', { name: /I understand this read-only link/ }).check();
+  await create.click();
+  await expect(page.getByRole('alert')).toContainText(
+    'Darve can’t create the link right now, try again.',
+  );
+  const retry = page.getByRole('button', { name: 'Try creating the OBS link again' });
+  await expect(retry).toBeEnabled();
+  state.issueFailure = null;
+  await retry.click();
+  await expect(page.getByLabel('Private browser-source URL')).toBeVisible();
+  expect(state.issued).toBe(2);
+  await page.reload();
+  await expect(page.getByText('Current display: idle · version 1')).toBeVisible();
+  await expect(page.getByText('Existing display ID')).toHaveCount(0);
+  await expect(page.getByLabel('Private browser-source URL')).toHaveCount(0);
+  expect(state.issued).toBe(2);
+});
+for (const failure of ['network', 500, 'malformed-503'] as const) {
+  test(`OBS link creation stays locked after ${failure} and display refresh`, async ({ page }) => {
+    const state = await owner(page, false);
+    state.issueFailure = failure;
+    await page.getByText('Create a private OBS link to set up your first display.').waitFor();
+    const create = page.getByRole('button', { name: 'Create private OBS link' });
+    await page.getByRole('checkbox', { name: /I understand this read-only link/ }).check();
+    await create.click();
+    const warning = page
+      .getByRole('alert')
+      .filter({ hasText: 'The result is unconfirmed. Refresh the current display' });
+    await expect(warning).toBeVisible();
+    await expect(create).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Try creating the OBS link again' })).toHaveCount(
+      0,
+    );
+
+    state.hasDisplay = true;
+    await page.getByRole('button', { name: 'Refresh display and settings' }).click();
+    await expect(page.getByText('Current display: idle · version 1')).toBeVisible();
+    await expect(warning).toBeVisible();
+    await expect(create).toBeDisabled();
+    expect(state.issued).toBe(1);
+  });
+}
+test('a stale display link still selects the accepted challenge on the owner’s display', async ({
+  page,
+}) => {
+  const state = await owner(page);
+  await page.goto(origin + '/tests/fixtures/creator.html?view=obs&displayId=' + foreignId);
+  await page.getByRole('button', { name: 'Review for display' }).click();
+  await page.getByRole('checkbox', { name: /Show this selection/ }).check();
+  await page.getByRole('button', { name: 'Confirm display selection' }).click();
+  await expect(
+    page.getByRole('status').filter({ hasText: 'Display selection confirmed.' }),
+  ).toBeVisible();
+  expect(state.selectedDisplayIds).toEqual([displayId]);
+  await page.reload();
+  await expect(page.getByText(/Current display: challenge/)).toBeVisible();
 });
 test('synthetic owner controls never issue on mount and require separate review for link, selection and settings', async ({
   page,
@@ -653,6 +832,14 @@ test('synthetic private OBS access uses explicit Copy and Show controls without 
   await expect(page.getByLabel('Private browser-source URL')).toHaveAttribute('type', 'text');
   await page.getByRole('button', { name: 'Hide private link' }).click();
   await expect(page.getByLabel('Private browser-source URL')).toHaveAttribute('type', 'password');
+  const viewer = page.getByRole('textbox', { name: 'Public viewer link' });
+  await expect(viewer).not.toBeEditable();
+  await expect(viewer).toHaveValue('https://example.test/s/synthetic-creator');
+  await page.getByRole('button', { name: 'Copy viewer link' }).click();
+  await expect(page.getByText('Viewer link copied.', { exact: true })).toBeVisible();
+  expect(await page.evaluate(() => (window as unknown as { copiedObs: string }).copiedObs)).toBe(
+    'https://example.test/s/synthetic-creator',
+  );
   expect(state.issued).toBe(1);
 });
 test('synthetic blocked clipboard explains the visible private-link fallback without issuing another grant', async ({
@@ -687,6 +874,16 @@ test('synthetic stale selection requires refreshed renewed review without an aut
   await expect(page.getByRole('alert').filter({ hasText: 'display changed' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Confirm display selection' })).toHaveCount(0);
   expect(state.selected.length).toBe(1);
+  state.stale = false;
+  await page.getByRole('button', { name: 'Retry display selection' }).click();
+  await page.getByRole('button', { name: 'Review for display' }).click();
+  await expect(page.getByRole('button', { name: 'Confirm display selection' })).toBeDisabled();
+  await page.getByRole('checkbox', { name: /Show this selection/ }).check();
+  await page.getByRole('button', { name: 'Confirm display selection' }).click();
+  await expect(
+    page.getByRole('status').filter({ hasText: 'Display selection confirmed.' }),
+  ).toBeVisible();
+  expect(state.selected.length).toBe(2);
 });
 test('synthetic OBS settings support keyboard, 320px reflow, reduced motion and accessible controls', async ({
   page,
@@ -716,4 +913,68 @@ test('production isolated entry stays transparent without credentials and never 
         path.includes('workspace-layout'),
     ),
   ).toBe(false);
+});
+
+test('M4-1 OBS settings save integer stream delay and preserve it on refresh', async ({ page }) => {
+  const state = await owner(page);
+  const input = page.getByLabel('Stream delay (seconds)', { exact: true });
+  await expect(input).toHaveValue('0');
+  await input.fill('31');
+  await expect
+    .poll(() => input.evaluate((el) => (el as HTMLInputElement).validity.rangeOverflow))
+    .toBe(true);
+  await input.fill('0.5');
+  await expect
+    .poll(() => input.evaluate((el) => (el as HTMLInputElement).validity.stepMismatch))
+    .toBe(true);
+  await input.fill('10');
+  await page.getByRole('checkbox', { name: /Apply these settings/ }).check();
+  await page.getByRole('button', { name: 'Save display settings' }).click();
+  await expect(
+    page.getByRole('status').filter({ hasText: 'Display settings confirmed.' }),
+  ).toBeVisible();
+  expect(state.saved[0]).toMatchObject({ streamDelaySeconds: 10 });
+  await page.getByRole('button', { name: 'Refresh display and settings' }).click();
+  await expect(input).toHaveValue('10');
+  await input.fill('0');
+  await page.getByRole('checkbox', { name: /Apply these settings/ }).check();
+  await page.getByRole('button', { name: 'Save display settings' }).click();
+  await expect.poll(() => state.saved.length).toBe(2);
+  expect(state.saved[1]).toMatchObject({ streamDelaySeconds: 0 });
+});
+
+test('M4-1 OBS countdown follows the server extended viewer end', async ({ page }) => {
+  const frame = await display(page),
+    now = Date.parse(frame.serverTime);
+  frame.data = {
+    ...frame.data,
+    version: frame.data.version + 1,
+    presentationState: 'collecting',
+    reviewState: 'collecting',
+    challengeId: null,
+    challenge: null,
+    qrPayload: null,
+    collectionClosesAt: new Date(now + 20_000).toISOString(),
+  };
+  await page.evaluate((f) => window.syntheticOverlay.emit(f), frame);
+  await expect(page.getByLabel('Collection time remaining')).toHaveText('0:20');
+  await page.clock.fastForward(10_000);
+  await expect(page.getByLabel('Collection time remaining')).toHaveText('0:10');
+  // Keep authoritative stream freshness while advancing through the delayed tail.
+  frame.serverTime = new Date(now + 10_000).toISOString();
+  frame.data.version += 1;
+  await page.evaluate((f) => window.syntheticOverlay.emit(f), frame);
+  await page.clock.fastForward(9_000);
+  await expect(page.getByLabel('Collection time remaining')).toHaveText('0:01');
+  frame.serverTime = new Date(now + 20_000).toISOString();
+  frame.data = {
+    ...frame.data,
+    version: frame.data.version + 1,
+    presentationState: 'collection_closed',
+    reviewState: 'closing',
+    collectionClosesAt: null,
+  };
+  await page.evaluate((f) => window.syntheticOverlay.emit(f), frame);
+  await expect(page.getByLabel('Collection time remaining')).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Ideas closed' })).toBeVisible();
 });

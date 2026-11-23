@@ -1,0 +1,8 @@
+{
+  "id": "classic_twitch",
+  "displayName": "Classic · Twitch",
+  "version": 1,
+  "rendererKey": "classic_twitch",
+  "assetHash": "c2ed5c2038025e6254235e96ba938d98dd8cae041d297a8155c9ca38761d7956",
+  "approvalHash": "d1e19e3bd00adc4c6ddea600de5149f54bff479ca161cfd49e66f86f215739ad"
+}

@@ -21,6 +21,7 @@ function Review({
     heading.current?.focus();
   }, []);
   const sending = state.phase === 'sending';
+  const templateId = state.attempt!.input.templateId;
   return (
     <section className="template-review" aria-labelledby="template-selection-review">
       <h3 id="template-selection-review" ref={heading} tabIndex={-1}>
@@ -48,7 +49,17 @@ function Review({
         >
           {sending ? 'Saving template…' : 'Use this template'}
         </Button>
-        <Button tone="quiet" disabled={sending} onClick={() => client.cancel()}>
+        <Button
+          tone="quiet"
+          disabled={sending}
+          onClick={() => {
+            client.cancel();
+            // Return to the Select button that opened this review.
+            window.requestAnimationFrame(() =>
+              document.getElementById('template-select-' + templateId)?.focus(),
+            );
+          }}
+        >
           Cancel selection
         </Button>
       </div>
@@ -133,6 +144,7 @@ export function TemplateSelection({
           .map((item) => (
             <Button
               key={item.id}
+              id={'template-select-' + item.id}
               tone="secondary"
               disabled={fetching || error || !value || Boolean(state.attempt) || redemptionHeld}
               onClick={() => {

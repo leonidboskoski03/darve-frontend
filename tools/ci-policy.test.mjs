@@ -46,18 +46,12 @@ function fixture(run) {
   };
   const commit = () => {
     git('add', '.');
-    git(
-      '-c',
-      'user.name=CI Fixture',
-      '-c',
-      'user.email=fixture@example.invalid',
-      'commit',
-      '-m',
-      'fixture',
-    );
+    git('commit', '-m', 'fixture');
   };
   try {
     git('init', '-b', 'dev');
+    git('config', 'user.name', 'CI Fixture');
+    git('config', 'user.email', 'fixture@example.invalid');
     git('config', 'core.autocrlf', 'false');
     write('README.md');
     write('src/app/main.ts', 'export const value = 1;\n');

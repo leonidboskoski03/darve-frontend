@@ -2,7 +2,8 @@ import { afterEach, expect, it, vi } from 'vitest';
 import jsQR from 'jsqr';
 import { createCreatorSession, type CreatorSession } from '@/services/creator-session/index';
 import { readOverlayLocation, createOverlayReader } from './reader';
-import { createOverlayOwner } from './owner';
+import { createOverlayOwner, overlayMessage } from './owner';
+import { OverlayPreferencesV2InputSchema } from '@/services/contracts/index';
 import { qrMatrix } from './qr';
 const secret = 's'.repeat(43),
   origin = 'https://api.example.test';
@@ -176,6 +177,44 @@ it('owner selection uses exact optimistic binding and rejects a foreign acknowle
   });
   expect(new Headers(send.mock.calls[1]![1]!.headers).get('X-CSRF-Token')).toBeTruthy();
 });
+it('reads the current display without supplying an ID or issuing a link', async () => {
+  const { send, client } = await owner();
+  const selection = { displayId, version: 1, roundId: null, challengeId: null };
+  send.mockResolvedValueOnce(json(envelope(selection))).mockResolvedValueOnce(json(envelope(null)));
+  await expect(client.currentSelection()).resolves.toEqual(selection);
+  await expect(client.currentSelection()).resolves.toBeNull();
+  expect(send.mock.calls[1]?.[0]).toBe(origin + '/api/overlay-displays/current?viewerLink=1');
+  expect(send.mock.calls[1]?.[1]?.method).toBe('GET');
+});
+it('explains link-creation 503 and leaves explicit retry available', async () => {
+  const { send, client } = await owner();
+  send.mockResolvedValueOnce(
+    new Response(
+      JSON.stringify({
+        schemaVersion: 1,
+        serverTime: new Date().toISOString(),
+        error: {
+          code: 'SERVICE_UNAVAILABLE',
+          message: 'private',
+          requestId: 'test',
+          retryable: true,
+          retryAfterSeconds: 1,
+          issues: [],
+          refetch: null,
+        },
+      }),
+      { status: 503, headers: { 'content-type': 'application/json' } },
+    ),
+  );
+  const failure = await client.issue().then(
+    () => null,
+    (error: unknown) => error,
+  );
+  expect(overlayMessage(failure, 'issue')).toBe(
+    'Darve can’t create the link right now, try again.',
+  );
+  expect(send).toHaveBeenCalledTimes(2);
+});
 it('owner commands are fenced after session disposal', async () => {
   const { send, session, client } = await owner();
   session.stop();
@@ -207,4 +246,14 @@ it('locally encoded exact challenge URL independently decodes with its quiet zon
   }
   expect(qrMatrix('javascript:alert(1)')).toBeNull();
   expect(qrMatrix('https://user:password@example.test/c')).toBeNull();
+});
+
+it.each([-1, 31, 0.5, NaN])('rejects invalid stream delay %s at the frontend boundary', (delay) => {
+  expect(
+    OverlayPreferencesV2InputSchema.safeParse({
+      expectedVersion: 1,
+      streamDelaySeconds: delay,
+      styles: { position: 'bottom_left', scale: 1, opacity: 1, marginX: 0, marginY: 0 },
+    }).success,
+  ).toBe(false);
 });

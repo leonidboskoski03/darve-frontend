@@ -145,7 +145,7 @@ export function createReceivingClient(session: CreatorSession) {
     stripeStatus: async (signal?: AbortSignal) =>
       (
         await read({
-          path: base + 'stripe',
+          path: base + 'stripe?details=1',
           schema: StripeReceivingResponseSchema,
           success: [200],
           signal,
@@ -154,7 +154,7 @@ export function createReceivingClient(session: CreatorSession) {
     paypalStatus: async (signal?: AbortSignal) =>
       (
         await read({
-          path: base + 'paypal',
+          path: base + 'paypal?details=1',
           schema: PayPalReceivingResponseSchema,
           success: [200],
           signal,

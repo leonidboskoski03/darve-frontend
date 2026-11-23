@@ -10,6 +10,7 @@ import {
   performanceLabel,
   reportTime,
 } from '@/services/reporting/index';
+import { FundingCloseTime } from './funding-close-time';
 import { useChallengePages } from './challenge-pages';
 import './reporting.css';
 
@@ -66,8 +67,13 @@ function CurrentChallenges({
                   <p>Checkout unavailable at last check.</p>
                 ) : null}
                 <p className="report-muted">
-                  Funding deadline <time dateTime={deadline}>{reportTime(deadline)} UTC</time> ·
-                  Checked <time dateTime={serverTime}>{reportTime(serverTime)} UTC</time>
+                  Funding deadline{' '}
+                  <FundingCloseTime
+                    deadline={deadline}
+                    serverTime={serverTime}
+                    open={challenge.funding.state === 'pending'}
+                  />{' '}
+                  · Checked <time dateTime={serverTime}>{reportTime(serverTime)}</time>
                 </p>
               </li>
             );

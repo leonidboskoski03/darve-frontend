@@ -9,11 +9,9 @@ import type { CreatorSession, CreatorSnapshot } from '@/services/creator-session
 export function DashboardOverlay({
   session,
   scope,
-  displayId,
 }: {
   session: CreatorSession;
   scope: CreatorSnapshot['scope'];
-  displayId: string | null;
 }) {
   const [client] = useState(() => createOverlayOwner(session));
   const preferences = useQuery({
@@ -23,9 +21,8 @@ export function DashboardOverlay({
     networkMode: 'always',
   });
   const selection = useQuery({
-    queryKey: scope.key(['overlay-selection', displayId]),
-    enabled: displayId !== null,
-    queryFn: ({ signal }) => client.selection(displayId!, signal),
+    queryKey: scope.key(['overlay-selection']),
+    queryFn: ({ signal }) => client.currentSelection(signal),
     retry: false,
     networkMode: 'always',
   });
@@ -43,12 +40,12 @@ export function DashboardOverlay({
               : 'OBS preferences are unavailable.'}
         </p>
         <p>
-          {!displayId
-            ? 'Open OBS setup to review a specific display’s selection.'
-            : selection.isFetching
-              ? 'Checking this display’s selection…'
+          {selection.isFetching
+            ? 'Checking this display’s selection…'
+            : selection.isError
+              ? 'This display’s selection is unavailable. Check OBS settings to try again.'
               : !selected
-                ? 'This display’s selection is unavailable.'
+                ? 'Open OBS setup to create your first display.'
                 : selected.challengeId
                   ? 'This display is set to an accepted challenge.'
                   : selected.roundId
@@ -65,7 +62,7 @@ export function DashboardOverlay({
           </p>
         ) : null}
       </div>
-      <ActionLink tone="secondary" href={displayId ? '/obs?displayId=' + displayId : '/obs'}>
+      <ActionLink tone="secondary" href="/obs">
         Open OBS setup
       </ActionLink>
       <Button
@@ -73,7 +70,7 @@ export function DashboardOverlay({
         busy={preferences.isFetching || selection.isFetching}
         onClick={() => {
           void preferences.refetch();
-          if (displayId) void selection.refetch();
+          void selection.refetch();
         }}
       >
         Check OBS settings

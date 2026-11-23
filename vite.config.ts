@@ -44,7 +44,23 @@ export default defineConfig(({ mode }) => {
         'tests/fixtures/creator.html',
       ],
     },
-    server: { host: '127.0.0.1', port: 5173, strictPort: true },
+    server: {
+      host: '127.0.0.1',
+      port: 5173,
+      strictPort: true,
+      fs: {
+        deny: [
+          '.env',
+          '.env.*',
+          '*.{crt,pem}',
+          '**/.git/**',
+          '**/artifacts.local/**',
+          '**/test-results/**',
+          '**/playwright-report/**',
+          '**/tools/**',
+        ],
+      },
+    },
     preview: { host: '127.0.0.1', port: 4173, strictPort: true },
     build: {
       sourcemap: false,

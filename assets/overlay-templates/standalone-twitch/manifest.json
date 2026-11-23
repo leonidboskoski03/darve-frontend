@@ -1,0 +1,8 @@
+{
+  "id": "standalone_twitch",
+  "displayName": "Standalone · Twitch",
+  "version": 1,
+  "rendererKey": "standalone_twitch",
+  "assetHash": "de8ac806f3ea6e0ee0161644e0f04f4dc4f75035f3973ce6a3c695ffb77ddcf6",
+  "approvalHash": "4fd6ccd557a88d4b79a913721bad90b8c9f5e662700e1fcd63b9be96861a952f"
+}

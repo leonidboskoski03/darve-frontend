@@ -5,6 +5,8 @@ import {
   StopRoundInputSchema,
   RoundParamsSchema,
   RoundResponseSchema,
+  AnalysisRetryInputSchema,
+  AnalysisRetryResponseSchema,
   RoundRecoveryResponseSchema,
   type StartRoundInput,
   type RoundDto,
@@ -177,9 +179,28 @@ export function createCollectionClient(session: CreatorSession, clock = () => pe
     },
     round(roundId: string, signal: AbortSignal) {
       return readRound(
-        { path: `/api/rounds/${id(roundId)}`, signal, schema: RoundResponseSchema, success: [200] },
+        {
+          path: `/api/rounds/${id(roundId)}?roundReview=1&analysisRetry=1`,
+          signal,
+          schema: RoundResponseSchema,
+          success: [200],
+        },
         roundId,
       );
+    },
+    retryAnalysis(roundId: string, failedGeneration: number) {
+      return command(() => {
+        const body = AnalysisRetryInputSchema.safeParse({ failedGeneration });
+        if (!body.success)
+          throw new CollectionError(failure('configuration', 'INVALID_ANALYSIS_RETRY'));
+        return request({
+          path: `/api/rounds/${id(roundId)}/analysis/retry`,
+          method: 'POST',
+          body: body.data,
+          schema: AnalysisRetryResponseSchema,
+          success: [202],
+        });
+      });
     },
     stop(round: Pick<RoundDto, 'id' | 'version'>) {
       return command(() => {
@@ -188,7 +209,7 @@ export function createCollectionClient(session: CreatorSession, clock = () => pe
           throw new CollectionError(failure('configuration', 'INVALID_STOP_INPUT'));
         return readRound(
           {
-            path: `/api/rounds/${id(round.id)}/collection/stop`,
+            path: `/api/rounds/${id(round.id)}/collection/stop?roundReview=1`,
             method: 'POST',
             body: parsed.data,
             schema: RoundResponseSchema,

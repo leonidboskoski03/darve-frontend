@@ -35,6 +35,6 @@ it('preserves ordered authoritative ledger pages without silently merging overla
   expect(ledgerRows([page(3, 'a', 'same'), page(2, 'b', 'same')])).toBeNull();
   expect(ledgerRows([])).toEqual([]);
 });
-it('formats recorded time explicitly in UTC', () => {
-  expect(coinTime('2026-11-04T12:00:00.000Z')).toContain('12:00');
+it('formats recorded time with a zone', () => {
+  expect(coinTime('2026-11-04T12:00:00.000Z', 'America/Los_Angeles')).toContain('4:00 AM PST');
 });

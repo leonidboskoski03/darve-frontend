@@ -230,3 +230,96 @@ it('distinguishes a definitive unconfigured policy from uncertain service failur
   expect(uncertainReview(new ReviewError(failure('http', 'POLICY_UNAVAILABLE', 503)))).toBe(false);
   expect(uncertainReview(new ReviewError(failure('http', 'SERVICE_UNAVAILABLE', 503)))).toBe(true);
 });
+
+it('loads owner-only uncertain ideas and sends an allowed idea through the same acceptance path', async () => {
+  const { client, send } = await setup(),
+    page = reviewFixture();
+  const idea = {
+    id: ids.result + '.g3',
+    version: 1,
+    roundId: ids.round,
+    resultVersion: ids.result,
+    analysisRunId: ids.run,
+    snapshotVersion: 3,
+    text: 'Take a shot after a death',
+    supporterCount: 7,
+    reasonCode: 'policy_review_required',
+    reasonLabel: 'Might break platform rules — your call',
+    state: 'pending',
+    selectedChallengeId: null,
+  };
+  send.mockResolvedValueOnce(
+    json(envelope({ roundId: ids.round, resultVersion: ids.result, items: [idea] })),
+  );
+  const pending = (await client.uncertain(ids.round, new AbortController().signal)).items[0]!;
+  expect(() => client.prepare(page, pending, terms)).toThrow(ReviewError);
+  send.mockResolvedValueOnce(json(envelope({ ...idea, state: 'allowed', version: 2 })));
+  const allowed = await client.decide(pending, 'allow');
+  const decisionRequest = send.mock.calls.at(-1)!;
+  expect(decisionRequest[0]).toEqual(expect.stringContaining('/uncertain-ideas/'));
+  const attempt = client.prepare(page, structuredClone(allowed), terms);
+  expect(attempt.suggestionId).toBe(idea.id);
+  expect(attempt.input.expectedVersion).toBe(2);
+  send.mockResolvedValueOnce(json(envelope({ ...acceptedFixture(), suggestionId: idea.id }), 201));
+  await client.accept(attempt);
+  expect(send.mock.calls.at(-1)![0]).toEqual(
+    expect.stringContaining('/suggestions/' + idea.id + '/accept'),
+  );
+});
+it('retains the decision idempotency key across a lost response and rejects changed decisions', async () => {
+  const { client, send } = await setup();
+  const idea = {
+    id: ids.result + '.g3',
+    version: 1,
+    roundId: ids.round,
+    resultVersion: ids.result,
+    analysisRunId: ids.run,
+    snapshotVersion: 3,
+    text: 'Invented risky stunt',
+    supporterCount: 2,
+    reasonCode: 'insufficient_context' as const,
+    reasonLabel: 'AI couldn’t tell if this is in-game' as const,
+    state: 'pending' as const,
+    selectedChallengeId: null,
+  };
+  send.mockRejectedValueOnce(new TypeError('Invented lost response'));
+  await expect(client.decide(idea, 'skip')).rejects.toThrow();
+  const first = new Headers(send.mock.calls.at(-1)![1]!.headers).get('Idempotency-Key');
+  await expect(client.decide(idea, 'allow')).rejects.toThrow(ReviewError);
+  send.mockResolvedValueOnce(json(envelope({ ...idea, state: 'skipped', version: 2 })));
+  await client.decide(idea, 'skip');
+  expect(new Headers(send.mock.calls.at(-1)![1]!.headers).get('Idempotency-Key')).toBe(first);
+  expect(first).toBeTruthy();
+});
+it('removes the chosen chat pin by notice ID and validates the returned round', async () => {
+  const { client, send } = await setup();
+  const noticeId = '7a3c2f1e-1b2c-4d5e-8f90-123456789abc';
+  const status = (roundId: string) => ({
+    data: {
+      roundId,
+      selection: null,
+      notices: [
+        {
+          id: noticeId,
+          purpose: 'collection_chosen',
+          state: 'unpinning',
+          reasonCode: null,
+          retired: false,
+          cleanupState: 'not_requested',
+        },
+      ],
+    },
+  });
+  await expect(client.unpinChat(ids.round, 'not-a-uuid')).rejects.toBeInstanceOf(ReviewError);
+  send.mockResolvedValueOnce(json(status(ids.round), 202));
+  const result = await client.unpinChat(ids.round, noticeId);
+  expect(result.notices[0]!.state).toBe('unpinning');
+  const [url, init] = send.mock.calls.at(-1)!;
+  expect(url instanceof Request ? url.url : url.toString()).toBe(
+    `https://api.example.test/api/rounds/${ids.round}/chat/unpin`,
+  );
+  expect(init!.method).toBe('POST');
+  expect(JSON.parse(init!.body as string)).toEqual({ noticeId });
+  send.mockResolvedValueOnce(json(status(ids.snapshot), 202));
+  await expect(client.unpinChat(ids.round, noticeId)).rejects.toBeInstanceOf(ReviewError);
+});

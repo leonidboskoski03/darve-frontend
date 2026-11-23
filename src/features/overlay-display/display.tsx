@@ -4,6 +4,9 @@ import { qrMatrix, type OverlayReader } from '@/services/overlay/index';
 import { resolveOverlayTemplate } from '@/entities/overlay-template/index';
 import './display.css';
 import './compact.css';
+import './immersive.css';
+import { LazyOverlayScene } from '@/motion/lazy-overlay-scene';
+import { isImmersiveVariant } from '@/motion/immersive-variants';
 
 const phases: Record<string, string> = {
   preparing: 'Preparing collection',
@@ -88,6 +91,8 @@ export function OverlayDisplay({ reader }: { reader: OverlayReader }) {
       className="obs-stage"
       data-obs-phase={state}
       data-template={template.variant}
+      data-funding={challenge?.funding.state}
+      data-performance={challenge?.performance.state}
       data-position={styles.position}
       style={
         {
@@ -99,6 +104,15 @@ export function OverlayDisplay({ reader }: { reader: OverlayReader }) {
       }
     >
       <article className="obs-card" aria-label="Darve broadcast challenge">
+        {isImmersiveVariant(template.variant) && (
+          <LazyOverlayScene
+            variant={template.variant}
+            progress={progress / 100}
+            funded={challenge?.funding.state === 'funded'}
+            complete={declared}
+            pulseKey={challenge?.funding.eligibleGross ?? 'none'}
+          />
+        )}
         <div className="obs-main">
           <div className="obs-top">
             <strong className="obs-status">{status}</strong>
@@ -137,7 +151,14 @@ export function OverlayDisplay({ reader }: { reader: OverlayReader }) {
                     aria-valuemax={100}
                     aria-valuenow={progress}
                   >
-                    <span style={{ width: `${progress}%` }} />
+                    <span style={{ width: `${progress}%` }}>
+                      {/* Restarts its one-shot glow whenever verified money changes. */}
+                      <i
+                        key={challenge.funding.eligibleGross}
+                        className="obs-progress-pulse"
+                        aria-hidden="true"
+                      />
+                    </span>
                   </div>
                   <span>Deadline-eligible contributions</span>
                 </div>

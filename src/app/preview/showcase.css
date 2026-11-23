@@ -1,0 +1,60 @@
+/* Local showcase chrome only; the OBS display keeps its own styles. */
+.showcase-framed {
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(80% 60% at 70% 30%, #2b3550 0%, transparent 60%),
+    linear-gradient(160deg, #1b2233 0%, #0b0e16 70%);
+}
+.showcase-controls {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 10;
+  display: grid;
+  gap: 8px;
+  max-width: calc(100vw - 32px);
+  padding: 12px;
+  border: 1px solid rgb(255 255 255 / 8%);
+  border-radius: 12px;
+  background: rgb(10 13 22 / 80%);
+  color: #e8ecf6;
+  font:
+    12px Inter,
+    system-ui,
+    sans-serif;
+}
+.showcase-title {
+  margin: 0 0 2px;
+  font-weight: 600;
+}
+.showcase-title span {
+  margin-left: 6px;
+  color: #7f889e;
+  font-weight: 400;
+}
+.showcase-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  width: fit-content;
+  padding: 2px;
+  border-radius: 8px;
+  background: rgb(255 255 255 / 5%);
+}
+.showcase-row button {
+  padding: 5px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #aab2c5;
+  font: inherit;
+  cursor: pointer;
+}
+.showcase-row button:hover {
+  color: #e8ecf6;
+}
+.showcase-row button[aria-pressed='true'] {
+  background: rgb(255 255 255 / 12%);
+  color: #fff;
+}

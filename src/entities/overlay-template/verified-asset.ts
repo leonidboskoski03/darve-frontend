@@ -3,7 +3,541 @@ export const compactAsset = {
   id: 'darve_compact',
   version: 1,
   key: 'darve_compact',
-  hash: '26997a548c25be59d305866a735876b4db359d8bb3152703160377c9791e39b2',
+  hash: 'd26f2eafd1dcecbb71edcf03bcc25dec9928baea78075533a969a442f91e0e72',
   name: 'Darve Compact',
   variant: 'compact',
+  experimental: false,
 } as const;
+export const standaloneTwitchAsset = {
+  id: 'standalone_twitch',
+  version: 1,
+  key: 'standalone_twitch',
+  hash: 'de8ac806f3ea6e0ee0161644e0f04f4dc4f75035f3973ce6a3c695ffb77ddcf6',
+  name: 'Standalone · Twitch',
+  variant: 'standalone-twitch',
+  experimental: true,
+} as const;
+export const standaloneYoutubeAsset = {
+  id: 'standalone_youtube',
+  version: 1,
+  key: 'standalone_youtube',
+  hash: '104a0b28ff92c8596050a1cbe82a87941223bd324144468f0b3cc7372ea056e7',
+  name: 'Standalone · YouTube',
+  variant: 'standalone-youtube',
+  experimental: true,
+} as const;
+export const standaloneKickAsset = {
+  id: 'standalone_kick',
+  version: 1,
+  key: 'standalone_kick',
+  hash: '65fc94a3628e1d4704b27a3b3d76f1967c165cbfc7e21d677e633b1349137123',
+  name: 'Standalone · Kick',
+  variant: 'standalone-kick',
+  experimental: true,
+} as const;
+export const standaloneDarveAsset = {
+  id: 'standalone_darve',
+  version: 1,
+  key: 'standalone_darve',
+  hash: '85feba9d3e9d6bb2e1f08cadac67f0a8fd178883c25ac964131d3f07a08c1c08',
+  name: 'Standalone · Darve',
+  variant: 'standalone-darve',
+  experimental: true,
+} as const;
+export const compactTwitchAsset = {
+  id: 'compact_twitch',
+  version: 1,
+  key: 'compact_twitch',
+  hash: 'd4cb1665589fbb268d122ccc77ff03a4064ddf88168145bbdac8f262054b75b6',
+  name: 'Compact · Twitch',
+  variant: 'compact-twitch',
+  experimental: true,
+} as const;
+export const compactYoutubeAsset = {
+  id: 'compact_youtube',
+  version: 1,
+  key: 'compact_youtube',
+  hash: '9d4e088b92366f519c89e3276e6f15a61d19c6d40f2d9958a39506bd83ac7664',
+  name: 'Compact · YouTube',
+  variant: 'compact-youtube',
+  experimental: true,
+} as const;
+export const compactKickAsset = {
+  id: 'compact_kick',
+  version: 1,
+  key: 'compact_kick',
+  hash: '2cc3792318c7f7760e99b32a8e7ea53bf7b9c3e4bba87042833d5e0bf49dad65',
+  name: 'Compact · Kick',
+  variant: 'compact-kick',
+  experimental: true,
+} as const;
+export const compactDarveAsset = {
+  id: 'compact_darve',
+  version: 1,
+  key: 'compact_darve',
+  hash: '5a4000fe651c40daa81a52b08cc34f3a5d4f28e37d78c218c80e436e45942a2c',
+  name: 'Compact · Darve',
+  variant: 'compact-darve',
+  experimental: true,
+} as const;
+export const minimalGlassAsset = {
+  id: 'minimal_glass',
+  version: 1,
+  key: 'minimal_glass',
+  hash: '12a48cc7689c2c94ae323a231bf027055d311b7aca5544ff0c695d3980e9da4e',
+  name: 'Minimal Glass',
+  variant: 'glass',
+  experimental: true,
+} as const;
+export const glassTwitchAsset = {
+  id: 'glass_twitch',
+  version: 1,
+  key: 'glass_twitch',
+  hash: 'fb322b4e609ec8b6dd5854a700fbe27f1b2db148f6bc578ceed8c0f415415d68',
+  name: 'Glass · Twitch',
+  variant: 'glass-twitch',
+  experimental: true,
+} as const;
+export const glassYoutubeAsset = {
+  id: 'glass_youtube',
+  version: 1,
+  key: 'glass_youtube',
+  hash: '15c8e77c535a021673f0e7eeba7153cb1c701a32b57ecae74d3c5a6c1dc415af',
+  name: 'Glass · YouTube',
+  variant: 'glass-youtube',
+  experimental: true,
+} as const;
+export const glassKickAsset = {
+  id: 'glass_kick',
+  version: 1,
+  key: 'glass_kick',
+  hash: '177831e2e20bc79c97868e5b293f1b7de59a33d7cc936bfe92a2f4306bcdb546',
+  name: 'Glass · Kick',
+  variant: 'glass-kick',
+  experimental: true,
+} as const;
+export const glassDarveAsset = {
+  id: 'glass_darve',
+  version: 1,
+  key: 'glass_darve',
+  hash: 'edebf2c70a4f90c25d3b38926bfee985b9e07f349bff07314fc0aeb2f4dfc6d8',
+  name: 'Glass · Darve',
+  variant: 'glass-darve',
+  experimental: true,
+} as const;
+export const neonPulseAsset = {
+  id: 'neon_pulse',
+  version: 1,
+  key: 'neon_pulse',
+  hash: 'a77e057e618f9bc8bb93a8a2744a7cec62ba7e66c833b9119a5dc34f1ad16a7a',
+  name: 'Neon Pulse',
+  variant: 'neon',
+  experimental: true,
+} as const;
+export const neonTwitchAsset = {
+  id: 'neon_twitch',
+  version: 1,
+  key: 'neon_twitch',
+  hash: '7666a60315f990eb5eece34487892b32aa33081cb7f781ab439976853c899bbb',
+  name: 'Neon · Twitch',
+  variant: 'neon-twitch',
+  experimental: true,
+} as const;
+export const neonYoutubeAsset = {
+  id: 'neon_youtube',
+  version: 1,
+  key: 'neon_youtube',
+  hash: 'b8a34579cf6139b8b93fe3493003295d3dc260e494c2c888651e26b1360479e3',
+  name: 'Neon · YouTube',
+  variant: 'neon-youtube',
+  experimental: true,
+} as const;
+export const neonKickAsset = {
+  id: 'neon_kick',
+  version: 1,
+  key: 'neon_kick',
+  hash: 'c2f7054bbec9c80629cd9db7961bdcea39ab27b20717a1b51cfadaafe714b3d2',
+  name: 'Neon · Kick',
+  variant: 'neon-kick',
+  experimental: true,
+} as const;
+export const neonDarveAsset = {
+  id: 'neon_darve',
+  version: 1,
+  key: 'neon_darve',
+  hash: 'c1390621448a3bd67e0e1073f73e4f0c740683411388fe3005286e300b2817ba',
+  name: 'Neon · Darve',
+  variant: 'neon-darve',
+  experimental: true,
+} as const;
+export const classicAsset = {
+  id: 'classic',
+  version: 1,
+  key: 'classic',
+  hash: 'a114ee807024cb7e04c93353b48c06e76fff3d91802eb4933d6ba86cc8b7f7bb',
+  name: 'Classic',
+  variant: 'classic',
+  experimental: true,
+} as const;
+export const classicTwitchAsset = {
+  id: 'classic_twitch',
+  version: 1,
+  key: 'classic_twitch',
+  hash: 'c2ed5c2038025e6254235e96ba938d98dd8cae041d297a8155c9ca38761d7956',
+  name: 'Classic · Twitch',
+  variant: 'classic-twitch',
+  experimental: true,
+} as const;
+export const classicYoutubeAsset = {
+  id: 'classic_youtube',
+  version: 1,
+  key: 'classic_youtube',
+  hash: '789c12ce4681f7cb287ccb2a867b8594bcb30d1418a900f9406f61fbf3a7462f',
+  name: 'Classic · YouTube',
+  variant: 'classic-youtube',
+  experimental: true,
+} as const;
+export const classicKickAsset = {
+  id: 'classic_kick',
+  version: 1,
+  key: 'classic_kick',
+  hash: '194f28a43bf7a37839f76d63ff4ac862bc16b1093be92d82ad8d5bb77e65a068',
+  name: 'Classic · Kick',
+  variant: 'classic-kick',
+  experimental: true,
+} as const;
+export const classicDarveAsset = {
+  id: 'classic_darve',
+  version: 1,
+  key: 'classic_darve',
+  hash: 'cb993ace019aca488625475de1849e421b8a83cc8af6a904b959dadd45beb0ab',
+  name: 'Classic · Darve',
+  variant: 'classic-darve',
+  experimental: true,
+} as const;
+export const driftAsset = {
+  id: 'drift',
+  version: 1,
+  key: 'drift',
+  hash: '07ebea2ff883b4859b94de3b918f5a0887c3906b1f19894657549f5824757ec5',
+  name: 'Drift',
+  variant: 'drift',
+  experimental: true,
+} as const;
+export const driftTwitchAsset = {
+  id: 'drift_twitch',
+  version: 1,
+  key: 'drift_twitch',
+  hash: 'ae0568b8bed4ec86bebcd333fc0928d886cb96b281ed3e4f0b8c6d79138060ec',
+  name: 'Drift · Twitch',
+  variant: 'drift-twitch',
+  experimental: true,
+} as const;
+export const driftYoutubeAsset = {
+  id: 'drift_youtube',
+  version: 1,
+  key: 'drift_youtube',
+  hash: 'c5e505ee10b40886c20c50e119d2f5375d7fb6d14878e42da3042d2ce0130fd5',
+  name: 'Drift · YouTube',
+  variant: 'drift-youtube',
+  experimental: true,
+} as const;
+export const driftKickAsset = {
+  id: 'drift_kick',
+  version: 1,
+  key: 'drift_kick',
+  hash: 'ee0ac4e95042e9336c3b0e7c877499da2381ffe6d8f758b357f34239ec96ae2f',
+  name: 'Drift · Kick',
+  variant: 'drift-kick',
+  experimental: true,
+} as const;
+export const driftDarveAsset = {
+  id: 'drift_darve',
+  version: 1,
+  key: 'drift_darve',
+  hash: '9a07b107b2dffefdb0a497d6e84c21556809fceb029276df2c127afec9f63c6f',
+  name: 'Drift · Darve',
+  variant: 'drift-darve',
+  experimental: true,
+} as const;
+export const contourAsset = {
+  id: 'contour',
+  version: 1,
+  key: 'contour',
+  hash: '275772f36fa5098e63364fdfc7993e6f63350f4d355d06e8a008b658c2f7e965',
+  name: 'Contour',
+  variant: 'contour',
+  experimental: true,
+} as const;
+export const contourTwitchAsset = {
+  id: 'contour_twitch',
+  version: 1,
+  key: 'contour_twitch',
+  hash: 'facb041209e8bde25ca05a18c71fa4c0f4755113a4d62e2b2a6a8b6365100c08',
+  name: 'Contour · Twitch',
+  variant: 'contour-twitch',
+  experimental: true,
+} as const;
+export const contourYoutubeAsset = {
+  id: 'contour_youtube',
+  version: 1,
+  key: 'contour_youtube',
+  hash: 'c79d037cca9dc16abbb2a22a13ef68beb89f3a70cb5d29099de837b91393188a',
+  name: 'Contour · YouTube',
+  variant: 'contour-youtube',
+  experimental: true,
+} as const;
+export const contourKickAsset = {
+  id: 'contour_kick',
+  version: 1,
+  key: 'contour_kick',
+  hash: '91fa0e613be4cf91e2fb72aceca90163c93e880b0752c4bb8869972f70b2977f',
+  name: 'Contour · Kick',
+  variant: 'contour-kick',
+  experimental: true,
+} as const;
+export const contourDarveAsset = {
+  id: 'contour_darve',
+  version: 1,
+  key: 'contour_darve',
+  hash: '1bfc3ff3df5cf5a0de56b2ffe3632602ae3df2d2878960ea5e843e9f79a1fea3',
+  name: 'Contour · Darve',
+  variant: 'contour-darve',
+  experimental: true,
+} as const;
+export const haloAsset = {
+  id: 'halo',
+  version: 1,
+  key: 'halo',
+  hash: 'a57e661c7d1c73a5f4f65b4328e6e939f8be7fdf250637a3c7c61b3d19294a10',
+  name: 'Halo',
+  variant: 'halo',
+  experimental: true,
+} as const;
+export const haloTwitchAsset = {
+  id: 'halo_twitch',
+  version: 1,
+  key: 'halo_twitch',
+  hash: '456efb7ef3f64038fe428fc03594a2cc897d2f54a521c79d0f0c026597212a07',
+  name: 'Halo · Twitch',
+  variant: 'halo-twitch',
+  experimental: true,
+} as const;
+export const haloYoutubeAsset = {
+  id: 'halo_youtube',
+  version: 1,
+  key: 'halo_youtube',
+  hash: '53835627a56a379f2a4008f7301ad03d0a8c803ec47f2a0a205f8e115ace81fe',
+  name: 'Halo · YouTube',
+  variant: 'halo-youtube',
+  experimental: true,
+} as const;
+export const haloKickAsset = {
+  id: 'halo_kick',
+  version: 1,
+  key: 'halo_kick',
+  hash: '41f624a9de99c67fd5e9f0ed9b17144fc7f2f214b19bf30bfbf6af5b2f0e6a6e',
+  name: 'Halo · Kick',
+  variant: 'halo-kick',
+  experimental: true,
+} as const;
+export const haloDarveAsset = {
+  id: 'halo_darve',
+  version: 1,
+  key: 'halo_darve',
+  hash: 'd9bccba5f3bf97458bb4da12810bffd068ab35dde4b55baf86b07379614e7b34',
+  name: 'Halo · Darve',
+  variant: 'halo-darve',
+  experimental: true,
+} as const;
+export const rippleAsset = {
+  id: 'ripple',
+  version: 1,
+  key: 'ripple',
+  hash: '004375515cf1ca0853991170714999494158ab07dc33bf0ab8d21eb5c4e0f651',
+  name: 'Ripple',
+  variant: 'ripple',
+  experimental: true,
+} as const;
+export const rippleTwitchAsset = {
+  id: 'ripple_twitch',
+  version: 1,
+  key: 'ripple_twitch',
+  hash: '72e0eafe89d4f4583722bf7e92621a601cd8db890a1915a309116614c4203c80',
+  name: 'Ripple · Twitch',
+  variant: 'ripple-twitch',
+  experimental: true,
+} as const;
+export const rippleYoutubeAsset = {
+  id: 'ripple_youtube',
+  version: 1,
+  key: 'ripple_youtube',
+  hash: 'c3a2cc3d768dd6fb9c430d0321743088598e5296d2672f42cbd4bdc8251e096c',
+  name: 'Ripple · YouTube',
+  variant: 'ripple-youtube',
+  experimental: true,
+} as const;
+export const rippleKickAsset = {
+  id: 'ripple_kick',
+  version: 1,
+  key: 'ripple_kick',
+  hash: '28d4b65aa3b3e9330c72a983cd5aa15c22b8dfbf158e78445d978a8223f548bf',
+  name: 'Ripple · Kick',
+  variant: 'ripple-kick',
+  experimental: true,
+} as const;
+export const rippleDarveAsset = {
+  id: 'ripple_darve',
+  version: 1,
+  key: 'ripple_darve',
+  hash: '7e42ea73dd42dcd27e1e863f5ab25f4433e33414fb997050520cd79299db42a5',
+  name: 'Ripple · Darve',
+  variant: 'ripple-darve',
+  experimental: true,
+} as const;
+export const cometAsset = {
+  id: 'comet',
+  version: 1,
+  key: 'comet',
+  hash: '3352e1efb7a851e76d87d82c475f92b79f7b436f57a009f9d55193bbfec957ce',
+  name: 'Comet',
+  variant: 'comet',
+  experimental: true,
+} as const;
+export const cometTwitchAsset = {
+  id: 'comet_twitch',
+  version: 1,
+  key: 'comet_twitch',
+  hash: '4f5646c362028c3fdcd56541f6212f3088a35d4b8b12984dc167ba8cda1b7b96',
+  name: 'Comet · Twitch',
+  variant: 'comet-twitch',
+  experimental: true,
+} as const;
+export const cometYoutubeAsset = {
+  id: 'comet_youtube',
+  version: 1,
+  key: 'comet_youtube',
+  hash: 'ff6a24337e6fb7a4152f5aaefd1a5882283bce1479a0f49b38d3954b7b00023f',
+  name: 'Comet · YouTube',
+  variant: 'comet-youtube',
+  experimental: true,
+} as const;
+export const cometKickAsset = {
+  id: 'comet_kick',
+  version: 1,
+  key: 'comet_kick',
+  hash: '56be724e28bfb714c2c2839e12361bf6e1ef2f61745ce975119a8f0f953008d9',
+  name: 'Comet · Kick',
+  variant: 'comet-kick',
+  experimental: true,
+} as const;
+export const cometDarveAsset = {
+  id: 'comet_darve',
+  version: 1,
+  key: 'comet_darve',
+  hash: '8716c9a5ef8eaee33e76a71afcfb07a6cd079987b8b4a3cb0f9aeb1a84c3eda6',
+  name: 'Comet · Darve',
+  variant: 'comet-darve',
+  experimental: true,
+} as const;
+export const stardustAsset = {
+  id: 'stardust',
+  version: 1,
+  key: 'stardust',
+  hash: '170769f3d3230a394e23d6b799edaf66995231e3974aaf72563994ed9780307d',
+  name: 'Stardust',
+  variant: 'stardust',
+  experimental: true,
+} as const;
+export const stardustTwitchAsset = {
+  id: 'stardust_twitch',
+  version: 1,
+  key: 'stardust_twitch',
+  hash: 'a0429d41de65443200adc9ad5d8e6fe24d487efc1b30b55190cff24605aa2bc9',
+  name: 'Stardust · Twitch',
+  variant: 'stardust-twitch',
+  experimental: true,
+} as const;
+export const stardustYoutubeAsset = {
+  id: 'stardust_youtube',
+  version: 1,
+  key: 'stardust_youtube',
+  hash: '414417fdc541747d493c1bc7aae3b160c016d686befb36ad2f453bf436d267b8',
+  name: 'Stardust · YouTube',
+  variant: 'stardust-youtube',
+  experimental: true,
+} as const;
+export const stardustKickAsset = {
+  id: 'stardust_kick',
+  version: 1,
+  key: 'stardust_kick',
+  hash: 'db9e602b3119f3fff15a454dcd43a95ee2ddc70f7058465e0dc345ddef872d2a',
+  name: 'Stardust · Kick',
+  variant: 'stardust-kick',
+  experimental: true,
+} as const;
+export const stardustDarveAsset = {
+  id: 'stardust_darve',
+  version: 1,
+  key: 'stardust_darve',
+  hash: '948a1cd05f1c141cffdb53694d6cc4772c89e3cc3ce90d333a09b289128fed2e',
+  name: 'Stardust · Darve',
+  variant: 'stardust-darve',
+  experimental: true,
+} as const;
+export const verifiedAssets = [
+  compactAsset,
+  standaloneTwitchAsset,
+  standaloneYoutubeAsset,
+  standaloneKickAsset,
+  standaloneDarveAsset,
+  compactTwitchAsset,
+  compactYoutubeAsset,
+  compactKickAsset,
+  compactDarveAsset,
+  minimalGlassAsset,
+  glassTwitchAsset,
+  glassYoutubeAsset,
+  glassKickAsset,
+  glassDarveAsset,
+  neonPulseAsset,
+  neonTwitchAsset,
+  neonYoutubeAsset,
+  neonKickAsset,
+  neonDarveAsset,
+  classicAsset,
+  classicTwitchAsset,
+  classicYoutubeAsset,
+  classicKickAsset,
+  classicDarveAsset,
+  driftAsset,
+  driftTwitchAsset,
+  driftYoutubeAsset,
+  driftKickAsset,
+  driftDarveAsset,
+  contourAsset,
+  contourTwitchAsset,
+  contourYoutubeAsset,
+  contourKickAsset,
+  contourDarveAsset,
+  haloAsset,
+  haloTwitchAsset,
+  haloYoutubeAsset,
+  haloKickAsset,
+  haloDarveAsset,
+  rippleAsset,
+  rippleTwitchAsset,
+  rippleYoutubeAsset,
+  rippleKickAsset,
+  rippleDarveAsset,
+  cometAsset,
+  cometTwitchAsset,
+  cometYoutubeAsset,
+  cometKickAsset,
+  cometDarveAsset,
+  stardustAsset,
+  stardustTwitchAsset,
+  stardustYoutubeAsset,
+  stardustKickAsset,
+  stardustDarveAsset,
+] as const;

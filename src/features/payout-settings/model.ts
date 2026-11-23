@@ -37,14 +37,15 @@ export const statusText: Record<Receiving['data']['state'], [string, string]> = 
 
 export function receivingMessage(error: unknown, setup = false) {
   if (error instanceof ReceivingError) {
+    if (error.problem.status === 429) return 'Too many attempts — wait a minute.';
     if (error.problem.code === 'STALE_VERSION' || error.problem.code === 'CONFLICT')
       return 'The connection or setup has changed. Check current status and review your next action.';
     if (error.problem.code === 'RECONCILIATION_REQUIRED')
       return 'The provider result needs reconciliation. Check current status before proceeding.';
-    if (error.problem.code === 'AUTHORITY_CHANGED' || error.problem.status === 401)
-      return 'Your session changed. Sign in again to manage receiving.';
-    if (error.problem.status === 403) return 'Check your session and current account terms.';
-    if (error.problem.status === 429) return 'Too many requests. Wait before trying again.';
+    if (error.problem.code === 'SETUP_SESSION_MISMATCH')
+      return 'This PayPal setup started in another sign-in session. Use Start over PayPal to check and restart setup.';
+    if (error.problem.status === 401 || error.problem.status === 403)
+      return 'Darve could not authorize this receiving action. Check current status and try again.';
   }
   if (receivingUncertain(error))
     return setup
@@ -75,9 +76,10 @@ export function useReceivingStatus(client: Client, provider: Provider) {
           : client.paypalStatus(signal));
         return {
           status: data,
-          deadline: data.validUntil
-            ? started + Math.max(0, Date.parse(data.validUntil) - Date.parse(serverTime))
-            : null,
+          deadline:
+            data.validUntil && (data.state === 'ready' || data.state === 'unavailable')
+              ? started + Math.max(0, Date.parse(data.validUntil) - Date.parse(serverTime))
+              : null,
         };
       },
       retry: false,

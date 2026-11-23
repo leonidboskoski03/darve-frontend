@@ -1,0 +1,8 @@
+{
+  "id": "drift_twitch",
+  "displayName": "Drift · Twitch",
+  "version": 1,
+  "rendererKey": "drift_twitch",
+  "assetHash": "ae0568b8bed4ec86bebcd333fc0928d886cb96b281ed3e4f0b8c6d79138060ec",
+  "approvalHash": "0ddeecc868d51ce9cbb933fbc8ffb39399538ef25527b4d28915f0725db8a18c"
+}

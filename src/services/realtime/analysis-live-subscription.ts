@@ -45,7 +45,7 @@ export function createAnalysisLiveSubscription(options: {
   const { scope } = options;
   if (scope.audience !== 'creator') throw new Error('Invalid analysis stream authority.');
   const roundId = RoundParamsSchema.parse({ id: options.roundId }).id.toLowerCase();
-  const url = `${options.origin}/api/rounds/${encodeURIComponent(roundId)}/analysis/events`;
+  const url = `${options.origin}/api/rounds/${encodeURIComponent(roundId)}/analysis/events?reasons=1`;
   const fetcher = options.fetcher ?? fetch;
   const random = options.random ?? Math.random;
   let state = createAnalysisLiveState(roundId);

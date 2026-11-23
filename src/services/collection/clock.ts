@@ -1,3 +1,4 @@
+import { overlayRemainingSeconds } from '@/services/contracts/index';
 import type { RoundRead } from './client';
 
 // Presentation confidence window, not a backend admission/deadline rule.
@@ -7,13 +8,7 @@ export const roundIsFresh = (read: RoundRead, now: number) =>
 export function remainingCollectionSeconds(read: RoundRead, now: number) {
   if (!roundIsFresh(read, now) || read.round.state !== 'collecting' || !read.round.closesAt)
     return null;
-  return Math.max(
-    0,
-    Math.ceil(
-      (Date.parse(read.round.closesAt) - Date.parse(read.serverTime) - (now - read.receivedAt)) /
-        1000,
-    ),
-  );
+  return overlayRemainingSeconds(read.round.closesAt, read.serverTime, read.receivedAt, now);
 }
 export const retainNewerRound = (previous: RoundRead | undefined, next: RoundRead) =>
   previous && previous.round.id === next.round.id && previous.round.version > next.round.version

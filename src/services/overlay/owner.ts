@@ -4,6 +4,7 @@ import {
   OverlayGrantIssuedResponseSchema,
   OverlaySelectionInputSchema,
   OverlaySelectionResponseSchema,
+  CurrentOverlaySelectionResponseSchema,
   OverlayPreferencesV2InputSchema,
   OverlayPreferencesV2ResponseSchema,
 } from '@/services/contracts/index';
@@ -16,15 +17,33 @@ class OverlayError extends Error {
     super('Overlay request could not be confirmed.');
   }
 }
-export function overlayMessage(error: unknown) {
+export function canRetryOverlayIssue(error: unknown) {
+  return (
+    error instanceof OverlayError &&
+    error.problem.category === 'http' &&
+    error.problem.status === 503
+  );
+}
+const unconfirmed =
+  'The result is unconfirmed. Refresh the current display before another change. A link may have been issued; do not automatically create a replacement.';
+export function overlayMessage(error: unknown, action: 'issue' | 'select' | 'other' = 'other') {
+  if (action === 'issue')
+    return canRetryOverlayIssue(error)
+      ? 'Darve can’t create the link right now, try again.'
+      : unconfirmed;
   if (!(error instanceof OverlayError))
     return 'Overlay information could not be confirmed. Refresh before continuing.';
+  if (action === 'select' && error.problem.status === 503)
+    return 'Darve can’t save the display selection right now. Check the current selection and try again.';
+  if (error.problem.code === 'SOURCE_UNAVAILABLE')
+    return 'This challenge can no longer be shown. Refresh and choose another challenge.';
   if (error.problem.status === 409)
     return 'The display changed. Refresh and review its current selection or settings.';
-  if (error.problem.status === 401)
-    return 'Your session changed. Check your account before continuing.';
+  if (error.problem.status === 401) return 'Darve could not authorize this OBS action.';
+  if (action === 'select' && error.problem.status === 404)
+    return 'The display or selected challenge could not be found. Refresh and choose a challenge again.';
   if (error.problem.status === 404) return 'This display or grant is unavailable for your account.';
-  return 'The result is unconfirmed. Refresh the current display before another change. A link may have been issued; do not automatically create a replacement.';
+  return unconfirmed;
 }
 export function createOverlayOwner(session: CreatorSession) {
   const scope = session.getSnapshot().scope;
@@ -86,6 +105,14 @@ export function createOverlayOwner(session: CreatorSession) {
         schema: OverlaySelectionResponseSchema,
         success: [204],
       }),
+    async currentSelection(signal?: AbortSignal) {
+      return (await request({
+        path: '/api/overlay-displays/current?viewerLink=1',
+        schema: CurrentOverlaySelectionResponseSchema,
+        success: [200],
+        signal,
+      }))!.data;
+    },
     async selection(displayId: string, signal?: AbortSignal) {
       const result = (await request({
         path: '/api/overlay-displays/' + id(displayId),
@@ -134,7 +161,9 @@ export function createOverlayOwner(session: CreatorSession) {
       }))!.data;
       if (
         result.version <= body.expectedVersion ||
-        JSON.stringify(result.styles) !== JSON.stringify(body.styles)
+        JSON.stringify(result.styles) !== JSON.stringify(body.styles) ||
+        (body.streamDelaySeconds !== undefined &&
+          result.streamDelaySeconds !== body.streamDelaySeconds)
       )
         throw new OverlayError(failure('protocol', 'PREFERENCES_MISMATCH'));
       return result;

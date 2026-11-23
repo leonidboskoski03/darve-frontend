@@ -50,7 +50,7 @@ export function coinProblem(error: unknown) {
       error.failure.status === 403 ||
       error.failure.category === 'authority'
     )
-      return 'Your account access changed. Check your session before continuing.';
+      return 'Darve could not authorize this rewards action.';
     if (error.failure.status === 503)
       return 'Coin information is temporarily unavailable. Refresh it when the service is ready.';
   }

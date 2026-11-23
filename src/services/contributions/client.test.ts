@@ -29,6 +29,16 @@ afterEach(() => {
   owned.length = 0;
 });
 describe('public contribution and independent private receipt reads', () => {
+  it('normalizes a viewer slug and resolves without cookies or caching', async () => {
+    const send = vi.fn<typeof fetch>().mockResolvedValue(response({ publicId: ids.public }));
+    const client = runtime(send);
+    await expect(client.resolveViewerLink('../a', signal())).resolves.toBeNull();
+    await expect(client.resolveViewerLink('Creator--2', signal())).resolves.toBe(ids.public);
+    expect(send).toHaveBeenCalledExactlyOnceWith(
+      'https://api.example.test/api/public/viewer-links/creator--2',
+      expect.objectContaining({ method: 'GET', credentials: 'omit', cache: 'no-store' }),
+    );
+  });
   it('omits cookies on the public read and never starts a creator or monetary command', async () => {
     const send = vi.fn<typeof fetch>().mockResolvedValue(response(publicContributionFixture()));
     await runtime(send).challenge(ids.public, signal());

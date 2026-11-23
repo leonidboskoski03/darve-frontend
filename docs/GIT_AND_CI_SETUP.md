@@ -12,7 +12,7 @@ Create focused task branches from current dev, preserving unpublished dependenci
 
 [Development CI](../.github/workflows/development-checks.yml) requires the distinct **development-checks** job:
 
-- Code/config/tooling: formatting, typed lint/import architecture, links, one build/typecheck. No hosted unit/component/browser suites, audit or Docker images.
+- Code/config/tooling runs formatting, typed lint, links, one build/typecheck, Vitest, architecture and CI-policy tests. Browser acceptance, audit and Docker images remain release concerns.
 - Docs-only: formatting and links. The complete PR merge-tree diff must contain only root Markdown, `docs/**/*.md` or `.github/pull_request_template.md`. Include deletions and both rename sides; empty/unreadable diffs cannot silently use this shortcut.
 
 Workflows include PR base-edit events so retargeting cannot reuse the wrong tier. Ordinary task/dev pushes do not duplicate PR CI. Batch settled pushes and require current-head checks. Relevant local tests/browser/backend acceptance remain mandatory under [WORKFLOW](WORKFLOW.md), even when dev CI is light.

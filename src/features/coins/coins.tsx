@@ -40,7 +40,7 @@ const accountStates = {
 function Checked({ time }: { time: string }) {
   return (
     <p className="coins-muted coins-checked">
-      Last checked <time dateTime={time}>{coinTime(time)} UTC</time>
+      Last checked <time dateTime={time}>{coinTime(time)}</time>
     </p>
   );
 }
@@ -115,7 +115,7 @@ function Missions({ value }: { value: CoinMissionsResponse }) {
                 )}
                 {mission.completedAt && (
                   <p className="coins-muted">
-                    <time dateTime={mission.completedAt}>{coinTime(mission.completedAt)} UTC</time>
+                    <time dateTime={mission.completedAt}>{coinTime(mission.completedAt)}</time>
                   </p>
                 )}
               </div>
@@ -247,7 +247,7 @@ export function Coins({
             tabIndex={0}
           >
             <table className="coins-table">
-              <caption>Recorded coin activity · times in UTC</caption>
+              <caption>Recorded coin activity</caption>
               <thead>
                 <tr>
                   <th scope="col">Recorded</th>

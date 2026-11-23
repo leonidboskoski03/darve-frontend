@@ -16,13 +16,17 @@ export function collectionErrorMessage(error: unknown) {
     CONTEXT_CHANGED: 'The selected live stream changed. Refresh streams and select it again.',
     ROUND_NOT_READY:
       'This live stream is not ready. Refresh its current status before trying again.',
+    ANALYSIS_RETRY_WINDOW_PASSED: 'The 30-minute analysis retry window has closed.',
+    ANALYSIS_RETRY_LIMIT_REACHED: 'This round has used both analysis retries.',
+    ANALYSIS_RETRY_BUDGET_EXHAUSTED: 'The analysis budget has been reached.',
+    ANALYSIS_RETRY_NOT_FAILED: 'Analysis is no longer in a retryable state.',
     VERSION_CONFLICT:
       'The collection changed. Review its refreshed status before confirming again.',
   };
   if (messages[code]) return messages[code];
   if (category === 'configuration') return 'Choose valid collection settings before continuing.';
   if (category === 'authority' || status === 401)
-    return 'Your session changed. Check your account before continuing.';
+    return 'Darve could not authorize this collection action.';
   if (status === 404) return 'This collection or stream could not be found for your account.';
   if (status === 403)
     return 'The server could not authorize this action. Check your session and permissions.';

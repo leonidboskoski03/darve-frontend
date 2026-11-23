@@ -279,7 +279,7 @@ test('synthetic creator 401 clears the account screen and keyboard dialog flow s
 }) => {
   let expired = false;
   await mock(page, async (route, path) => {
-    if (path === '/api/session') await json(route, signedIn(true));
+    if (path === '/api/session') await json(route, expired ? signedOut : signedIn(true));
     else if (path === '/api/connections')
       await json(
         route,

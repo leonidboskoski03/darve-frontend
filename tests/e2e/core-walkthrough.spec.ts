@@ -36,6 +36,11 @@ async function scenario(page: Page, accepted = false) {
     receivingGate: null as Promise<void> | null,
     paypal: 'pending' as 'pending' | 'ready' | 'revoked',
     receivingUnavailable: false,
+    paypalConflict: false,
+    paypalExpired: false,
+    paypalPreviousDeadline: new Date(Date.now() - 1_000).toISOString(),
+    paypalRateLimit: false,
+    stripeOnboarding: false,
     mutations: [] as string[],
     unexpected: [] as string[],
     errors: [] as string[],
@@ -100,14 +105,31 @@ async function scenario(page: Page, accepted = false) {
       state.signedIn = false;
       return route.fulfill({ status: 204, headers: cors });
     }
+    if (path === '/api/auth/twitch/start' && method === 'POST')
+      return reply(route, {
+        authorizationUrl: 'https://id.twitch.tv/oauth2/authorize?fixture=1',
+        expiresAt: new Date(Date.now() + 60000).toISOString(),
+      });
     if (!state.signedIn) return reply(route, failure(), 401);
+    if (
+      state.paypalConflict &&
+      method === 'POST' &&
+      ['/api/payment-accounts/paypal/onboarding', '/api/payment-accounts/paypal/refresh'].includes(
+        path,
+      )
+    ) {
+      const body = failure();
+      body.error.code = 'SETUP_SESSION_MISMATCH';
+      return reply(route, body, 409);
+    }
     if (
       path === '/api/connections' ||
       path === '/api/challenges' ||
       path === '/api/challenges/current'
     )
       return reply(route, envelope({ items: [], nextCursor: null }));
-    if (path === '/api/rounds/current') return reply(route, envelope(null));
+    if (path === '/api/rounds/current' || path === '/api/overlay-displays/current')
+      return reply(route, envelope(null));
     if (path === '/api/dashboard/summary') {
       const summary = dashboardFixture();
       summary.period.timeZone = new URL(request.url()).searchParams.get('timeZone')!;
@@ -126,8 +148,11 @@ async function scenario(page: Page, accepted = false) {
         serverTime: new Date().toISOString(),
         data: makeFrame(2).data.preferences,
       });
-    if (path === '/api/payment-accounts/paypal/refresh' && method === 'POST')
+    if (path === '/api/payment-accounts/paypal/refresh' && method === 'POST') {
+      if (state.paypalRateLimit) return reply(route, failure(), 429);
+      state.paypalExpired = false;
       state.paypal = 'ready';
+    }
     if (
       [
         '/api/payment-accounts/stripe',
@@ -143,12 +168,25 @@ async function scenario(page: Page, accepted = false) {
         route,
         envelope({
           environment: 'test',
-          state: stripe ? 'unconfigured' : state.paypal,
-          version: stripe ? null : ready ? 2 : 1,
-          country: stripe ? null : 'US',
+          state: stripe
+            ? state.stripeOnboarding
+              ? 'restricted'
+              : 'unconfigured'
+            : state.paypalExpired
+              ? 'unavailable'
+              : state.paypal,
+          version: stripe && !state.stripeOnboarding ? null : ready ? 2 : 1,
+          country: stripe && !state.stripeOnboarding ? null : 'US',
+          ...(stripe && state.stripeOnboarding
+            ? { onboardingRequired: true, accountLabel: 'acct_…4F2a' }
+            : {}),
           currencies: ready ? ['USD'] : [],
           observedAt: ready ? new Date().toISOString() : null,
-          validUntil: ready ? new Date(Date.now() + 60_000).toISOString() : null,
+          validUntil: ready
+            ? state.paypalExpired
+              ? state.paypalPreviousDeadline
+              : new Date(Date.now() + 60_000).toISOString()
+            : null,
           ...(stripe ? {} : { walletActive: ready, cardsActive: false }),
         }),
       );
@@ -371,3 +409,91 @@ test('synthetic core navigation preserves pending, verified and revoked receivin
   expect(state.unexpected).toEqual([]);
   expect(state.errors).toEqual([]);
 });
+test('payout shows connected accounts, checks expired verification and explains rate limiting', async ({
+  page,
+}) => {
+  const state = await scenario(page, true);
+  state.stripeOnboarding = true;
+  state.paypal = 'ready';
+  state.paypalExpired = true;
+  state.paypalRateLimit = true;
+  await page.goto(fixture);
+  await navigate(page, 'Payout settings', 'Payout settings');
+  const stripe = page.getByRole('region', { name: 'Stripe', exact: true });
+  await expect(stripe.getByText('Connected', { exact: true })).toBeVisible();
+  await expect(stripe.getByText('acct_…4F2a', { exact: true })).toBeVisible();
+  await expect(stripe.getByRole('button', { name: 'Continue Stripe onboarding' })).toBeVisible();
+  const paypal = page.getByRole('region', { name: 'PayPal', exact: true });
+  await expect(paypal.getByText('Connected', { exact: true })).toBeVisible();
+  await expect(paypal.getByText('Last checked', { exact: true })).toBeVisible();
+  await expect.poll(() => state.mutations).toEqual(['POST /api/payment-accounts/paypal/refresh']);
+  await paypal.getByRole('button', { name: 'Verify PayPal again' }).click();
+  await expect(paypal.getByRole('alert')).toContainText('Too many attempts — wait a minute.');
+  expect(state.unexpected).toEqual([]);
+});
+test('signed-out dashboard deep link resumes after provider sign-in', async ({ page }) => {
+  const state = await scenario(page, true);
+  state.signedIn = false;
+  await page.route('https://id.twitch.tv/oauth2/authorize?*', async (route) => {
+    state.signedIn = true;
+    await route.fulfill({
+      status: 302,
+      headers: { location: 'http://127.0.0.1:4175/tests/fixtures/creator.html?view=oauth-return' },
+    });
+  });
+  await page.goto(fixture.replace('view=terms', 'view=dashboard&timeZone=UTC'));
+  await expect(page.getByRole('heading', { name: 'Connect your stream to Darve' })).toBeVisible();
+  expect(new URL(page.url()).searchParams.get('returnTo')).toBe('/dashboard?timeZone=UTC');
+  await expect(page.getByRole('navigation', { name: 'Creator workspace' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Continue with Twitch' }).click();
+  await expect(page).toHaveURL('http://127.0.0.1:4175/dashboard?timeZone=UTC');
+  await expect(page.getByRole('heading', { name: 'Dashboard', exact: true })).toBeVisible();
+});
+
+test('pending PayPal setup conflict keeps the creator authenticated', async ({ page }) => {
+  const state = await scenario(page, true);
+  state.paypalConflict = true;
+  await page.goto(fixture.replace('view=terms', 'view=dashboard'));
+  await navigate(page, 'Payout settings', 'Payout settings');
+  await page.getByRole('button', { name: 'Verify PayPal receiving' }).click();
+  await expect(
+    page.getByRole('alert').getByText(/This PayPal setup started in another sign-in session/),
+  ).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Start over PayPal' })).toBeVisible();
+  await page.getByRole('button', { name: 'Continue PayPal setup' }).click();
+  await page.getByRole('checkbox', { name: /I consent/ }).check();
+  await page.getByRole('button', { name: 'Confirm setup' }).click();
+  await expect(page.getByRole('dialog').getByRole('alert')).toHaveText(
+    /This PayPal setup started in another sign-in session/,
+  );
+  await expect(page.getByText(/Your session expired/)).toHaveCount(0);
+});
+for (const [view, path] of [
+  ['collection', '/collection'],
+  ['account', '/account'],
+  ['payouts', '/account/payments'],
+  ['obs', '/obs'],
+  ['coins', '/coins'],
+  ['templates', '/templates'],
+  ['support', '/support'],
+] as const) {
+  test(
+    'signed-out ' + path + ' waits for sign-in before opening private content',
+    async ({ page }) => {
+      const state = await scenario(page, true);
+      state.signedIn = false;
+      const privateReads: string[] = [];
+      page.on('request', (request) => {
+        const url = new URL(request.url());
+        if (url.origin === api && url.pathname !== '/api/session') privateReads.push(url.pathname);
+      });
+      await page.goto(fixture.replace('view=terms', 'view=' + view));
+      await expect(
+        page.getByRole('heading', { name: 'Connect your stream to Darve' }),
+      ).toBeVisible();
+      expect(new URL(page.url()).searchParams.get('returnTo')).toBe(path);
+      await expect(page.getByRole('navigation', { name: 'Creator workspace' })).toHaveCount(0);
+      expect(privateReads).toEqual([]);
+    },
+  );
+}

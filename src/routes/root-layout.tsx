@@ -37,19 +37,22 @@ function Layout({ connected, signedIn }: { connected: boolean; signedIn: boolean
     }
   }, [pathname]);
   if (
-    (signedIn && (setupRoute || termsRoute || connectionsRoute)) ||
-    pathname === '/dashboard' ||
-    pathname === '/account' ||
-    pathname === '/account/payments' ||
-    pathname === '/obs' ||
-    pathname === '/coins' ||
-    pathname === '/templates' ||
-    pathname === '/support' ||
-    pathname.startsWith('/support/') ||
-    pathname === '/challenges' ||
-    pathname.startsWith('/challenges/') ||
-    pathname === '/collection' ||
-    pathname.startsWith('/collection/')
+    signedIn &&
+    (setupRoute ||
+      termsRoute ||
+      connectionsRoute ||
+      pathname === '/dashboard' ||
+      pathname === '/account' ||
+      pathname === '/account/payments' ||
+      pathname === '/obs' ||
+      pathname === '/coins' ||
+      pathname === '/templates' ||
+      pathname === '/support' ||
+      pathname.startsWith('/support/') ||
+      pathname === '/challenges' ||
+      pathname.startsWith('/challenges/') ||
+      pathname === '/collection' ||
+      pathname.startsWith('/collection/'))
   )
     return (
       <Workspace session={connected ? <SessionStatus /> : <span>Server not connected</span>}>

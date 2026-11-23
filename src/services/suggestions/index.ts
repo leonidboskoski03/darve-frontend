@@ -3,6 +3,8 @@ export type {
   SuggestionClient,
   ReviewPage,
   Suggestion,
+  UncertainIdea,
+  AcceptanceIdea,
   AcceptanceAttempt,
   AcceptedChallenge,
   AcceptancePolicy,

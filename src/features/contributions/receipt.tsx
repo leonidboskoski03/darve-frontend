@@ -107,30 +107,46 @@ export function PrivateReceipt({
     enabled: visible,
     retry: false,
     gcTime: 0,
+    refetchInterval: ({ state }) => {
+      if (!visible || state.error || !state.data || state.dataUpdateCount > 24) return false;
+      const receipt = state.data;
+      return receipt.paymentStatus !== 'failed' &&
+        (receipt.paymentStatus !== 'confirmed' ||
+          receipt.verifiedPayments.some((payment) => payment.eligibility === 'unclassified'))
+        ? 5_000
+        : false;
+    },
   });
-  const receipt = visible && !query.isError && !query.isFetching ? query.data : undefined;
+  const receipt = visible && !query.isError ? query.data : undefined;
+  const publicId = receipt?.publicChallengeId;
+  const challenge = useQuery(
+    {
+      queryKey: ['public-challenge', publicId],
+      enabled: !!publicId,
+      queryFn: ({ signal }) => runtime.challenge(publicId!, signal),
+      retry: false,
+    },
+    runtime.publicQueries,
+  ).data?.data;
   return (
     <>
       <header className="contribution-heading">
-        <span className="contribution-kicker">Only in your private browser</span>
         <h1 ref={heading} tabIndex={-1}>
           Private contribution receipt
         </h1>
-        <p>
-          Returning from a payment provider does not confirm payment. This page reads the backend's
-          current record. Continuing or completing a payment requires your explicit confirmation.
-        </p>
       </header>
-      <Button
-        tone="secondary"
-        aria-busy={visible && query.isFetching}
-        disabled={!visible}
-        onClick={() => {
-          if (!query.isFetching) runtime.refreshPrivate();
-        }}
-      >
-        Refresh receipt
-      </Button>
+      {query.isError && visible && (
+        <Button
+          tone="secondary"
+          aria-busy={visible && query.isFetching}
+          disabled={!visible}
+          onClick={() => {
+            if (!query.isFetching) runtime.refreshPrivate();
+          }}
+        >
+          Refresh receipt
+        </Button>
+      )}
       {!visible ? (
         <p role="status">Private receipt hidden while this page is inactive.</p>
       ) : query.isFetching ? (
@@ -138,103 +154,135 @@ export function PrivateReceipt({
       ) : null}
       {query.error && visible && <p role="alert">{contributionMessage(query.error)}</p>}
       {receipt && (
-        <>
-          <p className="contribution-muted">
-            Snapshot as of {time(receipt.serverTime)}. Refresh for current status.
-          </p>
-          <section className="contribution-card" aria-labelledby="receipt-state-heading">
-            <span className="contribution-kicker">
-              {receipt.paymentProvider === 'stripe' ? 'Stripe' : 'PayPal'} contribution
-            </span>
-            <h2 id="receipt-state-heading">
-              {receipt.paymentStatus === 'confirmed'
-                ? 'Verified payment recorded'
-                : receipt.paymentStatus === 'failed'
-                  ? 'Checkout failed'
-                  : 'Payment not confirmed'}
-            </h2>
-            <p>
-              {receipt.paymentStatus === 'confirmed'
-                ? 'Review each payment’s deadline eligibility below. A verified payment is separate from the funding outcome and streamer performance.'
-                : 'No verified payment is present in this receipt. A provider return, approval or pending attempt is not proof of payment.'}
-            </p>
-            <dl className="contribution-details">
-              <div>
-                <dt>Requested contribution</dt>
-                <dd>{contributionMoney(receipt.amount.amountMinor, receipt.amount.currency)}</dd>
-              </div>
-              <div>
-                <dt>Recorded Darve fee</dt>
-                <dd>
-                  {contributionMoney(receipt.darveFee.amountMinor, receipt.darveFee.currency)}
-                </dd>
-              </div>
-              <div>
-                <dt>Attempt state</dt>
-                <dd>{attemptLabels[receipt.state]}</dd>
-              </div>
-              <div>
-                <dt>Created</dt>
-                <dd>{time(receipt.createdAt)}</dd>
-              </div>
-            </dl>
-            <a href={'/contribute/' + receipt.publicChallengeId}>View the public challenge</a>
-          </section>
-          {receipt.verifiedPayments.map((payment) => (
-            <section
-              className="contribution-card"
-              key={payment.id}
-              aria-label="Verified payment timing"
-            >
-              <h2>
-                {payment.eligibility === 'eligible'
-                  ? 'Deadline eligible'
-                  : payment.eligibility === 'late'
-                    ? 'Received outside the funding deadline'
-                    : 'Payment timing needs review'}
-              </h2>
+        <section className="contribution-card" aria-labelledby="receipt-state-heading">
+          <span className="contribution-kicker">
+            {receipt.paymentProvider === 'stripe' ? 'Stripe' : 'PayPal'} contribution
+          </span>
+          <h2 id="receipt-state-heading">
+            {receipt.paymentStatus === 'confirmed'
+              ? 'Payment confirmed'
+              : receipt.paymentStatus === 'failed'
+                ? 'Checkout failed'
+                : 'Confirming a payment…'}
+          </h2>
+          <dl className="contribution-details">
+            <div>
+              <dt>Contribution</dt>
+              <dd>{contributionMoney(receipt.amount.amountMinor, receipt.amount.currency)}</dd>
+            </div>
+            <div>
+              <dt>Darve fee</dt>
+              <dd>{contributionMoney(receipt.darveFee.amountMinor, receipt.darveFee.currency)}</dd>
+            </div>
+            <div>
+              <dt>{receipt.verifiedPayments[0]?.paidAt ? 'Paid' : 'Checkout started'}</dt>
+              <dd>{time(receipt.verifiedPayments[0]?.paidAt ?? receipt.createdAt)}</dd>
+            </div>
+          </dl>
+          <a href={'/contribute/' + receipt.publicChallengeId}>
+            {challenge?.terms.text ?? 'View the public challenge'}
+          </a>
+          {receipt.verifiedPayments.some((payment) => payment.eligibility === 'unclassified') && (
+            <p>We’re checking whether this payment counts toward the goal.</p>
+          )}
+        </section>
+      )}
+      {visible && !query.isError && (
+        <details className="contribution-disclosure">
+          <summary>Receipt details</summary>
+          <Button
+            tone="secondary"
+            aria-busy={query.isFetching}
+            onClick={() => {
+              if (!query.isFetching) runtime.refreshPrivate();
+            }}
+          >
+            Refresh receipt
+          </Button>
+          {receipt && (
+            <>
+              <p className="contribution-muted">
+                Snapshot as of {time(receipt.serverTime)}. Refresh for current status.
+              </p>
               <p>
-                {payment.eligibility === 'late'
-                  ? 'This payment did not qualify toward the funding deadline.'
-                  : payment.eligibility === 'unclassified'
-                    ? 'Verified money is retained, but deadline eligibility has not been established.'
-                    : 'The backend classified this payment as eligible toward the funding deadline.'}
+                Returning from a payment provider does not confirm payment. Continuing or completing
+                a payment requires your explicit confirmation.
+              </p>
+              <p>
+                {receipt.paymentStatus === 'confirmed'
+                  ? 'Review each payment’s deadline eligibility below. A verified payment is separate from the funding outcome and streamer performance.'
+                  : 'No verified payment is present in this receipt. A provider return, approval or pending attempt is not proof of payment.'}
               </p>
               <dl className="contribution-details">
                 <div>
-                  <dt>Verified amount</dt>
-                  <dd>{contributionMoney(payment.amountMinor, receipt.amount.currency)}</dd>
+                  <dt>Attempt state</dt>
+                  <dd>{attemptLabels[receipt.state]}</dd>
                 </div>
                 <div>
-                  <dt>Paid time</dt>
-                  <dd>{time(payment.paidAt)}</dd>
-                </div>
-                <div>
-                  <dt>Eligibility reference</dt>
-                  <dd>{time(payment.eligibilityReferenceAt)}</dd>
-                </div>
-                <div>
-                  <dt>Time provenance</dt>
-                  <dd>{timingLabels[payment.eligibilityTimeBasis]}</dd>
+                  <dt>Created</dt>
+                  <dd>{time(receipt.createdAt)}</dd>
                 </div>
               </dl>
-            </section>
-          ))}
-          <details className="contribution-disclosure">
-            <summary>Receipt references</summary>
-            <dl className="contribution-details">
-              <div>
-                <dt>Checkout</dt>
-                <dd>{receipt.id}</dd>
-              </div>
-              <div>
-                <dt>Accepted terms</dt>
-                <dd>{receipt.termsVersion}</dd>
-              </div>
-            </dl>
-            <p>These identifiers are not access proofs. Keep the private cookie in this browser.</p>
-          </details>
-        </>
+              {receipt.verifiedPayments.map((payment) => (
+                <section
+                  className="contribution-card"
+                  key={payment.id}
+                  aria-label="Verified payment timing"
+                >
+                  <h2>
+                    {payment.eligibility === 'eligible'
+                      ? 'Deadline eligible'
+                      : payment.eligibility === 'late'
+                        ? 'Received outside the funding deadline'
+                        : 'Payment received, confirming funding eligibility…'}
+                  </h2>
+                  <p>
+                    {payment.eligibility === 'late'
+                      ? 'This payment did not qualify toward the funding deadline.'
+                      : payment.eligibility === 'unclassified'
+                        ? 'We’ve received your payment and are checking whether it counts toward the goal.'
+                        : 'The backend classified this payment as eligible toward the funding deadline.'}
+                  </p>
+                  <dl className="contribution-details">
+                    <div>
+                      <dt>Verified amount</dt>
+                      <dd>{contributionMoney(payment.amountMinor, receipt.amount.currency)}</dd>
+                    </div>
+                    {payment.paidAt && (
+                      <div>
+                        <dt>Paid time</dt>
+                        <dd>{time(payment.paidAt)}</dd>
+                      </div>
+                    )}
+                    {payment.eligibilityReferenceAt && (
+                      <div>
+                        <dt>Funding eligibility checked against</dt>
+                        <dd>
+                          {time(payment.eligibilityReferenceAt)} ·{' '}
+                          {timingLabels[payment.eligibilityTimeBasis]}
+                        </dd>
+                      </div>
+                    )}
+                  </dl>
+                </section>
+              ))}
+              <h2>Receipt references</h2>
+              <dl className="contribution-details">
+                <div>
+                  <dt>Checkout</dt>
+                  <dd>{receipt.id}</dd>
+                </div>
+                <div>
+                  <dt>Accepted terms</dt>
+                  <dd>{receipt.termsVersion}</dd>
+                </div>
+              </dl>
+              <p>
+                These identifiers are not access proofs. Keep the private cookie in this browser.
+              </p>
+            </>
+          )}
+        </details>
       )}
       <ReceiptActions
         runtime={runtime}

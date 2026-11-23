@@ -10,6 +10,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   development-checks:
+    if: ${{ !startsWith(github.head_ref, 'archive/') }}
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     env:
@@ -34,6 +35,12 @@ jobs:
       - name: Docs-only development checks
         if: steps.scope.outputs.docs_only == 'true'
         run: npm run check:docs
-      - name: Light frontend development checks
+      - name: Frontend development checks
         if: steps.scope.outputs.docs_only != 'true'
         run: npm run check:dev
+      - name: Frontend unit, architecture and CI-policy tests
+        if: steps.scope.outputs.docs_only != 'true'
+        run: |
+          npm test
+          npm run test:architecture
+          npm run test:ci

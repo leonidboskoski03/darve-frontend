@@ -1,6 +1,6 @@
 import { afterEach, expect, it, vi } from 'vitest';
 import { createCreatorSession, type CreatorSession } from '@/services/creator-session/index';
-import { RoundResponseSchema } from '@/services/contracts/index';
+import { overlayRemainingSeconds, RoundResponseSchema } from '@/services/contracts/index';
 import { createCollectionClient, CollectionError } from './client';
 import { remainingCollectionSeconds, roundIsFresh, retainNewerRound } from './clock';
 import { syntheticSession, roundFixture, ids } from './fixture.test-helper';
@@ -156,6 +156,19 @@ it('rejects a Start response for a different selected stream', async () => {
     CollectionError,
   );
 });
+it('binds analysis retry to the failed generation and preserves the server receipt', async () => {
+  const { client, send } = await setup();
+  const time = '2026-11-19T12:00:00.000Z';
+  const data = { attempt: 1, acceptedAt: time };
+  await expect(client.retryAnalysis(ids.round, -1)).rejects.toBeInstanceOf(CollectionError);
+  send.mockResolvedValueOnce(json({ schemaVersion: 1, serverTime: time, data }, 202));
+  await expect(client.retryAnalysis(ids.round, 5)).resolves.toMatchObject({ data });
+  expect(send).toHaveBeenCalledTimes(2);
+  expect(send.mock.calls[1]?.[1]).toMatchObject({
+    method: 'POST',
+    body: JSON.stringify({ failedGeneration: 5 }),
+  });
+});
 it('rejects a fabricated start attempt and invalid Stop path before sending', async () => {
   const { client, send } = await setup();
   await expect(client.start({ ...client.prepareStart(startInput) })).rejects.toBeInstanceOf(
@@ -181,6 +194,15 @@ it('uses a monotonic presentation clock, hides stale/slow/backward reads and nev
   expect(
     remainingCollectionSeconds({ ...read, round: { ...read.round, state: 'preparing' } }, 2000),
   ).toBeNull();
+});
+it('counts to the same server cutoff as OBS when each surface samples at a different time', () => {
+  const base = Date.parse('2026-10-29T12:00:00.000Z');
+  const { data, serverTime } = RoundResponseSchema.parse(roundFixture('collecting', base));
+  const read = { round: data, serverTime, receivedAt: 4_000, requestedAt: 3_900 };
+  const overlaySample = new Date(base + 1_500).toISOString();
+
+  expect(remainingCollectionSeconds(read, 6_200)).toBe(28);
+  expect(overlayRemainingSeconds(data.closesAt, overlaySample, 30_000, 30_700)).toBe(28);
 });
 it('retains a higher round version without freshening its old timing anchor', () => {
   const value = RoundResponseSchema.parse(roundFixture('collecting'));

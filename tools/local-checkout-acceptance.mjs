@@ -180,7 +180,7 @@ try {
     await expect(
       page.getByRole('heading', { name: 'Private contribution receipt', exact: true }),
     ).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Refresh receipt', exact: true })).toBeVisible();
+    await expect(page.getByText('Receipt details', { exact: true })).toBeVisible();
     return new URL(page.url()).pathname.split('/').at(-1);
   }
   stage = 'actual browser create and private custody';
@@ -275,7 +275,7 @@ try {
   await visit('/payments/return?checkout=' + paypalId + '&token=ORDER1');
   await page.getByRole('checkbox', { name: /I approved this order on PayPal/ }).check();
   await page.getByRole('button', { name: 'Complete PayPal payment', exact: true }).click();
-  await expect(page.getByText('Verified payment recorded', { exact: true })).toBeVisible();
+  await expect(page.getByText('Payment confirmed', { exact: true })).toBeVisible();
   const paid = await api.checkoutFixture.audit();
   assert.equal(paid.captures, 1);
   assert.equal(paid.payments, 1);
@@ -291,14 +291,14 @@ try {
     'explicit approved PayPal completion records canonical money once; same-key replay does not capture twice',
   );
   await page.reload({ waitUntil: 'domcontentloaded' });
-  await expect(page.getByText('Verified payment recorded', { exact: true })).toBeVisible();
+  await expect(page.getByText('Payment confirmed', { exact: true })).toBeVisible();
   checks.push(
     'verified private payment survives reload with payment timing distinct from funding success',
   );
   stage = 'receiving withdrawal';
   api.checkoutFixture.receiving(false);
   await visit('/contribute/' + publicId);
-  await expect(page.getByRole('status')).toContainText('cannot currently receive');
+  await expect(page.getByRole('status')).toContainText('Contributions unavailable');
   await expect(page.getByRole('button', { name: 'Prepare checkout', exact: true })).toHaveCount(0);
   const countBefore = await api.checkoutFixture.audit();
   const denied = await guest.request.post(
@@ -318,11 +318,13 @@ try {
   stage = 'unknown provider create outcome';
   api.checkoutFixture.unknownCreate();
   const unknownId = await prepare('stripe');
+  await page.getByText('Receipt details', { exact: true }).click();
   await expect(page.getByText('Outcome unknown', { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Continue to Stripe', exact: true })).toHaveCount(
     0,
   );
   await page.reload({ waitUntil: 'domcontentloaded' });
+  await page.getByText('Receipt details', { exact: true }).click();
   await expect(page.getByText('Outcome unknown', { exact: true })).toBeVisible();
   assert.ok(unknownId !== stripeId);
   checks.push(
@@ -361,6 +363,7 @@ try {
   )?.value;
   assert.ok(secret);
   await api.checkoutFixture.revokeBrowser(secret);
+  await page.getByText('Receipt details', { exact: true }).click();
   await page.getByRole('button', { name: 'Refresh receipt', exact: true }).click();
   await expect(page.getByRole('alert')).toContainText('unavailable');
   checks.push(

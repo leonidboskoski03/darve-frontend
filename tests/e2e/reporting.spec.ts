@@ -77,7 +77,12 @@ async function scenario(
     }
     if (request.method() !== 'GET') state.writes.push(url.pathname);
     if (url.pathname === '/api/session') {
-      await json(route, syntheticReportingSession);
+      await json(
+        route,
+        state.expired
+          ? { authenticated: false, csrfToken: null, user: null, expiresAt: null }
+          : syntheticReportingSession,
+      );
       return;
     }
     if (state.expired) {
@@ -165,7 +170,7 @@ async function scenario(
       await json(route, round);
       return;
     }
-    if (url.pathname === '/api/overlay-displays/' + ids.other) {
+    if (url.pathname === '/api/overlay-displays/current') {
       if (state.displayUnavailable) await json(route, failure('RESOURCE_NOT_FOUND'), 404);
       else
         await json(
@@ -255,6 +260,60 @@ async function openDeclaration(page: Page) {
   ).toBeVisible();
 }
 const consent = 'I confirm I completed this challenge on its original or authorized stream.';
+test('creator challenge updates to Goal reached and labels the amount held', async ({ page }) => {
+  const state = await scenario(page);
+  const funded = structuredClone(state.challenge.funding);
+  state.challenge.funding.state = 'pending';
+  state.challenge.funding.goalReachedAt = null;
+  state.challenge.funding.eligibleGross = '500';
+  state.challenge.funding.unclassifiedGross = '500';
+  state.challenge.terms.fundingClosesAt = new Date(Date.parse(stamp) + 60_000).toISOString();
+  await page.goto(fixture('challenge'));
+  await expect(page.getByRole('heading', { name: 'Challenge details' })).toBeVisible();
+  await expect(page.getByText(/Contributions are paused while Darve verifies/)).toBeVisible();
+  await expect(page.getByText('Goal reached ✓', { exact: true })).toHaveCount(0);
+  state.challenge.funding = funded;
+  await expect(page.getByText('Goal reached ✓', { exact: true })).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText('Held for this challenge', { exact: true })).toBeVisible();
+});
+test.describe('creator’s local clock and sharing', () => {
+  test.use({ timezoneId: 'America/Los_Angeles' });
+
+  test('challenge history shares the exact public address and renders local deadlines', async ({
+    page,
+    context,
+  }) => {
+    const state = await scenario(page);
+    const challenge = state.challenge;
+    challenge.allowedActions = ['view_public'];
+    const shareUrl = 'https://public.example/contribute/' + challenge.publicId;
+    challenge.contributionUrl = shareUrl;
+    challenge.funding.state = 'pending';
+    challenge.funding.goalReachedAt = null;
+    challenge.terms.fundingClosesAt = new Date(Date.parse(stamp) + 18 * 60_000).toISOString();
+    await context.grantPermissions(['clipboard-read', 'clipboard-write'], {
+      origin: new URL(base).origin,
+    });
+    await page.goto(fixture('history'));
+    const card = page
+      .getByRole('article')
+      .filter({ has: page.getByRole('button', { name: 'Copy payment link' }) });
+    await expect(card.getByRole('link', { name: 'Open public page' })).toHaveAttribute(
+      'href',
+      '/contribute/' + challenge.publicId,
+    );
+    await expect(card.locator('time')).toContainText(/P[DS]T/);
+    await expect(card.getByText('· Closes in 18 min')).toBeVisible();
+    await card.getByRole('button', { name: 'Copy payment link' }).click();
+    await expect(card.getByRole('status')).toHaveText('Payment link copied.');
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(shareUrl);
+    await card.getByRole('button', { name: 'Copy chat message with link' }).click();
+    await expect(card.getByRole('status')).toHaveText('Chat message copied.');
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(
+      'Support the challenge: ' + shareUrl,
+    );
+  });
+});
 test('synthetic owner public handoff stays on the product route and is withdrawn when source content is restricted', async ({
   page,
 }) => {
@@ -263,7 +322,7 @@ test('synthetic owner public handoff stays on the product route and is withdrawn
   state.challenge.contributionUrl =
     'https://untrusted.example/contribute/' + state.challenge.publicId;
   await page.goto(fixture('challenge'));
-  const link = page.getByRole('link', { name: 'Open public contribution page' });
+  const link = page.getByRole('link', { name: 'Open public page' });
   await expect(link).toHaveAttribute('href', '/contribute/' + state.challenge.publicId);
   state.challenge.contentAvailability = 'unavailable';
   await page.getByRole('button', { name: 'Refresh challenge details' }).click();
@@ -299,7 +358,8 @@ test('synthetic operational home keeps round, overlapping windows and explicit O
   await expect(page.getByText('Setup pending', { exact: true })).toBeVisible();
   await expect(page.getByText('Setup unavailable', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Apply reporting filters' }).click();
-  await expect(page).toHaveURL(new RegExp('displayId=' + ids.other));
+  await expect(page).not.toHaveURL(/displayId=/);
+  await expect(obs.getByRole('link', { name: 'Open displayed challenge' })).toBeVisible();
   state.windowsClosed = true;
   state.displayUnavailable = true;
   await windows.getByRole('button', { name: 'Check funding windows' }).click();

@@ -1,6 +1,8 @@
 import {
   PublicChallengeParamsSchema,
   PublicChallengeResponseSchema,
+  ViewerSlugParamsSchema,
+  ViewerLinkResponseSchema,
   CheckoutResponseSchema,
   checkoutConsumerView,
   consumerMoney,
@@ -10,6 +12,8 @@ import { createJsonClient, failure, type ApiFailure } from '@/services/api/index
 import { createAuthorityScope, createQueryClient } from '@/services/server-state/index';
 import { validReceiptId } from './navigation';
 import { createCheckoutCommands } from './checkout';
+import { createQuickPayCommands } from './quick-pay';
+import { createEmbeddedStripeCommands } from './stripe-embedded';
 
 export type { PublicChallengeDto };
 export type PublicRead = ReturnType<typeof PublicChallengeResponseSchema.parse>;
@@ -103,6 +107,8 @@ export function createContributionRuntime(config: {
   return {
     scope,
     payments,
+    quickPay: createQuickPayCommands(publicRequest, privateRequest, active),
+    embeddedStripe: createEmbeddedStripeCommands(publicRequest, privateRequest, active),
     publicQueries,
     getSnapshot: () => snapshot,
     subscribe: (listener: () => void) => {
@@ -112,6 +118,22 @@ export function createContributionRuntime(config: {
       };
     },
     refreshPrivate: () => resetPrivate(true),
+    async resolveViewerLink(slug: string, signal: AbortSignal) {
+      const parsed = ViewerSlugParamsSchema.safeParse({ slug });
+      if (!parsed.success) return null;
+      const result = await publicRequest({
+        path: '/api/public/viewer-links/' + parsed.data.slug,
+        signal,
+        schema: ViewerLinkResponseSchema,
+        success: [200],
+      });
+      active();
+      if (result.kind !== 'data')
+        throw new ContributionError(
+          result.kind === 'error' ? result : failure('protocol', 'UNEXPECTED_VIEWER_LINK_RESPONSE'),
+        );
+      return result.data.publicId;
+    },
     async challenge(publicId: string, signal: AbortSignal): Promise<PublicRead> {
       active();
       if (!PublicChallengeParamsSchema.safeParse({ publicId }).success) invalid();

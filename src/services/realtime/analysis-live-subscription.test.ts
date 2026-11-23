@@ -80,7 +80,9 @@ describe('creator analysis live stream', () => {
       roundState: 'open',
       preview: [{ order: 1 }, { order: 2 }],
     });
-    expect(send.mock.calls[0]?.[0]).toBe(`${origin}/api/rounds/${roundId}/analysis/events`);
+    expect(send.mock.calls[0]?.[0]).toBe(
+      `${origin}/api/rounds/${roundId}/analysis/events?reasons=1`,
+    );
     expect(send.mock.calls[0]?.[1]).toMatchObject({
       method: 'GET',
       credentials: 'include',
