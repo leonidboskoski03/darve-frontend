@@ -19,6 +19,24 @@ async function scenario(page: Page, owner = true) {
     mode: 'ok' as 'ok' | 'stale' | 'lost',
     expired: false,
     reads: [] as string[],
+    fees: [
+      {
+        id: ids.ticket,
+        revision: 1,
+        policy: {
+          version: 'darve-default-v1',
+          currencies: {
+            USD: {
+              minimumMinor: '100',
+              maximumMinor: '1000000',
+              darveFee: { type: 'percentage', basisPoints: 1000, rounding: 'floor' },
+            },
+          },
+        },
+        createdAt: '2026-11-24T00:00:00.000Z',
+        reason: null as string | null,
+      },
+    ],
   };
   await page.route('http://127.0.0.1:3320/**', async (route) => {
     const request = route.request(),
@@ -78,9 +96,29 @@ async function scenario(page: Page, owner = true) {
           envelope({ templateId: state.item.id, revision: 2, amount: state.item.amount }),
         );
       }
+      if (path.endsWith('/fee-agreements')) {
+        const revision = state.fees[0].revision + 1;
+        state.fees.unshift({
+          id: ids.creator,
+          revision,
+          policy: body.policy as (typeof state.fees)[0]['policy'],
+          createdAt: '2026-11-24T01:00:00.000Z',
+          reason: String(body.reason),
+        });
+        return send(
+          envelope({
+            ownerId: ids.creator,
+            agreementId: ids.creator,
+            revision,
+            createdAt: '2026-11-24T01:00:00.000Z',
+          }),
+        );
+      }
       return send(problem('FORBIDDEN'), 403);
     }
     state.reads.push(path);
+    if (path === '/admin/v1/payments/creators/' + ids.creator + '/fee-agreements')
+      return send(envelope({ ownerId: ids.creator, items: state.fees }));
     if (path === '/admin/v1/coins/configuration') return send(state.configuration);
     if (path === '/admin/v1/coins/accounts/' + ids.creator) return send(state.account);
     if (path === '/admin/v1/coins/templates') return send(envelope({ templates: [state.item] }));
@@ -284,4 +322,34 @@ test('coin tools support keyboard, reduced motion, 320px reflow and sampled acce
     path: 'artifacts.local/f09-06/owner-mobile-synthetic-' + test.info().project.name + '.png',
     fullPage: true,
   });
+});
+test('owner reads a creator fee agreement and offers a sponsorship version', async ({ page }) => {
+  const state = await scenario(page);
+  await page.goto(base + '?view=fees&owner=' + ids.creator);
+  await expect(page.getByText('Version 1 · Darve default')).toBeVisible();
+  await expect(page.getByText('USD: 10% · contributions 1.00–10,000.00')).toBeVisible();
+  await page.getByLabel('Darve fee type').selectOption('percentage_plus_flat');
+  await page.getByLabel('Darve fee percent (0–99.99)').fill('5');
+  await page.getByLabel('Fixed amount per payment').fill('0.50');
+  await page.getByLabel('Fee offer reason').fill('Sponsorship offer');
+  await page.getByRole('button', { name: 'Review fee offer', exact: true }).click();
+  await confirm(page);
+  expect(state.writes.at(-1)).toMatchObject({
+    path: '/admin/v1/payments/creators/' + ids.creator + '/fee-agreements',
+    body: {
+      expectedRevision: 1,
+      confirmation: { ownerId: ids.creator },
+      policy: {
+        currencies: {
+          USD: {
+            minimumMinor: '100',
+            maximumMinor: '1000000',
+            darveFee: { type: 'percentage_plus_flat', basisPoints: 500, amountMinor: '50' },
+          },
+        },
+      },
+    },
+  });
+  await expect(page.getByText('Version 2 · Staff offer: Sponsorship offer')).toBeVisible();
+  expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 });

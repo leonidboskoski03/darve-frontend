@@ -44,6 +44,8 @@ export function receivingMessage(error: unknown, setup = false) {
       return 'The provider result needs reconciliation. Check current status before proceeding.';
     if (error.problem.code === 'SETUP_SESSION_MISMATCH')
       return 'This PayPal setup started in another sign-in session. Use Start over PayPal to check and restart setup.';
+    if (error.problem.code === 'ACCOUNT_IN_USE')
+      return 'This PayPal account already receives payments for another Darve account. Use Start over PayPal and connect a different PayPal account.';
     if (error.problem.status === 401 || error.problem.status === 403)
       return 'Darve could not authorize this receiving action. Check current status and try again.';
   }

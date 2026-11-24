@@ -13,6 +13,9 @@ import {
   CoinLedgerItemSchema,
   CoinHistoryQuerySchema,
   SupportContextSchema,
+  FeeAgreementInputSchema,
+  FeeAgreementHistoryResponseSchema,
+  FeeAgreementSetResponseSchema,
   coinEnvelope,
   coinPage,
 } from '@/services/contracts/index';
@@ -25,7 +28,8 @@ export type StaffCoinAccount = ReturnType<typeof CoinAccountViewSchema.parse>;
 export type StaffCoinTemplate = ReturnType<
   typeof CoinCatalogueDataSchema.parse
 >['templates'][number];
-export type CoinCommandKind = 'configure' | 'adjust' | 'price';
+export type CoinCommandKind = 'configure' | 'adjust' | 'price' | 'fee';
+export type StaffFeeAgreements = ReturnType<typeof FeeAgreementHistoryResponseSchema.parse>['data'];
 export type StaffCoinAttempt = Readonly<{
   kind: CoinCommandKind;
   target: string;
@@ -37,7 +41,7 @@ export type StaffCoinCommandState = Readonly<{
   phase: 'idle' | 'review' | 'sending' | 'uncertain' | 'recorded' | 'rejected';
   attempt: StaffCoinAttempt | null;
   error: ApiFailure | null;
-  outcome: 'configured' | 'synchronization_pending' | 'priced' | null;
+  outcome: 'configured' | 'synchronization_pending' | 'priced' | 'fee_recorded' | null;
 }>;
 const idle: StaffCoinCommandState = { phase: 'idle', attempt: null, error: null, outcome: null };
 export class StaffCoinError extends Error {
@@ -56,8 +60,14 @@ const schemas = {
   configure: CoinConfigurationInputSchema,
   adjust: CoinAdjustmentInputSchema,
   price: TemplatePriceInputSchema,
+  fee: FeeAgreementInputSchema,
 };
-const permissions = { configure: 'coins.configure', adjust: 'coins.adjust', price: 'coins.price' };
+const permissions = {
+  configure: 'coins.configure',
+  adjust: 'coins.adjust',
+  price: 'coins.price',
+  fee: 'payments.fees.write',
+};
 function build(access: StaffAccess) {
   const scope = access.getSnapshot().scope,
     listeners = new Set<() => void>();
@@ -221,6 +231,25 @@ function build(access: StaffAccess) {
         cursor,
         signal,
       ),
+    async feeAgreements(id: string, signal: AbortSignal) {
+      permit('payments.fees.read');
+      const value = (
+        await request({
+          path: '/admin/v1/payments/creators/' + uuid(id) + '/fee-agreements',
+          schema: FeeAgreementHistoryResponseSchema,
+          success: [200],
+          signal,
+        })
+      ).data;
+      if (
+        value.ownerId !== id ||
+        value.items.some(
+          (row, index) => index > 0 && row.revision >= value.items[index - 1]!.revision,
+        )
+      )
+        mismatch();
+      return value;
+    },
     prepare(kind: CoinCommandKind, target: string, raw: unknown, summary: string) {
       permit(permissions[kind]);
       if (state.attempt) reject('STAFF_COIN_COMMAND_HELD');
@@ -234,7 +263,9 @@ function build(access: StaffAccess) {
           (!('ownerId' in body.confirmation) || body.confirmation.ownerId !== uuid(target))) ||
         (kind === 'price' &&
           (!('templateId' in body.confirmation) ||
-            body.confirmation.templateId !== template(target)))
+            body.confirmation.templateId !== template(target))) ||
+        (kind === 'fee' &&
+          (!('ownerId' in body.confirmation) || body.confirmation.ownerId !== uuid(target)))
       )
         reject();
       publish({
@@ -270,7 +301,9 @@ function build(access: StaffAccess) {
             ? '/admin/v1/coins/configuration-revisions'
             : attempt.kind === 'adjust'
               ? '/admin/v1/coins/accounts/' + attempt.target + '/adjustments'
-              : '/admin/v1/coins/templates/' + attempt.target + '/prices';
+              : attempt.kind === 'fee'
+                ? '/admin/v1/payments/creators/' + attempt.target + '/fee-agreements'
+                : '/admin/v1/coins/templates/' + attempt.target + '/prices';
         const input = {
           path,
           method: 'POST' as const,
@@ -278,6 +311,16 @@ function build(access: StaffAccess) {
           idempotencyKey: attempt.key,
           success: [200] as const,
         };
+        if (attempt.kind === 'fee') {
+          const fee = (await request({ ...input, schema: FeeAgreementSetResponseSchema })).data;
+          if (
+            fee.ownerId !== attempt.target ||
+            fee.revision !== Number(attempt.body.expectedRevision) + 1
+          )
+            mismatch();
+          publish({ phase: 'recorded', attempt: null, error: null, outcome: 'fee_recorded' });
+          return;
+        }
         const value =
           attempt.kind === 'price'
             ? (await request({ ...input, schema: coinEnvelope(CoinPriceDataSchema) })).data

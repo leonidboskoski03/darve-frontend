@@ -16,7 +16,14 @@ export const session = (owner = true) => ({
   state: 'authenticated',
   staff: { id: ids.owner, role: owner ? 'OWNER_ADMIN' : 'SUPPORT', revision: 1 },
   permissions: owner
-    ? ['coins.read', 'coins.configure', 'coins.adjust', 'coins.price']
+    ? [
+        'coins.read',
+        'coins.configure',
+        'coins.adjust',
+        'coins.price',
+        'payments.fees.read',
+        'payments.fees.write',
+      ]
     : ['coins.assigned.read', 'tickets.assigned.read'],
   expiresAt: new Date(Date.now() + 600000).toISOString(),
   authenticatedAt: new Date().toISOString(),

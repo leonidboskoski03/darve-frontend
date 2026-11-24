@@ -283,3 +283,112 @@ it('staff entry preserves coin route and only safe public navigation fields', ()
     '?view=prices',
   );
 });
+const feePolicy = {
+  version: 'darve-default-v1',
+  currencies: {
+    USD: {
+      minimumMinor: '100',
+      maximumMinor: '1000000',
+      darveFee: { type: 'percentage', basisPoints: 1000, rounding: 'floor' },
+    },
+  },
+};
+const feeItem = (revision: number, reason: string | null = null) => ({
+  id: crypto.randomUUID(),
+  revision,
+  policy: feePolicy,
+  createdAt: new Date().toISOString(),
+  reason,
+});
+it('reads a creator fee agreement history and rejects foreign or unordered projections', async () => {
+  const { client, send } = await setup();
+  send.mockResolvedValueOnce(
+    response(envelope({ ownerId: ids.creator, items: [feeItem(2, 'Sponsor'), feeItem(1)] })),
+  );
+  const value = await client.feeAgreements(ids.creator, new AbortController().signal);
+  expect(value.items.map((row) => row.revision)).toEqual([2, 1]);
+  expect(send.mock.calls.at(-1)?.[0]).toEqual(
+    expect.stringContaining(`/admin/v1/payments/creators/${ids.creator}/fee-agreements`),
+  );
+  send.mockResolvedValueOnce(
+    response(envelope({ ownerId: crypto.randomUUID(), items: [feeItem(1)] })),
+  );
+  await expect(
+    client.feeAgreements(ids.creator, new AbortController().signal),
+  ).rejects.toBeInstanceOf(StaffCoinError);
+  send.mockResolvedValueOnce(
+    response(envelope({ ownerId: ids.creator, items: [feeItem(1), feeItem(2)] })),
+  );
+  await expect(
+    client.feeAgreements(ids.creator, new AbortController().signal),
+  ).rejects.toBeInstanceOf(StaffCoinError);
+});
+it('records a fee offer only when the response binds the reviewed creator and next version', async () => {
+  const { client, send } = await setup();
+  const offer = {
+    expectedRevision: 1,
+    reason: 'Sponsorship offer',
+    confirmation: { ownerId: ids.creator },
+    policy: { ...feePolicy, version: 'staff-20261124-r2' },
+  };
+  expect(() =>
+    client.prepare(
+      'fee',
+      ids.creator,
+      { ...offer, confirmation: { ownerId: crypto.randomUUID() } },
+      'foreign',
+    ),
+  ).toThrow(StaffCoinError);
+  client.prepare('fee', ids.creator, offer, 'sponsorship');
+  send.mockResolvedValueOnce(
+    response(
+      envelope({
+        ownerId: ids.creator,
+        agreementId: crypto.randomUUID(),
+        revision: 2,
+        createdAt: new Date().toISOString(),
+      }),
+    ),
+  );
+  await client.execute(true);
+  expect(client.getSnapshot()).toMatchObject({ phase: 'recorded', outcome: 'fee_recorded' });
+  const request = send.mock.calls.at(-1);
+  expect(request?.[0]).toEqual(
+    expect.stringContaining(`/admin/v1/payments/creators/${ids.creator}/fee-agreements`),
+  );
+  expect(request?.[1]?.method).toBe('POST');
+  client.prepare('fee', ids.creator, { ...offer, expectedRevision: 2 }, 'next');
+  send.mockResolvedValueOnce(
+    response(
+      envelope({
+        ownerId: ids.creator,
+        agreementId: crypto.randomUUID(),
+        revision: 9,
+        createdAt: new Date().toISOString(),
+      }),
+    ),
+  );
+  await client.execute(true);
+  expect(client.getSnapshot().phase).toBe('uncertain');
+});
+it('denies Support fee reads and offers before transport', async () => {
+  const { client, send } = await setup(false);
+  const calls = send.mock.calls.length;
+  await expect(
+    client.feeAgreements(ids.creator, new AbortController().signal),
+  ).rejects.toBeInstanceOf(StaffCoinError);
+  expect(() =>
+    client.prepare(
+      'fee',
+      ids.creator,
+      {
+        expectedRevision: 0,
+        reason: 'x',
+        confirmation: { ownerId: ids.creator },
+        policy: feePolicy,
+      },
+      'denied',
+    ),
+  ).toThrow(StaffCoinError);
+  expect(send.mock.calls.length).toBe(calls);
+});

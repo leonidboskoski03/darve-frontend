@@ -6,8 +6,16 @@ import type {
   CoinConfiguration,
   StaffCoinAccount,
   StaffCoinTemplate,
+  StaffFeeAgreements,
 } from '@/services/staff-coins/index';
-import { missions, missionNames } from './model';
+import {
+  missions,
+  missionNames,
+  decimalToMinor,
+  feeText,
+  minorText,
+  percentToBasisPoints,
+} from './model';
 function ReviewForm({
   label,
   children,
@@ -204,6 +212,134 @@ export function PriceForm({
         onChange={(event) => setAmount(event.target.value)}
       />
       <p>Zero is an explicit free price. Price changes do not remove existing ownership.</p>
+    </ReviewForm>
+  );
+}
+type FeeKind = 'percentage' | 'percentage_plus_flat' | 'none';
+export function FeeForm({
+  client,
+  owner,
+  current,
+  disabled,
+}: {
+  client: StaffCoinClient;
+  owner: string;
+  current: StaffFeeAgreements['items'][number] | null;
+  disabled: boolean;
+}) {
+  const typeId = useId();
+  const currencies = current ? Object.keys(current.policy.currencies) : ['USD', 'EUR'];
+  const first = current?.policy.currencies[currencies[0]!];
+  const initial = first?.darveFee;
+  const [kind, setKind] = useState<FeeKind>(
+    initial?.type === 'none' || initial?.type === 'percentage_plus_flat'
+      ? initial.type
+      : 'percentage',
+  );
+  const [percent, setPercent] = useState(
+    initial && 'basisPoints' in initial ? String(initial.basisPoints / 100) : '10',
+  );
+  const [fixed, setFixed] = useState(
+    initial && 'amountMinor' in initial ? minorText(initial.amountMinor) : '0.50',
+  );
+  const [minimum, setMinimum] = useState(first ? minorText(first.minimumMinor) : '1.00');
+  const [maximum, setMaximum] = useState(first ? minorText(first.maximumMinor) : '10000.00');
+  const revision = current?.revision ?? 0;
+  return (
+    <ReviewForm
+      label="Fee offer"
+      disabled={disabled}
+      prepare={(reason) => {
+        const basisPoints = percentToBasisPoints(percent);
+        const fixedMinor = decimalToMinor(fixed);
+        const minimumMinor = decimalToMinor(minimum);
+        const maximumMinor = decimalToMinor(maximum);
+        if (
+          !minimumMinor ||
+          !maximumMinor ||
+          BigInt(minimumMinor) > BigInt(maximumMinor) ||
+          (kind !== 'none' && (basisPoints === null || basisPoints > 9999)) ||
+          (kind === 'percentage_plus_flat' && !fixedMinor)
+        )
+          throw new Error('Invalid fee offer');
+        const darveFee =
+          kind === 'none'
+            ? { type: 'none' as const }
+            : kind === 'percentage'
+              ? {
+                  type: 'percentage' as const,
+                  basisPoints: basisPoints!,
+                  rounding: 'floor' as const,
+                }
+              : {
+                  type: 'percentage_plus_flat' as const,
+                  basisPoints: basisPoints!,
+                  rounding: 'floor' as const,
+                  amountMinor: fixedMinor!,
+                };
+        const policy = {
+          version:
+            'staff-' +
+            new Date().toISOString().slice(0, 10).replaceAll('-', '') +
+            '-r' +
+            (revision + 1),
+          currencies: Object.fromEntries(
+            currencies.map((currency) => [currency, { minimumMinor, maximumMinor, darveFee }]),
+          ),
+        };
+        const offer = currencies
+          .map((currency) => currency + ': ' + feeText(darveFee, currency))
+          .join('; ');
+        client.prepare(
+          'fee',
+          owner,
+          { expectedRevision: revision, reason, confirmation: { ownerId: owner }, policy },
+          `Creator ${owner}, agreement version ${revision + 1}. New Darve fee: ${offer}. Contributions ${minorText(minimumMinor)}–${minorText(maximumMinor)} per payment. Applies to new payments only.`,
+        );
+      }}
+    >
+      <label htmlFor={typeId}>Darve fee type</label>
+      <select id={typeId} value={kind} onChange={(event) => setKind(event.target.value as FeeKind)}>
+        <option value="percentage">Percentage of each payment</option>
+        <option value="percentage_plus_flat">Percentage plus a fixed amount per payment</option>
+        <option value="none">No Darve fee (full sponsorship)</option>
+      </select>
+      {kind !== 'none' ? (
+        <TextField
+          label="Darve fee percent (0–99.99)"
+          required
+          inputMode="decimal"
+          value={percent}
+          onChange={(event) => setPercent(event.target.value)}
+        />
+      ) : null}
+      {kind === 'percentage_plus_flat' ? (
+        <TextField
+          label="Fixed amount per payment"
+          required
+          inputMode="decimal"
+          value={fixed}
+          onChange={(event) => setFixed(event.target.value)}
+        />
+      ) : null}
+      <TextField
+        label="Minimum per contribution"
+        required
+        inputMode="decimal"
+        value={minimum}
+        onChange={(event) => setMinimum(event.target.value)}
+      />
+      <TextField
+        label="Maximum per contribution"
+        required
+        inputMode="decimal"
+        value={maximum}
+        onChange={(event) => setMaximum(event.target.value)}
+      />
+      <p>
+        Applies to {currencies.join(' and ')}. A new version replaces the current fee for new
+        payments only; earlier payments keep the agreement they were made under.
+      </p>
     </ReviewForm>
   );
 }

@@ -2,7 +2,8 @@ import { useId, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { coinAmount } from '@/services/coins/index';
 import type { StaffCoinClient } from '@/services/staff-coins/index';
-import { ConfigurationForm, AdjustmentForm, PriceForm } from './forms';
+import { ConfigurationForm, AdjustmentForm, PriceForm, FeeForm } from './forms';
+import { feeText, minorText } from './model';
 import { History, ReadFailure } from './history';
 export function Configuration({
   client,
@@ -234,6 +235,82 @@ export function Prices({
           advance={setCursor}
           disabled={blocked}
         />
+      ) : null}
+    </>
+  );
+}
+export function Fees({
+  client,
+  owner,
+  epoch,
+  blocked,
+}: {
+  client: StaffCoinClient;
+  owner: string;
+  epoch: number;
+  blocked: boolean;
+}) {
+  const read = useQuery({
+    queryKey: client.scope.key(['staff-coins', 'fees', owner, epoch]),
+    enabled: Boolean(owner),
+    retry: false,
+    gcTime: 0,
+    queryFn: ({ signal }) => client.feeAgreements(owner, signal),
+  });
+  if (!owner) return <p>Enter a creator account ID to read their fee agreement.</p>;
+  if (read.isError)
+    return (
+      <ReadFailure
+        error={read.error}
+        historyCursor={false}
+        first={() => undefined}
+        refresh={() => void read.refetch()}
+      />
+    );
+  if (!read.data || read.isFetching) return <p role="status">Reading the fee agreement…</p>;
+  const current = read.data.items[0] ?? null;
+  return (
+    <>
+      <section aria-labelledby="staff-fees-current">
+        <h2 id="staff-fees-current">Creator fee agreement</h2>
+        {current ? (
+          <>
+            <p>
+              Version {current.revision} ·{' '}
+              {current.reason === null ? 'Darve default' : 'Staff offer: ' + current.reason}
+            </p>
+            <ul>
+              {Object.entries(current.policy.currencies).map(([currency, terms]) => (
+                <li key={currency}>
+                  {currency}: {feeText(terms.darveFee, currency)} · contributions{' '}
+                  {minorText(terms.minimumMinor)}–{minorText(terms.maximumMinor)}
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : (
+          <p>
+            This creator has no fee agreement, so their viewers cannot pay yet. An offer creates
+            version 1.
+          </p>
+        )}
+      </section>
+      <FeeForm client={client} owner={owner} current={current} disabled={blocked} />
+      {read.data.items.length > 1 ? (
+        <section aria-labelledby="staff-fees-history">
+          <h2 id="staff-fees-history">Earlier versions</h2>
+          <ol>
+            {read.data.items.slice(1).map((item) => (
+              <li key={item.id}>
+                Version {item.revision} · {new Date(item.createdAt).toLocaleString()} ·{' '}
+                {item.reason === null ? 'Darve default' : item.reason} ·{' '}
+                {Object.entries(item.policy.currencies)
+                  .map(([currency, terms]) => currency + ' ' + feeText(terms.darveFee, currency))
+                  .join(', ')}
+              </li>
+            ))}
+          </ol>
+        </section>
       ) : null}
     </>
   );

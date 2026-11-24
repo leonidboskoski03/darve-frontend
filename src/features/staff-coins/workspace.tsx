@@ -7,7 +7,7 @@ import { createStaffCoinClient, type StaffCoinClient } from '@/services/staff-co
 import type { StaffAccess } from '@/services/staff-access/index';
 import type { CoinToolSelection } from './model';
 import { Command } from './command';
-import { Configuration, Account, Prices } from './views';
+import { Configuration, Account, Prices, Fees } from './views';
 import './workspace.css';
 function Workspace({
   client,
@@ -55,7 +55,7 @@ function Workspace({
           </p>
         </header>
         <nav className="staff-coins-actions" aria-label="Coin tools">
-          {(['configuration', 'account', 'prices'] as const).map((view) => (
+          {(['configuration', 'account', 'prices', 'fees'] as const).map((view) => (
             <Button
               key={view}
               tone={selection.view === view ? 'primary' : 'quiet'}
@@ -66,7 +66,9 @@ function Workspace({
                 ? 'Rewards and configuration'
                 : view === 'account'
                   ? 'Creator account'
-                  : 'Template prices'}
+                  : view === 'prices'
+                    ? 'Template prices'
+                    : 'Creator fees'}
             </Button>
           ))}
           <Button tone="secondary" disabled={state.phase === 'sending'} onClick={refresh}>
@@ -74,7 +76,7 @@ function Workspace({
           </Button>
         </nav>
         <Command client={client} refresh={refresh} />
-        {selection.view === 'account' ? (
+        {selection.view === 'account' || selection.view === 'fees' ? (
           <form
             className="staff-coins-filter"
             onSubmit={(event) => {
@@ -91,7 +93,7 @@ function Workspace({
               onChange={(event) => setOwner(event.target.value)}
             />
             <Button type="submit" disabled={blocked}>
-              Read creator account
+              {selection.view === 'fees' ? 'Read fee agreement' : 'Read creator account'}
             </Button>
           </form>
         ) : null}
@@ -105,6 +107,14 @@ function Workspace({
         ) : selection.view === 'account' ? (
           <Account
             key={selection.owner + ':' + epoch}
+            client={client}
+            owner={selection.owner}
+            epoch={epoch}
+            blocked={blocked}
+          />
+        ) : selection.view === 'fees' ? (
+          <Fees
+            key={'fees:' + selection.owner + ':' + epoch}
             client={client}
             owner={selection.owner}
             epoch={epoch}
