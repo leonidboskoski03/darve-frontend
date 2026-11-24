@@ -196,4 +196,8 @@ export {
   SupportContinuationInputSchema,
   SupportRecoveryResponseSchema,
   ChallengeAcceptancePolicyResponseSchema,
+  ConfirmCollectionChoiceInputSchema,
+  BotAdminCommandSchema,
+  BotAdminResponseSchema,
+  BotAccountsResponseSchema,
 } from '@darve/contracts';

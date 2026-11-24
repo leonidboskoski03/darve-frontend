@@ -18,6 +18,35 @@ const envelope = (data: unknown) => ({
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
 const sessions: CreatorSession[] = [];
+it('explicit chat selection posts the group suffix with a stable replay key and accepts the queued 202 projection', async () => {
+  const { client, send } = await setup();
+  const item = reviewFixture().items[0]!;
+  const [resultVersion, suggestionId] = item.id.split('.');
+  const data = {
+    roundId: item.roundId,
+    selection: {
+      id: ids.round,
+      resultVersion,
+      suggestionId,
+      sendState: 'pending',
+      restricted: false,
+      text: item.text,
+    },
+    notices: [],
+  };
+  send.mockRejectedValueOnce(new TypeError('Synthetic lost response'));
+  await expect(client.confirmChat(item)).rejects.toThrow();
+  const first = new Headers(send.mock.calls.at(-1)![1]!.headers).get('Idempotency-Key');
+  expect(JSON.parse(send.mock.calls.at(-1)![1]!.body as string)).toEqual({
+    resultVersion,
+    suggestionId,
+  });
+  expect(send.mock.calls.at(-1)![0]).toContain(`/api/rounds/${item.roundId}/chat/selection`);
+  // The chat API replies with the projection only, without the common envelope.
+  send.mockResolvedValueOnce(json({ data }, 202));
+  await client.confirmChat(item);
+  expect(new Headers(send.mock.calls.at(-1)![1]!.headers).get('Idempotency-Key')).toBe(first);
+});
 const syntheticSession = {
   authenticated: true,
   user: {

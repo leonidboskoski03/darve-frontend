@@ -1,6 +1,6 @@
 {
-  "sourceRevision": "35cc707aedda63ff50f37fcebb5bc41fc2f6da63",
-  "status": "Adds owner-admin fee agreements (default 10% at sign-up; per-creator offers) and the PayPal ACCOUNT_IN_USE error. Existing feature mappings retained.",
+  "sourceRevision": "bd5d8974da997f8e87a4bfcee0f873eeb5c15c9a",
+  "status": "Adds owner DarveBot account status, audited refresh/revoke and creator chat availability diagnostics. Existing feature mappings retained.",
   "operations": [
     {
       "id": "public-api:GET /api/rounds/:id/analysis/events",
@@ -2912,7 +2912,7 @@
         "file": "apps/admin-api/src/app.ts",
         "line": 66,
         "handler": "inline health handler",
-        "sha256": "51bc100e45b2e8ee694f2d737b4e294076c9f7175d1e12cae7b904d1852a3488"
+        "sha256": "cc823c482aa35ce1b3c3026cd063511e20178e031d2003ba47e9ef0bdbcc23ea"
       },
       "frontend": "excluded"
     },
@@ -2933,7 +2933,7 @@
         "file": "apps/admin-api/src/app.ts",
         "line": 69,
         "handler": "inline health handler",
-        "sha256": "51bc100e45b2e8ee694f2d737b4e294076c9f7175d1e12cae7b904d1852a3488"
+        "sha256": "cc823c482aa35ce1b3c3026cd063511e20178e031d2003ba47e9ef0bdbcc23ea"
       },
       "frontend": "excluded"
     },
@@ -3154,12 +3154,75 @@
         "sha256": "a5469bd25fa149f7021d672febf3887631c848370b421f16a1537d68e1305cf6"
       },
       "frontend": "F04 / D12-2"
+    },
+    {
+      "id": "staff-api:GET /admin/v1/bots",
+      "origin": "staff-api",
+      "method": "GET",
+      "path": "/admin/v1/bots",
+      "authority": "staff",
+      "csrf": "none; read-only",
+      "idempotency": "none",
+      "request": "none",
+      "query": "empty",
+      "response": "BotAccountsResponseSchema",
+      "successStatuses": [200],
+      "publicExports": ["BotAccountsResponseSchema"],
+      "source": {
+        "file": "apps/admin-api/src/modules/bots/bots.routes.ts",
+        "line": 5,
+        "handler": "c.read",
+        "sha256": "ee34068d7822de9adb89e5c690e617a5dbec5767b04bb068bef82d095a9d68d8"
+      },
+      "frontend": "F08-09"
+    },
+    {
+      "id": "staff-api:POST /admin/v1/bots/:id/refresh",
+      "origin": "staff-api",
+      "method": "POST",
+      "path": "/admin/v1/bots/:id/refresh",
+      "authority": "staff",
+      "csrf": "Origin + X-Staff-CSRF; recent sign-in required",
+      "idempotency": "Idempotency-Key; exact command receipt replay",
+      "request": "BotAdminCommandSchema",
+      "query": "empty",
+      "response": "BotAdminResponseSchema",
+      "successStatuses": [200],
+      "publicExports": ["BotAdminCommandSchema", "BotAdminResponseSchema"],
+      "source": {
+        "file": "apps/admin-api/src/modules/bots/bots.routes.ts",
+        "line": 6,
+        "handler": "c.execute; action enum refresh/revoke",
+        "sha256": "ee34068d7822de9adb89e5c690e617a5dbec5767b04bb068bef82d095a9d68d8"
+      },
+      "frontend": "F08-09"
+    },
+    {
+      "id": "staff-api:POST /admin/v1/bots/:id/revoke",
+      "origin": "staff-api",
+      "method": "POST",
+      "path": "/admin/v1/bots/:id/revoke",
+      "authority": "staff",
+      "csrf": "Origin + X-Staff-CSRF; recent sign-in required",
+      "idempotency": "Idempotency-Key; exact command receipt replay",
+      "request": "BotAdminCommandSchema",
+      "query": "empty",
+      "response": "BotAdminResponseSchema",
+      "successStatuses": [200],
+      "publicExports": ["BotAdminCommandSchema", "BotAdminResponseSchema"],
+      "source": {
+        "file": "apps/admin-api/src/modules/bots/bots.routes.ts",
+        "line": 6,
+        "handler": "c.execute; action enum refresh/revoke",
+        "sha256": "ee34068d7822de9adb89e5c690e617a5dbec5767b04bb068bef82d095a9d68d8"
+      },
+      "frontend": "F08-09"
     }
   ],
   "sourceFiles": {
-    "apps/admin-api/src/app.ts": "51bc100e45b2e8ee694f2d737b4e294076c9f7175d1e12cae7b904d1852a3488",
+    "apps/admin-api/src/app.ts": "cc823c482aa35ce1b3c3026cd063511e20178e031d2003ba47e9ef0bdbcc23ea",
     "apps/admin-api/src/composition/rate-limit-store.ts": "be565584ab12d8b71896e4828eef8f23aa73f3ab560239f476b9b9741627ea18",
-    "apps/admin-api/src/composition/runtime.ts": "d90814e4da2d8f3e90d7142265f251167525ba1244a469f73249223ae43c9dfe",
+    "apps/admin-api/src/composition/runtime.ts": "22cc1809e6fa804c14be993c19a41588cb5566a28a9535f7082d748f35e49901",
     "apps/admin-api/src/config/environment.ts": "db3e0e0de903797cfb643e3f30306de4fc0466a0ca12aa8af2130eed9c56d678",
     "apps/admin-api/src/index.ts": "4fe2f02e11e40cbb97a98c5d77ed61f4c52654935defe56389f81b861ac32a4e",
     "apps/admin-api/src/modules/coins/coins.controller.ts": "04038e2733ec4347bc1c15b41875ca0fa5c01b44c9447039a5da6e0724ce15af",
@@ -3223,7 +3286,7 @@
     "apps/api/src/modules/coins/templates.mapper.ts": "d4fe9885ef1a610df0f19222d95c566e2f4ea0c01d798ffa4bdd90d4a93e04fe",
     "apps/api/src/modules/coins/templates.routes.ts": "cf90674701ace10656b7ead8f8b5699f7d433eaa9f618bdb4d60921495ac1b9a",
     "apps/api/src/modules/collection/collection-chat.controller.ts": "a7b9cae1e5216e3fe1462e171fb92cc687267092f56f899a90655dedaa709db4",
-    "apps/api/src/modules/collection/collection-chat.mapper.ts": "ddc7fe7c72a876026a0ac0a830ddc415eb71969b6c9b7fec6ed3b8dba51a3ed5",
+    "apps/api/src/modules/collection/collection-chat.mapper.ts": "ba83826076416c6530974ddc424075a00326eb1f314d74cb40087be8eb7b69f9",
     "apps/api/src/modules/collection/collection.controller.ts": "25c7a03dce03f75cf6e04201ff855496a541421026bfaccba832bd54d159f106",
     "apps/api/src/modules/collection/collection.mapper.ts": "810c981b0148f4d69679dc9f0f1af4c9cfbb3bc90e3c3e97b0d683a42429e2b8",
     "apps/api/src/modules/collection/collection.routes.ts": "2672d8684ecfdb14c5d77df53e270a840244285aa031d7b73e97e2513d0d4848",
@@ -3242,10 +3305,10 @@
     "apps/api/src/modules/health/health.routes.ts": "a50ae03dab44ff8d9662c3203938ae3bfec375b4ed25d33e7c75f84d16965bb5",
     "apps/api/src/modules/kick-webhooks/kick-webhook.controller.ts": "7876db8253878a62977c7125179ff8e07eca57e41aecfdb8d757883f835f3084",
     "apps/api/src/modules/kick-webhooks/kick-webhook.routes.ts": "2871374a4e251a2e565074f2582f2c667be4e687b114e53c2acc9762f8a6b353",
-    "apps/api/src/modules/overlays/overlay.controller.ts": "4441b59f2e0ace464ba0242a3137702ac21c944c81c13213fc0d7291bd4f7736",
+    "apps/api/src/modules/overlays/overlay.controller.ts": "372c04a8dd68811df20dac88cc0220fa562e5dc0576771fce7ffa68bb751e70c",
     "apps/api/src/modules/overlays/overlay.mapper.ts": "85543e88280434e59d451a1d417b164f357d44029cd3bd97ac2b7997aeac34d7",
     "apps/api/src/modules/overlays/overlay.routes.ts": "a446411adbf4b150f482b0018cac8d7b95b3bb2be7432ea0d1846c8159159872",
-    "apps/api/src/modules/payment-accounts/paypal-receiving.controller.ts": "e8aad6ccc78b94d65ff69d9078a0692873f1d5dc6b95134e9027b93af0a05149",
+    "apps/api/src/modules/payment-accounts/paypal-receiving.controller.ts": "85dcd39f0767288723868df0836075dafdebcbfbce9d18550069b16ee3648187",
     "apps/api/src/modules/payment-accounts/paypal-receiving.mapper.ts": "99b00bdb090e7f98188a3dc553ae9183f1a28fdfde06a9fe59f0da254e7c82d8",
     "apps/api/src/modules/payment-accounts/paypal-receiving.routes.ts": "c15ba1ce7b248335bec9490c14bcad029dc58f75afc34603cd9eceb01b803158",
     "apps/api/src/modules/payment-accounts/stripe-existing-account.controller.ts": "18dff837071ebb8f04f30e603e51a268441a38a91a0122df167bc878be17f4c5",
@@ -3276,7 +3339,9 @@
     "apps/api/src/security/overlay-grants.ts": "a521e8ac3ff1f092cfae7a9be8265c3aef324c4fd5b54dcd333ffb2a701bc017",
     "apps/api/src/security/payment-guests.ts": "c325da283e076ec3f0aece4c21e670772f781147d55e1a7f88c6347c7fafd171",
     "apps/api/src/security/proofs.ts": "1cd879e1e0b0a17a6b8df88630e720d32dd0d36f29e98a3a4c8896966b18f838",
-    "apps/api/src/security/session-cookies.ts": "d3b9f7347e5aaae95ef3d5fb1fec4d98b97cd0e6da1e3e3873f6aca5bc02ab0a"
+    "apps/api/src/security/session-cookies.ts": "d3b9f7347e5aaae95ef3d5fb1fec4d98b97cd0e6da1e3e3873f6aca5bc02ab0a",
+    "apps/admin-api/src/modules/bots/bots.routes.ts": "ee34068d7822de9adb89e5c690e617a5dbec5767b04bb068bef82d095a9d68d8",
+    "apps/admin-api/src/modules/bots/bots.controller.ts": "4ad6a4dae97978fb6a6a02137aebcb95eee12c5f1bfcf221e33a61cc4e86fbc7"
   },
   "gaps": [
     {

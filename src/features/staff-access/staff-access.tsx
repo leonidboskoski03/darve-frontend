@@ -285,6 +285,9 @@ function StaffScreen({ access, snapshot }: { access: StaffAccess; snapshot: Staf
               {snapshot.permissions.includes('coins.read') ? (
                 <ActionLink href="/coins">Open owner coin tools</ActionLink>
               ) : null}
+              {snapshot.role === 'OWNER_ADMIN' && snapshot.permissions.includes('bots.read') ? (
+                <ActionLink href="/coins?view=bots">Open DarveBot accounts</ActionLink>
+              ) : null}
               {snapshot.permissions.includes('review.read') ? (
                 <ActionLink href="/reviews">Open inspection and review tools</ActionLink>
               ) : null}

@@ -11,6 +11,7 @@ import {
   AcceptSuggestionInputSchema,
   AcceptSuggestionResponseSchema,
   CollectionChatResponseSchema,
+  ConfirmCollectionChoiceInputSchema,
   UnpinCollectionNoticeInputSchema,
   ChallengeResponseSchema,
   ChallengeAcceptancePolicyResponseSchema,
@@ -62,6 +63,7 @@ export function createSuggestionClient(session: CreatorSession) {
     { key: string; expectedVersion: number; decision: 'allow' | 'skip' }
   >();
   let commanding = false;
+  const chatKeys = new Map<string, string>();
   const active = () => {
     const current = session.getSnapshot();
     if (scope.signal.aborted || current.scope !== scope || current.phase !== 'authenticated')
@@ -97,6 +99,40 @@ export function createSuggestionClient(session: CreatorSession) {
   };
   return {
     scope,
+    confirmChat(item: Pick<Suggestion, 'roundId' | 'id'>) {
+      return command(async () => {
+        itemPath(item);
+        const [resultVersion, suggestionId] = item.id.split('.');
+        const body = ConfirmCollectionChoiceInputSchema.parse({ resultVersion, suggestionId });
+        const identity = item.roundId + ':' + item.id;
+        const key = chatKeys.get(identity) ?? crypto.randomUUID();
+        chatKeys.set(identity, key);
+        active();
+        const result = await session.request({
+          path: `/api/rounds/${item.roundId}/chat/selection`,
+          method: 'POST',
+          body,
+          idempotencyKey: key,
+          schema: CollectionChatResponseSchema,
+          success: [202],
+        });
+        active();
+        if (result.kind !== 'data' && result.kind !== 'pending')
+          throw new ReviewError(
+            result.kind === 'error' ? result : failure('protocol', 'UNEXPECTED_REVIEW_RESPONSE'),
+          );
+        const { data } = result.data;
+        if (
+          data.roundId !== item.roundId ||
+          !data.selection ||
+          data.selection.resultVersion !== resultVersion ||
+          data.selection.suggestionId !== suggestionId
+        )
+          mismatch();
+        chatKeys.delete(identity);
+        return data;
+      });
+    },
     async uncertain(roundId: string, signal: AbortSignal) {
       roundPath(roundId);
       const { data } = await request({

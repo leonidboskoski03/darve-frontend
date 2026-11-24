@@ -104,6 +104,31 @@ try {
   assert.equal(wire.data.items[0].pinned, true);
   assert.equal(wire.data.items[0].version, 2);
   checks.push('actual version-confirmed disposition persists in PostgreSQL');
+  for (const action of ['Unpin', 'Dismiss', 'Restore', 'Pin']) {
+    await page.getByRole('button', { name: action + ' idea 1', exact: true }).click();
+    await expect(
+      page.getByRole('button', {
+        name:
+          (action === 'Pin'
+            ? 'Unpin'
+            : action === 'Dismiss'
+              ? 'Restore'
+              : action === 'Restore'
+                ? 'Dismiss'
+                : 'Pin') + ' idea 1',
+        exact: true,
+      }),
+    ).toBeEnabled();
+    wire = await (
+      await context.request.get(`${api.apiOrigin}/api/rounds/${roundId}/suggestions`, { headers })
+    ).json();
+    const disposition = wire.data.items.find((value) => value.rank === 1);
+    assert.equal(disposition.pinned, action === 'Pin');
+    assert.equal(disposition.dismissed, action === 'Dismiss');
+    checks.push(
+      'actual ' + action.toLowerCase() + ' action matches the API and persisted list flags',
+    );
+  }
   const current = wire.data.items[0],
     body = {
       expectedVersion: current.version,

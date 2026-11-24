@@ -17,6 +17,7 @@ import { NeedsYourCall } from './needs-your-call';
 import { AcceptDialog } from './accept-dialog';
 import { ChallengeStatus } from './challenge';
 import { AcceptanceStatus } from './acceptance-status';
+import { RoundChatStatus } from './chat-status';
 import './review.css';
 export type ReviewFilter = 'all' | 'recommended' | 'pinned' | 'dismissed';
 const states: Record<string, string> = {
@@ -167,6 +168,7 @@ export function SuggestionReview({
     void query.refetch();
     void uncertain.refetch();
   };
+  const chatItem = [...items, ...privateItems].find((item) => item.selectedChallengeId !== null);
   return (
     <>
       <div className="review-heading">
@@ -395,7 +397,19 @@ export function SuggestionReview({
         </>
       )}
       {accepted && (
-        <AcceptanceStatus key={accepted.id} accepted={accepted} client={client} session={session} />
+        <AcceptanceStatus
+          key={accepted.id}
+          accepted={{ ...accepted, chat: undefined }}
+          client={client}
+          session={session}
+        />
+      )}
+      {available && (
+        <RoundChatStatus
+          client={client}
+          roundId={roundId}
+          {...(chatItem ? { item: chatItem } : {})}
+        />
       )}
       {accepted && available && (
         <ChallengeStatus

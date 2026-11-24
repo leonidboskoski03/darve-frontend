@@ -1,7 +1,7 @@
 import { CoinMissionSchema } from '@/services/contracts/index';
 import { StaffCoinError, type StaffFeeAgreements } from '@/services/staff-coins/index';
 export type CoinToolSelection = {
-  view: 'configuration' | 'account' | 'prices' | 'fees';
+  view: 'configuration' | 'account' | 'prices' | 'fees' | 'bots';
   owner: string;
   template: string;
 };
