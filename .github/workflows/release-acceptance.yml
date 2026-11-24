@@ -48,7 +48,7 @@ jobs:
       - name: Dependency vulnerability audit
         run: npm audit --audit-level=low
       - name: Install Chromium
-        run: npx --no-install playwright install --with-deps chromium
+        run: npx --no-install playwright install --with-deps --only-shell chromium
       - name: Browser, keyboard, reduced-motion and accessibility acceptance
         run: npm run test:e2e
       - uses: actions/upload-artifact@v4
