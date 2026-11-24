@@ -88,7 +88,8 @@ export function createOverlaySubscription(options: {
   let tick: ReturnType<typeof setInterval> | undefined;
   let cursor: string | null = null,
     retryMs = 2000,
-    attempts = 0;
+    attempts = 0,
+    resumeAfterScheduledEnd = false;
   let unregister = () => {};
   let published: OverlayStreamSnapshot = { phase, error, snapshot: null, presentation: null };
   const listeners = new Set<() => void>();
@@ -256,7 +257,11 @@ export function createOverlaySubscription(options: {
     };
     let watchdog = setTimeout(abortConnection, 15_000);
     let retryHint = 0,
-      sawResync = false;
+      sawResync = false,
+      endedCleanly = false,
+      openedAt = now();
+    const resumed = resumeAfterScheduledEnd;
+    resumeAfterScheduledEnd = false;
     try {
       const headers = new Headers({ Accept: 'text/event-stream' });
       if (cursor) headers.set('Last-Event-ID', cursor);
@@ -311,6 +316,7 @@ export function createOverlaySubscription(options: {
       )
         throw new ProtocolError();
       connected = true;
+      openedAt = now();
       publish();
       const parser = createSseParser(
         (frame: SseFrame) => {
@@ -333,6 +339,28 @@ export function createOverlaySubscription(options: {
             throw new ProtocolError();
           if (parsed.data.resourceId !== displayId) return;
           if (!sawResync && parsed.data.type !== 'resync_required') throw new ProtocolError();
+          const current = state.frame?.data;
+          if (
+            resumed &&
+            !sawResync &&
+            protocol === 2 &&
+            current &&
+            !state.needsRefetch &&
+            parsed.data.resourceVersion === current.version &&
+            JSON.stringify(parsed.data.data) === JSON.stringify(current)
+          ) {
+            // The resumed stream repeats exactly the frame on screen: keep it
+            // (refreshing freshness) instead of clearing it for a refetch.
+            sawResync = true;
+            cursor = parsed.data.eventId;
+            state = applySnapshot(
+              state,
+              { schemaVersion: 2, serverTime: parsed.data.occurredAt, data: parsed.data.data },
+              now(),
+            );
+            publish();
+            return;
+          }
           sawResync = true;
           if (parsed.data.resourceVersion >= state.versionFloor) cursor = parsed.data.eventId;
           state = applyEvent(state, parsed.data, now());
@@ -364,6 +392,7 @@ export function createOverlaySubscription(options: {
           } catch {
             throw new ProtocolError();
           }
+          endedCleanly = true;
           break;
         }
         try {
@@ -385,12 +414,25 @@ export function createOverlaySubscription(options: {
         if (activeReader === reader) activeReader = undefined;
       }
       if (valid(id)) {
-        clearConnection();
-        phase = 'reconnecting';
-        publish();
-        retryTimer = setTimeout(() => {
-          void connect();
-        }, delay(retryHint));
+        // The server ends each healthy stream on a schedule (about a minute).
+        // After a clean, long-lived stream that delivered a resync, keep the
+        // current card and reconnect at once instead of blinking it off; the
+        // 15 s freshness bound still hides it if no new frame arrives.
+        const scheduledEnd = endedCleanly && sawResync && connected && now() - openedAt >= 10_000;
+        if (scheduledEnd) {
+          if (active === controller) active = undefined;
+          resumeAfterScheduledEnd = true;
+          retryTimer = setTimeout(() => {
+            void connect();
+          }, 0);
+        } else {
+          clearConnection();
+          phase = 'reconnecting';
+          publish();
+          retryTimer = setTimeout(() => {
+            void connect();
+          }, delay(retryHint));
+        }
       }
     }
   }

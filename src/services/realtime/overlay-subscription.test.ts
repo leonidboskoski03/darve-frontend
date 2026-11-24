@@ -135,6 +135,51 @@ describe.each([1, 2] as const)('protocol %s overlay stream', (protocol) => {
     expect(send.mock.calls.some((call) => requestUrl(call[0]).includes('/session'))).toBe(false);
   });
 
+  it('keeps the card through a scheduled stream end and reconnects at once with its cursor', async () => {
+    const first = stream(),
+      second = stream();
+    let opens = 0;
+    const send = vi
+      .fn<typeof fetch>()
+      .mockImplementation((url) =>
+        Promise.resolve(
+          requestUrl(url).includes('/events?')
+            ? ++opens === 1
+              ? first.response
+              : second.response
+            : json(makeFrame(protocol, 1, opens === 2 ? 61 : 1)),
+        ),
+      );
+    const { subscription } = setup(send, protocol);
+    first.send(wireEvent(makeEvent(makeFrame(protocol), 'resync_required')));
+    await flush();
+    // The server keeps the stream fresh, then ends it on schedule after a minute.
+    clock = 55_100;
+    first.send(wireEvent(makeEvent(makeFrame(protocol, 1, 55))));
+    await flush();
+    clock = 60_100;
+    first.end();
+    await flush();
+    expect(subscription.getSnapshot()).toMatchObject({ phase: 'live', snapshot: { version: 1 } });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(opens).toBe(2);
+    expect(subscription.getSnapshot().snapshot).not.toBeNull();
+    const reconnect = send.mock.calls.filter((call) => requestUrl(call[0]).includes('/events?'))[1];
+    expect(new Headers(reconnect?.[1]?.headers).get('Last-Event-ID')).toBe(`${displayId}.v1`);
+    const snapshotsBefore = send.mock.calls.filter((call) =>
+      requestUrl(call[0]).includes('/snapshot'),
+    ).length;
+    second.send(wireEvent(makeEvent(makeFrame(protocol, 1, 60), 'resync_required')));
+    if (protocol === 2) expect(subscription.getSnapshot().snapshot).not.toBeNull();
+    await flush();
+    expect(subscription.getSnapshot()).toMatchObject({ phase: 'live', snapshot: { version: 1 } });
+    // OBS (protocol 2) keeps an identical frame without another snapshot request.
+    expect(
+      send.mock.calls.filter((call) => requestUrl(call[0]).includes('/snapshot')).length -
+        snapshotsBefore,
+    ).toBe(protocol === 2 ? 0 : 1);
+  });
+
   it('bounds freshness by validated server frames, not comments, duplicate data or browser wall clock', async () => {
     const source = stream();
     const send = vi

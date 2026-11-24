@@ -7,4 +7,5 @@ export {
   type CoinConfiguration,
   type StaffCoinAccount,
   type StaffCoinTemplate,
+  type StaffFeeAgreements,
 } from './client';

@@ -1,6 +1,6 @@
 {
-  "sourceRevision": "68b589da23be755dfadafc12ee651398664fcbfa",
-  "status": "Funding revision 0 now means no funding event is recorded yet, so a freshly accepted challenge is valid in the public, OBS v2 snapshot and OBS event contracts before its first contribution. Routes, authority and UI behavior stay unchanged. Existing feature mappings retained.",
+  "sourceRevision": "35cc707aedda63ff50f37fcebb5bc41fc2f6da63",
+  "status": "Adds owner-admin fee agreements (default 10% at sign-up; per-creator offers) and the PayPal ACCOUNT_IN_USE error. Existing feature mappings retained.",
   "operations": [
     {
       "id": "public-api:GET /api/rounds/:id/analysis/events",

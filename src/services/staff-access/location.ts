@@ -8,7 +8,8 @@ export function staffCoinSearch(search: string) {
   const view = unique('view'),
     owner = unique('owner'),
     template = unique('template');
-  if (view && ['configuration', 'account', 'prices'].includes(view)) output.set('view', view);
+  if (view && ['configuration', 'account', 'prices', 'fees'].includes(view))
+    output.set('view', view);
   if (
     owner &&
     /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(owner)

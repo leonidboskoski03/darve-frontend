@@ -9,4 +9,10 @@ describe('receiving error copy', () => {
     expect(receivingMessage(limited, true)).toBe('Too many attempts — wait a minute.');
     expect(receivingMessage(limited)).toBe('Too many attempts — wait a minute.');
   });
+  it('explains a PayPal account that already receives for another Darve account', () => {
+    const owned = new ReceivingError(failure('http', 'ACCOUNT_IN_USE', 409));
+    expect(receivingMessage(owned, true)).toBe(
+      'This PayPal account already receives payments for another Darve account. Use Start over PayPal and connect a different PayPal account.',
+    );
+  });
 });

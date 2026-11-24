@@ -10,7 +10,7 @@ export function StaffCoinsRoute({ access }: { access: StaffAccess }) {
   const safe = new URLSearchParams(staffCoinSearch('?' + search.toString()));
   const view = safe.get('view');
   const selection: CoinToolSelection = {
-    view: view === 'account' || view === 'prices' ? view : 'configuration',
+    view: view === 'account' || view === 'prices' || view === 'fees' ? view : 'configuration',
     owner: safe.get('owner') ?? '',
     template: safe.get('template') ?? '',
   };
