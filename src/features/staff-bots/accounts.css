@@ -1,0 +1,49 @@
+.staff-bots {
+  max-width: 68rem;
+  margin: auto;
+  padding: 2rem;
+  background: var(--color-background);
+  color: var(--color-text);
+  min-height: 100dvh;
+}
+.staff-bots nav,
+.staff-bots-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-block: 1rem;
+}
+.staff-bots section {
+  padding-block: 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+}
+.staff-bots dl {
+  display: grid;
+  grid-template-columns: minmax(9rem, 1fr) 3fr;
+  gap: 0.65rem 1.5rem;
+}
+.staff-bots dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.staff-bots p,
+.staff-bots li {
+  max-width: 72ch;
+}
+.staff-bots details {
+  margin-top: 1.5rem;
+}
+.staff-bots summary {
+  cursor: pointer;
+}
+@media (max-width: 40rem) {
+  .staff-bots {
+    padding: 1rem;
+  }
+  .staff-bots dl {
+    grid-template-columns: 1fr;
+  }
+  .staff-bots dd {
+    margin-bottom: 0.75rem;
+  }
+}

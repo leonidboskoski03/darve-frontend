@@ -42,6 +42,7 @@ function Workspace({
           <a href="/tickets">Support desk</a>
           <a href="/reviews">Inspection and reviews</a>
           <a href="/">Staff access</a>
+          <a href="/coins?view=bots">DarveBot accounts</a>
           <Button tone="secondary" onClick={() => void client.access.logout()}>
             Sign out
           </Button>

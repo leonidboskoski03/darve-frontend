@@ -8,7 +8,7 @@ export function staffCoinSearch(search: string) {
   const view = unique('view'),
     owner = unique('owner'),
     template = unique('template');
-  if (view && ['configuration', 'account', 'prices', 'fees'].includes(view))
+  if (view && ['configuration', 'account', 'prices', 'fees', 'bots'].includes(view))
     output.set('view', view);
   if (
     owner &&
