@@ -1,4 +1,16 @@
 /* Local showcase chrome only; the OBS display keeps its own styles. */
+html,
+body,
+#root {
+  margin: 0;
+  background: transparent !important;
+}
+
+.showcase-embed,
+.showcase-embed .obs-stage {
+  background: transparent !important;
+}
+
 .showcase-framed {
   position: fixed;
   inset: 0;

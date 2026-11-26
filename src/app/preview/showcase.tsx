@@ -20,15 +20,35 @@ const ids = {
   terms: '44556677-1234-4234-8234-112233445566',
   declaration: '55667788-1234-4234-8234-112233445566',
 };
-const goalMinor = 2500;
+const defaultGoalMinor = 2500;
 const contributionUrl = 'https://darve.example/contribute/showcase';
+const defaultChallengeText = 'Win the next round using only the pistol while chat picks the map';
 
-function frame(templateId: string, scene: Scene, eligibleMinor: number, version: number) {
+type CardPosition = 'bottom_left' | 'bottom_right' | 'top_left' | 'top_right';
+
+type FrameOptions = {
+  challengeText: string;
+  goalMinor: number;
+  showQr: boolean;
+  scale: number;
+  marginX: number;
+  marginY: number;
+  position: CardPosition;
+};
+
+function frame(
+  templateId: string,
+  scene: Scene,
+  eligibleMinor: number,
+  version: number,
+  options: FrameOptions,
+) {
   const entry = registeredTemplates().find((value) => value.id === templateId)!;
   const now = new Date();
   const iso = (seconds: number) => new Date(now.getTime() + seconds * 1000).toISOString();
   const funded = scene === 'funded' || scene === 'complete';
-  const eligible = String(funded ? goalMinor : eligibleMinor);
+  const goalMinor = options.goalMinor;
+  const eligible = String(funded ? goalMinor : Math.min(eligibleMinor, goalMinor));
   const challenge =
     scene === 'collecting'
       ? null
@@ -39,7 +59,7 @@ function frame(templateId: string, scene: Scene, eligibleMinor: number, version:
           contentAvailability: 'available',
           terms: {
             version: ids.terms,
-            text: 'Win the next round using only the pistol while chat picks the map',
+            text: options.challengeText,
             goal: { amountMinor: String(goalMinor), currency: 'EUR' },
             fundingDurationSeconds: 600,
             fundingClosesAt: iso(540),
@@ -113,11 +133,17 @@ function frame(templateId: string, scene: Scene, eligibleMinor: number, version:
       challengeId: challenge ? ids.challenge : null,
       collectionClosesAt: scene === 'collecting' ? iso(45) : null,
       challenge,
-      qrPayload: challenge ? contributionUrl : null,
+      qrPayload: challenge && options.showQr ? contributionUrl : null,
       ...(scene === 'collecting' ? { reviewState: 'collecting' } : {}),
       preferences: {
         version: 1,
-        styles: { position: 'bottom_left', scale: 1, opacity: 1, marginX: 32, marginY: 32 },
+        styles: {
+          position: options.position,
+          scale: options.scale,
+          opacity: 1,
+          marginX: options.marginX,
+          marginY: options.marginY,
+        },
         template: {
           revision: 1,
           templateId: entry.id,
@@ -208,6 +234,24 @@ const sceneLabels: Record<Scene, string> = {
   complete: 'Complete',
 };
 
+function readPositiveInt(value: string | null, fallback: number) {
+  if (value === null || value === '') return fallback;
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function readMargin(value: string | null, fallback: number) {
+  if (value === null || value === '') return fallback;
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
+}
+
+function readScale(value: string | null, fallback: number) {
+  if (!value) return fallback;
+  const parsed = Number.parseFloat(value);
+  return Number.isFinite(parsed) && parsed > 0 && parsed <= 1.5 ? parsed : fallback;
+}
+
 export function Showcase() {
   const params = new URLSearchParams(window.location.search);
   const templates = registeredTemplates();
@@ -223,6 +267,21 @@ export function Showcase() {
   );
   const [tick, setTick] = useState(0);
   const controls = params.get('controls') !== '0';
+  const showQr = params.get('qr') !== '0';
+  const challengeText = params.get('text')?.trim() || defaultChallengeText;
+  const goalEuros = readPositiveInt(params.get('goal'), defaultGoalMinor / 100);
+  const raisedEuros = readPositiveInt(params.get('raised'), Math.round(goalEuros * 0.8));
+  const goalMinor = goalEuros * 100;
+  const raisedMinor = Math.min(raisedEuros, goalEuros) * 100;
+  const scale = readScale(params.get('scale'), 1);
+  const marginX = readMargin(params.get('mx'), 32);
+  const marginY = readMargin(params.get('my'), 32);
+  const positionParam = params.get('position');
+  const position: CardPosition = (
+    ['bottom_left', 'bottom_right', 'top_left', 'top_right'] as const
+  ).includes(positionParam as CardPosition)
+    ? (positionParam as CardPosition)
+    : 'bottom_left';
   const family =
     families.find((value) => Object.values(value.ids).includes(templateId)) ?? families[0]!;
   const colour = (Object.entries(family.ids).find(([, id]) => id === templateId)?.[0] ??
@@ -245,17 +304,51 @@ export function Showcase() {
           : 'complete'
     : scene;
   const step = auto ? Math.min(Math.floor((cycle - 8) / 3.5), 3) : Math.floor(tick / 3) % 4;
-  const eligible = [400, 900, 1500, 2100][Math.max(step, 0)]!;
+  const autoEligible = [400, 900, 1500, 2100][Math.max(step, 0)]!;
+  // Landing embeds pass raised/goal; keep those stable instead of the auto ramp.
+  const eligible = params.has('raised') ? raisedMinor : autoEligible;
 
   useEffect(() => {
-    showcase.publish(frame(templateId, current, eligible, tick + 1), {
-      collection: current === 'collecting' ? Math.max(45 - (auto ? cycle : tick % 45), 0) : null,
-      funding: current === 'collecting' ? null : 540 - (tick % 540),
-    });
-  }, [showcase, templateId, current, eligible, tick, auto, cycle]);
+    showcase.publish(
+      frame(templateId, current, eligible, tick + 1, {
+        challengeText,
+        goalMinor,
+        showQr,
+        scale,
+        marginX,
+        marginY,
+        position,
+      }),
+      {
+        collection: current === 'collecting' ? Math.max(45 - (auto ? cycle : tick % 45), 0) : null,
+        funding: current === 'collecting' ? null : 540 - (tick % 540),
+      },
+    );
+  }, [
+    showcase,
+    templateId,
+    current,
+    eligible,
+    tick,
+    auto,
+    cycle,
+    challengeText,
+    goalMinor,
+    showQr,
+    scale,
+    marginX,
+    marginY,
+    position,
+  ]);
+
+  useEffect(() => {
+    if (controls) return;
+    document.documentElement.style.background = 'transparent';
+    document.body.style.background = 'transparent';
+  }, [controls]);
 
   return (
-    <div className={controls ? 'showcase showcase-framed' : 'showcase'}>
+    <div className={controls ? 'showcase showcase-framed' : 'showcase showcase-embed'}>
       {controls && (
         <header className="showcase-controls" aria-label="Template showcase controls">
           <p className="showcase-title">

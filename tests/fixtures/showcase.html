@@ -6,8 +6,16 @@
     <meta name="referrer" content="no-referrer" />
     <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin />
     <title>OBS template showcase</title>
+    <style>
+      html,
+      body,
+      #root {
+        margin: 0;
+        background: transparent !important;
+      }
+    </style>
   </head>
-  <body>
+  <body style="background: transparent">
     <div id="root"></div>
     <script type="module" src="/src/app/preview/showcase-main.tsx"></script>
   </body>

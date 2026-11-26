@@ -11,6 +11,9 @@ const overlay = '/overlay/' + displayId + '#grantId=' + grantId;
 export const states = {
   signIn: ['Sign-in screen', '/authorize'],
   landing: ['Landing', '/welcome'],
+  privacy: ['Legal · Privacy', '/privacy'],
+  legalTerms: ['Legal · Terms', '/legal/terms'],
+  safety: ['Legal · Safety', '/safety'],
   demo: ['Signed-in demo streamer', '/'],
   onboarding: ['Onboarding', '/onboarding'],
   connections: ['Connections', '/integrations'],

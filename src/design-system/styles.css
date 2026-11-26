@@ -119,6 +119,29 @@ main:focus {
   border-radius: var(--radius-small);
   object-fit: contain;
 }
+/* Landing / legal public wordmark — Syne 20px / 700 / uppercase + 31×31 mark. */
+.brand.brand--wordmark {
+  gap: 9px;
+  font-family: 'Syne', 'Space Grotesk', Arial, sans-serif;
+  font-size: 20px;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  text-transform: uppercase;
+}
+.brand.brand--wordmark > span:last-child {
+  font-family: 'Syne', 'Space Grotesk', Arial, sans-serif;
+  font-size: 20px;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: #ffffff;
+}
+.brand.brand--wordmark .brand-mark {
+  width: 31px;
+  height: 31px;
+  border-radius: 0;
+}
 .environment-label,
 .eyebrow {
   color: var(--color-muted);

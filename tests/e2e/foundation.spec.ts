@@ -7,7 +7,8 @@ test('standalone landing is keyboard reachable, responsive and exposes the real 
   const failures: string[] = [];
   page.on('pageerror', (error) => failures.push(error.message));
   await page.goto('/');
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('The Engagement Engine');
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('MAKE YOUR');
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('LEGENDARY');
   await expect(
     page.getByRole('link', { name: 'Connect your stream', exact: true }).first(),
   ).toBeVisible();
@@ -30,7 +31,7 @@ test('unknown deep links render a real not-found page and navigate back', async 
   await page.goto('/missing-route');
   await expect(page.getByRole('heading', { name: 'Page not found' })).toBeVisible();
   await page.getByRole('link', { name: 'Return to Darve' }).click();
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('The Engagement Engine');
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('MAKE YOUR');
   await expect(page.getByRole('main')).toBeFocused();
 });
 
@@ -42,5 +43,5 @@ test('reduced motion keeps all content visible without moving the heading', asyn
   await expect(
     page.getByRole('link', { name: 'Connect your stream', exact: true }).first(),
   ).toBeVisible();
-  await expect(heading.locator('..')).toHaveCSS('transform', 'none');
+  await expect(heading).toHaveCSS('transform', 'none');
 });

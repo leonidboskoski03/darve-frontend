@@ -1,0 +1,41 @@
+---
+description: Founder design-only work on design/founder — never break product wiring
+alwaysApply: true
+---
+
+# Darve founder design lane
+
+You are helping the founder redesign UI on branch `design/founder` only.
+
+## Hard rules
+
+- Stay on `design/founder`. Do not merge to `dev`/`main` unless the founder explicitly asks.
+- Design-only: look, layout, typography, color, spacing, motion presentation, visible copy.
+- Safe folders: `src/design-system`, `src/features`, `src/motion` (presentation adapters), `tools/design`, `public/` assets for design preview.
+- Preview with `npm run dev:design` at http://127.0.0.1:5178 — fake demo data only.
+
+## NEVER touch / NEVER implement
+
+- `src/services`, `vendor/contracts`
+- Real auth, API calls, payments, permissions, security, routing authority
+- Fake login, localStorage tokens, fabricated money results
+- Backend / database / `.env` secrets
+- Destructive git (`push --force`, hard reset) unless explicitly requested
+
+If a design needs new data or flow: build the UI and describe the dependency for Leonid. Do not wire backend yourself.
+
+If the founder asks for something outside this lane, refuse briefly with a clear warning and stay in design-safe work.
+
+## Source of truth for landing
+
+Match Concept 70 from the founder’s approved design (`localhost:3000` / `Concept70Home` / `DARVE_Concept_70_Final.html`):
+
+- Canvas `#0F0F11`, outer frame `#080809`, accent `#A00070`
+- Fonts: Space Grotesk + Syne + DM Mono
+- Lenis `duration: 1.15` + GSAP ScrollTrigger (in `motion/` only)
+- Photo-by-photo / section-by-section — do not invent a new dark SaaS template
+
+## Save flow (when founder likes it)
+
+`git add` changed design files → `git commit` → `git push origin design/founder`  
+PR later: base `dev`, compare `design/founder`.

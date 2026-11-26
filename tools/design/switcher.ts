@@ -1,7 +1,7 @@
 // This module is injected by the design server into both product HTML entries.
 const panel = document.createElement('details');
 panel.style.cssText =
-  'position:fixed;top:12px;right:12px;z-index:99999;padding:8px 12px;background:#181522;color:white;border:1px solid #8879a1;border-radius:8px;font:14px system-ui;max-width:calc(100vw - 24px)';
+  'position:fixed;bottom:12px;left:12px;z-index:99999;padding:8px 12px;background:#181522;color:white;border:1px solid #8879a1;border-radius:8px;font:14px system-ui;max-width:calc(100vw - 24px)';
 const label = document.createElement('summary');
 label.textContent = 'Design states';
 label.style.cursor = 'pointer';

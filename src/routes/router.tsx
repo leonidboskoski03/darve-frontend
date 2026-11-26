@@ -39,6 +39,9 @@ export const createAppRouter = ({
           path: '/welcome',
           lazy: async () => ({ Component: (await import('./home')).PublicHome }),
         },
+        { path: '/privacy', lazy: () => import('./legal') },
+        { path: '/safety', lazy: () => import('./legal') },
+        { path: '/legal/terms', lazy: () => import('./legal') },
         { path: '/authorize', lazy: () => import('./creator-connection') },
         {
           lazy: async () => ({ Component: (await import('./creator-guard')).CreatorGuard }),

@@ -1,0 +1,348 @@
+/* Concept 70 Experience — challenge rows + illustrative OBS preview */
+
+.experience {
+  position: relative;
+  min-height: auto;
+  padding: 10vh var(--page-gutter);
+  background: #0f0f11;
+  color: #fff;
+}
+
+.experience > h2 {
+  margin: 0 0 65px;
+  max-width: 1150px;
+  font-family: var(--landing-font);
+  font-size: clamp(48px, 9vw, 140px);
+  font-weight: 500;
+  letter-spacing: -0.09em;
+  line-height: 0.9;
+}
+
+.experience > h2 em {
+  font-style: normal;
+  color: #a00070;
+}
+
+.challenge {
+  display: grid;
+  grid-template-columns: 70px 1fr auto;
+  gap: 25px;
+  align-items: center;
+  padding: 30px 0;
+  border-top: 1px solid #39323f;
+  cursor: pointer;
+  transition:
+    padding 0.25s ease,
+    background 0.25s ease;
+}
+
+.challenge:hover,
+.challenge.active {
+  padding-left: 18px;
+  background: #191519;
+}
+
+.challenge:focus-visible {
+  outline: 2px solid #a00070;
+  outline-offset: 4px;
+}
+
+.challenge .num {
+  color: #a00070;
+}
+
+.challenge .name {
+  font-family: var(--landing-font);
+  font-size: clamp(22px, 3.4vw, 49px);
+  font-weight: 500;
+  letter-spacing: -0.055em;
+}
+
+.challenge button {
+  background: transparent;
+  border: 1px solid #62516f;
+  border-radius: 0;
+  color: #fff;
+  padding: 12px 17px;
+  font: inherit;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition:
+    background 0.25s,
+    border-color 0.25s,
+    color 0.25s;
+}
+
+.challenge.active button {
+  background: #a00070;
+  border-color: #a00070;
+  color: #fff;
+}
+
+.challenge button:hover {
+  border-color: #a00070;
+}
+
+.dv64-experience-demo {
+  width: 100%;
+  max-width: 100%;
+  margin-top: 58px;
+  border-top: 1px solid #443344;
+  padding-top: 24px;
+}
+
+.dv64-demo-intro,
+.dv64-stream-top,
+.dv64-overlay-head,
+.dv64-overlay-bottom,
+.dv64-overlay-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+.dv64-demo-tag {
+  font-family: var(--landing-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: #e4a1cd;
+}
+
+.dv64-demo-stage {
+  position: relative;
+  min-height: 470px;
+  margin-top: 22px;
+  border: 1px solid #39303b;
+  border-radius: 12px;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 65% 45%, #342036 0%, #15121b 46%, #0d0c10 90%);
+}
+
+.dv64-stream-top {
+  position: absolute;
+  top: 23px;
+  left: 27px;
+  right: 27px;
+  z-index: 2;
+  font-family: var(--landing-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: #b5a8b6;
+}
+
+.dv64-stream-top i {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 9px;
+  border-radius: 50%;
+  background: #dc3999;
+  box-shadow: 0 0 12px #dc3999;
+}
+
+.dv64-game-scene {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #514453;
+  overflow: hidden;
+}
+
+.dv64-game-scene > span {
+  font-family: var(--landing-font);
+  font-size: clamp(32px, 6vw, 85px);
+  font-weight: 700;
+  letter-spacing: -0.075em;
+  color: #ffffff09;
+  white-space: nowrap;
+}
+
+.dv64-scene-grid {
+  position: absolute;
+  inset: 20% -10% -30%;
+  opacity: 0.35;
+  background:
+    linear-gradient(#71375930 1px, transparent 1px),
+    linear-gradient(90deg, #71375930 1px, transparent 1px);
+  background-size: 65px 65px;
+  transform: perspective(450px) rotateX(57deg) scale(1.5);
+  mask-image: linear-gradient(transparent, #000);
+}
+
+/* Real Stardust · Darve card only — stream scene background stays untouched. */
+.dv64-overlay-frame {
+  position: absolute;
+  right: 3%;
+  bottom: 5%;
+  left: auto;
+  z-index: 3;
+  width: min(760px, 96%);
+  aspect-ratio: 960 / 280;
+  max-height: 56%;
+  border: 0;
+  background: transparent !important;
+  pointer-events: none;
+}
+
+@media (max-width: 1024px) {
+  .experience {
+    padding: 8vh var(--page-gutter);
+  }
+
+  .experience > h2 {
+    margin-bottom: 48px;
+    font-size: clamp(42px, 8.5vw, 110px);
+  }
+
+  .dv64-overlay-frame {
+    width: min(640px, 94%);
+    max-height: 50%;
+  }
+}
+
+.dv64-demo-foot {
+  margin: 17px 0 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #9e909e;
+}
+
+.dv64-bump .dv64-overlay-frame {
+  animation: dv64-swap 0.35s ease both;
+}
+
+@keyframes dv64-swap {
+  from {
+    transform: translateY(9px);
+    opacity: 0.5;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+@keyframes dv-live-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.42;
+  }
+}
+
+@keyframes dv-progress-sheen {
+  0% {
+    filter: brightness(1);
+  }
+  100% {
+    filter: brightness(1.18);
+  }
+}
+
+.experience.is-demo-live .dv64-stream-top i {
+  animation: dv-live-pulse 1.4s ease-in-out infinite;
+}
+
+@media (max-width: 720px) {
+  .experience {
+    padding: 64px var(--page-gutter) 72px;
+  }
+
+  .experience > h2 {
+    margin-bottom: 36px;
+    font-size: clamp(36px, 11vw, 64px);
+  }
+
+  .challenge {
+    grid-template-columns: 30px 1fr;
+    gap: 12px 15px;
+    padding: 22px 0;
+  }
+
+  .challenge:hover,
+  .challenge.active {
+    padding-left: 10px;
+  }
+
+  .challenge button {
+    grid-column: 2;
+    justify-self: start;
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+
+  .challenge .name {
+    font-size: clamp(18px, 5.4vw, 24px);
+    line-height: 1.15;
+  }
+
+  .dv64-experience-demo {
+    margin-top: 40px;
+  }
+
+  .dv64-demo-stage {
+    min-height: 380px;
+  }
+
+  .dv64-overlay-frame {
+    right: 2%;
+    bottom: 4%;
+    width: min(520px, 96%);
+    max-height: 46%;
+  }
+}
+
+@media (max-width: 560px) {
+  .experience {
+    padding: 52px var(--page-gutter) 60px;
+  }
+
+  .experience > h2 {
+    font-size: clamp(32px, 12vw, 48px);
+    letter-spacing: -0.07em;
+  }
+
+  .challenge {
+    padding: 18px 0;
+  }
+
+  .dv64-demo-stage {
+    min-height: 300px;
+    border-radius: 10px;
+  }
+
+  .dv64-stream-top {
+    top: 14px;
+    left: 14px;
+    right: 14px;
+    font-size: 9px;
+  }
+
+  .dv64-demo-foot {
+    font-size: 11px;
+  }
+
+  .dv64-overlay-frame {
+    right: 2%;
+    bottom: 3%;
+    width: min(100%, 96%);
+    max-height: 44%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .challenge,
+  .challenge button {
+    transition: none;
+  }
+
+  .dv64-bump .dv64-overlay-frame,
+  .experience.is-demo-live .dv64-stream-top i {
+    animation: none;
+  }
+}

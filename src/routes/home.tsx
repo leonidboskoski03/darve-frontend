@@ -11,7 +11,7 @@ import {
 
 export function PublicHome() {
   useEffect(() => {
-    document.title = 'Darve — The Engagement Engine for Your Viewers';
+    document.title = 'Darve — Make Your Stream Legendary';
   }, []);
   return <Landing connectHref="/authorize" />;
 }
