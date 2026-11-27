@@ -398,7 +398,7 @@ export function SuggestionReview({
       )}
       {accepted && (
         <AcceptanceStatus
-          key={accepted.id}
+          key={`acceptance:${accepted.id}`}
           accepted={{ ...accepted, chat: undefined }}
           client={client}
           session={session}
@@ -413,7 +413,7 @@ export function SuggestionReview({
       )}
       {accepted && available && (
         <ChallengeStatus
-          key={accepted.id}
+          key={`challenge:${accepted.id}`}
           client={client}
           snapshot={snapshot}
           id={accepted.id}

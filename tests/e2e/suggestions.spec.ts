@@ -286,6 +286,11 @@ test('synthetic pin, dismiss and restore are explicit versioned metadata actions
 test('synthetic acceptance reviews exact money and keeps other ideas after confirmed creation', async ({
   page,
 }) => {
+  const duplicateKeys: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error' && message.text().includes('same key'))
+      duplicateKeys.push(message.text());
+  });
   const state = await scenario(page);
   await page.goto(fixture);
   await openTerms(page);
@@ -312,6 +317,7 @@ test('synthetic acceptance reviews exact money and keeps other ideas after confi
   });
   await expect(page.getByRole('article', { name: 'Idea 2', exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Accept idea 2', exact: true })).toBeDisabled();
+  expect(duplicateKeys).toEqual([]);
 });
 test('synthetic uncertain acceptance retries only the identical held body and key', async ({
   page,
