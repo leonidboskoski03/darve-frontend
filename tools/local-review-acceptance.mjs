@@ -274,3 +274,6 @@ try {
   await vite?.close();
   await api?.close();
 }
+// Vite's native tooling can retain idle handles on Windows after close().
+// Reach this only after every assertion and explicit resource cleanup succeeds.
+process.exit(0);
