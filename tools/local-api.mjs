@@ -315,8 +315,8 @@ export async function startLocalApi({
   const provenance = JSON.parse(
     readFileSync(path.join(root, 'vendor/contracts/provenance.json'), 'utf8'),
   );
-  if (run('git', ['rev-parse', 'HEAD'], { cwd: backend }) !== provenance.sourceRevision)
-    throw new Error('Backend source differs from the pinned contracts.');
+  // Merge commits may retain exactly the pinned backend inputs checked below.
+  run('git', ['merge-base', '--is-ancestor', provenance.sourceRevision, 'HEAD'], { cwd: backend });
   const buildInputs = [
     'apps',
     'packages',

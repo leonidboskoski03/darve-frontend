@@ -47,7 +47,7 @@ function Account({
             'Unknown'
           )}
         </dd>
-        <dt>Last validation / refresh</dt>
+        <dt>Last account outcome</dt>
         <dd>
           {account.lastOutcome ?? 'Not validated'}
           {account.checkedAt ? ' · ' + new Date(account.checkedAt).toLocaleString() : ''}
@@ -64,10 +64,10 @@ function Account({
         </dd>
         {account.commandState && (
           <>
-            <dt>Latest refresh request</dt>
+            <dt>Latest account request</dt>
             <dd>
               {account.commandState === 'uncertain'
-                ? 'Unconfirmed after interruption; reconnect instead of repeating the provider exchange.'
+                ? 'Unconfirmed after interruption. Review a new refresh to abandon the old request; reconnect may still be needed if the provider rotated its token.'
                 : account.commandState}
             </dd>
           </>
@@ -89,7 +89,6 @@ function Account({
                 blocked ||
                 !reason.trim() ||
                 !account.scopes.length ||
-                account.commandState === 'uncertain' ||
                 ['queued', 'running'].includes(account.commandState ?? '') ||
                 account.lastOutcome === 'production_test_actor' ||
                 account.lastOutcome === 'revoked'
@@ -235,7 +234,8 @@ function Accounts({ client }: { client: StaffBotClient }) {
         ) : state.phase === 'recorded' ? (
           <p role="status">
             The server recorded the command. A refresh is queued for the collector; revocation is
-            immediate. This does not send chat messages.
+            immediate in Darve, with provider revocation queued. Check the last account outcome for
+            the provider result. This does not send chat messages.
           </p>
         ) : null}
         {state.error && (
