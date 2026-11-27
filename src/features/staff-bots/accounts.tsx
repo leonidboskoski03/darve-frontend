@@ -242,9 +242,11 @@ function Accounts({ client }: { client: StaffBotClient }) {
           <p role="alert">
             {state.error.code === 'REAUTHENTICATION_REQUIRED'
               ? 'Verify your staff sign-in again, refresh the account, then review a new command.'
-              : state.error.code === 'STALE_VERSION'
-                ? 'The account changed; refresh and review its current revision.'
-                : 'The account change could not be confirmed. Check current status before another action.'}
+              : state.error.code === 'BOT_ALREADY_REVOKED'
+                ? 'This account is already revoked or has no stored credentials. Refresh account status.'
+                : state.error.code === 'STALE_VERSION'
+                  ? 'The account changed; refresh and review its current revision.'
+                  : 'The account change could not be confirmed. Check current status before another action.'}
           </p>
         )}
         {read.isError ? (

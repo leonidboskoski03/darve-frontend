@@ -41,6 +41,10 @@ try {
     },
   ]);
   const page = await context.newPage();
+  page.on('console', (message) => {
+    if (message.type() === 'error' && message.text().includes('same key'))
+      errors.push('Duplicate React key in review page');
+  });
   page.on('pageerror', (error) => errors.push(error.name));
   await page.goto(origin + '/collection');
   await page.getByRole('checkbox', { name: /I have read and accept account terms/ }).check();

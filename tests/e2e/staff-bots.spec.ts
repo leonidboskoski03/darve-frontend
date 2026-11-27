@@ -61,6 +61,7 @@ for (const interrupted of [false, true]) {
           body: request.postDataJSON() as Record<string, unknown>,
           key: request.headers()['idempotency-key'],
         });
+        if (action === 'revoke' && revoked) return send(problem('BOT_ALREADY_REVOKED'), 409);
         revoked = action === 'revoke';
         return send(
           envelope({
@@ -99,6 +100,14 @@ for (const interrupted of [false, true]) {
     await expect(page.getByText('revoke:provider_failed', { exact: true }).first()).toBeVisible();
     expect(writes).toHaveLength(2);
     expect(writes[1].key).not.toBe(writes[0].key);
+    await page.getByLabel('TWITCH change reason').fill('Synthetic repeated revocation');
+    await page.getByRole('button', { name: 'Review revoke TWITCH' }).click();
+    await page.getByRole('checkbox').check();
+    await page.getByRole('button', { name: 'Confirm bot change' }).click();
+    await expect(page.getByRole('alert')).toHaveText(
+      'This account is already revoked or has no stored credentials. Refresh account status.',
+    );
+    expect(writes).toHaveLength(3);
     expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
